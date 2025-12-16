@@ -1,0 +1,3527 @@
+import React, { useState, useEffect, useMemo, createContext, useContext, useCallback, useRef } from 'react';
+import {
+  LayoutDashboard, Package, Users, Rocket, ClipboardList, Plus, Trash2, Edit2, X,
+  CheckCircle2, AlertCircle, Search, ExternalLink, ChevronRight, Clock, Save, Filter,
+  Calendar, ChevronLeft, MoreHorizontal, ArrowRight, BarChart3, FileText, CheckSquare,
+  AlertTriangle, Loader2, ArrowUpRight, ChevronDown, ChevronUp, PieChart as PieChartIcon,
+  TrendingUp, Link as LinkIcon, Command, Copy, Eye, Keyboard, Activity, History, Sun, Moon,
+  Zap, Info, List, LayoutGrid, Columns, MessageSquare, Send, Code, Settings, Download, RefreshCw
+} from 'lucide-react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LineChart, Line, PieChart, Pie
+} from 'recharts';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, 
+  query, where, orderBy, serverTimestamp, limit 
+} from 'firebase/firestore';
+
+// --- Firebase Initialization ---
+// const firebaseConfig = {
+//   apiKey: "AIzaSy...",
+//   authDomain: "your-project.firebaseapp.com",
+//   projectId: "your-project",
+//   storageBucket: "your-project.appspot.com",
+//   messagingSenderId: "...",
+//   appId: "..."
+// };
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyAIuY4yQWR9oZujMvTGdiNqZeo4zzW9Cj4",
+
+  authDomain: "gen-lang-client-0046318495.firebaseapp.com",
+
+  projectId: "gen-lang-client-0046318495",
+
+  storageBucket: "gen-lang-client-0046318495.firebasestorage.app",
+
+  messagingSenderId: "282900830200",
+
+  appId: "1:282900830200:web:96725193e4cb673de4a80d",
+
+  measurementId: "G-MTHRPE9F67"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+// ==========================================
+// 🎨 THEME & UTILITIES
+// ==========================================
+
+const STANDARD_CHECKLIST = [
+  "Requirements Finalized", "API Ready", "Backend Ready", "Frontend Ready",
+  "Test Cases Approved", "UAT Completed", "Release Notes Added",
+  "Documentation Uploaded", "Go-Live Validation Completed"
+];
+
+const DOC_TYPES = [
+  { key: 'productGuide', label: 'Product Guide' },
+  { key: 'releaseNotes', label: 'Release Notes' },
+  { key: 'demoScript', label: 'Demo Script' },
+  { key: 'testCases', label: 'Test Cases' },
+  { key: 'productionChecklist', label: 'Prod Checklist' }
+];
+
+const DEPLOYMENT_TYPES = [
+  { key: 'generic', label: 'Generic', description: 'Standard deployment for all clients' },
+  { key: 'client-specific', label: 'Client-Specific', description: 'Customized for specific client needs' }
+];
+
+const KANBAN_COLUMNS = [
+  { id: 'Not Started', label: 'Not Started', color: 'border-slate-400', bgColor: 'bg-slate-50 dark:bg-slate-900/50' },
+  { id: 'In Progress', label: 'In Progress', color: 'border-blue-400', bgColor: 'bg-blue-50/50 dark:bg-blue-900/20' },
+  { id: 'Blocked', label: 'Blocked', color: 'border-rose-400', bgColor: 'bg-rose-50/50 dark:bg-rose-900/20' },
+  { id: 'Released', label: 'Released', color: 'border-emerald-400', bgColor: 'bg-emerald-50/50 dark:bg-emerald-900/20' }
+];
+
+const formatDate = (val) => {
+  if (!val) return '-';
+  try {
+    const date = val.toDate ? val.toDate() : new Date(val);
+    if (isNaN(date.getTime())) return '-';
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+  } catch (e) { return '-'; }
+};
+
+const toInputDate = (val) => {
+  if (!val) return '';
+  try {
+    const d = val.toDate ? val.toDate() : new Date(val);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  } catch (e) { return ''; }
+};
+
+const getDaysDiff = (dateString) => {
+  if (!dateString) return 999;
+  try {
+    const target = dateString.toDate ? dateString.toDate() : new Date(dateString);
+    const now = new Date();
+    return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+  } catch (e) { return 999; }
+};
+
+const getDeadlineStatus = (dateString, status) => {
+  if (status === 'Released') return { color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-800 dark:text-emerald-400', label: 'Released', urgent: false };
+  if (status === 'Blocked') return { color: 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400', label: 'Blocked', urgent: true };
+  if (!dateString) return { color: 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400', label: 'No Date', urgent: false };
+  
+  const diffDays = getDaysDiff(dateString);
+
+  if (diffDays < 0) return { color: 'text-rose-700 bg-rose-50 border-rose-200 font-bold dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400', label: `Overdue (${Math.abs(diffDays)}d)`, urgent: true };
+  if (diffDays <= 7) return { color: 'text-rose-600 bg-rose-50 border-rose-200 font-semibold dark:bg-rose-900/30 dark:border-rose-800 dark:text-rose-400', label: `Due in ${diffDays}d`, urgent: true };
+  if (diffDays <= 30) return { color: 'text-amber-600 bg-amber-50 border-amber-200 font-medium dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400', label: `Due in ${diffDays}d`, urgent: false };
+  return { color: 'text-slate-600 bg-slate-50 border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300', label: `Due in ${diffDays}d`, urgent: false };
+};
+
+const getStatusTooltip = (status) => {
+  switch(status) {
+    case 'Not Started': return 'No activity yet';
+    case 'In Progress': return 'Work underway';
+    case 'Blocked': return 'Waiting on dependencies';
+    case 'Released': return 'Delivered to client';
+    default: return status;
+  }
+};
+
+const calculateChecklistProgress = (items = []) => {
+  if (!items.length) return 0;
+  const completed = items.filter(i => i.isCompleted).length;
+  return Math.round((completed / items.length) * 100);
+};
+
+// ==========================================
+// 📤 EXPORT & SYNC UTILITIES
+// ==========================================
+
+// CSV Export utility
+const exportToCSV = (data, filename, columns) => {
+  if (!data || data.length === 0) {
+    return { success: false, error: 'No data to export' };
+  }
+
+  try {
+    // Build CSV header
+    const header = columns.map(col => col.label).join(',');
+
+    // Build CSV rows
+    const rows = data.map(item => {
+      return columns.map(col => {
+        let value = col.getValue ? col.getValue(item) : item[col.key] || '';
+        // Escape quotes and wrap in quotes if contains comma or newline
+        if (typeof value === 'string') {
+          value = value.replace(/"/g, '""');
+          if (value.includes(',') || value.includes('\n') || value.includes('"')) {
+            value = `"${value}"`;
+          }
+        }
+        return value;
+      }).join(',');
+    });
+
+    const csv = [header, ...rows].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+
+    return { success: true, count: data.length };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+};
+
+// Product export columns
+const PRODUCT_EXPORT_COLUMNS = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'description', label: 'Description' },
+  { key: 'productOwner', label: 'Product Owner' },
+  { key: 'engineeringOwner', label: 'Engineering Owner' },
+  { key: 'nextReleaseDate', label: 'Next Release Date', getValue: (p) => p.nextReleaseDate ? formatDate(p.nextReleaseDate) : '' },
+  { key: 'docProductGuide', label: 'Product Guide URL', getValue: (p) => p.documentation?.productGuide || '' },
+  { key: 'docReleaseNotes', label: 'Release Notes URL', getValue: (p) => p.documentation?.releaseNotes || '' },
+  { key: 'docDemoScript', label: 'Demo Script URL', getValue: (p) => p.documentation?.demoScript || '' },
+  { key: 'docTestCases', label: 'Test Cases URL', getValue: (p) => p.documentation?.testCases || '' },
+  { key: 'docProductionChecklist', label: 'Prod Checklist URL', getValue: (p) => p.documentation?.productionChecklist || '' },
+];
+
+// Deployment export columns
+const DEPLOYMENT_EXPORT_COLUMNS = [
+  { key: 'id', label: 'ID' },
+  { key: 'clientName', label: 'Client', getValue: (d) => d.clientName || '' },
+  { key: 'productName', label: 'Product', getValue: (d) => d.productName || '' },
+  { key: 'status', label: 'Status' },
+  { key: 'deploymentType', label: 'Type' },
+  { key: 'nextDeliveryDate', label: 'Target Date', getValue: (d) => d.nextDeliveryDate ? formatDate(d.nextDeliveryDate) : '' },
+  { key: 'checklistProgress', label: 'Checklist Progress', getValue: (d) => `${d.checklistProgress || 0}%` },
+  { key: 'createdAt', label: 'Created', getValue: (d) => d.createdAt ? formatDate(d.createdAt) : '' },
+];
+
+// Client export columns
+const CLIENT_EXPORT_COLUMNS = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'comments', label: 'Notes' },
+  { key: 'deploymentCount', label: 'Active Deployments', getValue: (c) => c.deploymentCount || 0 },
+  { key: 'createdAt', label: 'Created', getValue: (c) => c.createdAt ? formatDate(c.createdAt) : '' },
+];
+
+// Google Sheets Sync Service
+const SheetsSync = {
+  // Parse Google Sheet URL to extract spreadsheet ID
+  parseSheetUrl: (url) => {
+    const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    return match ? match[1] : null;
+  },
+
+  // Fetch data from Google Sheet via Apps Script proxy
+  fetchFromSheet: async (appsScriptUrl, sheetName = 'Products') => {
+    try {
+      const url = `${appsScriptUrl}?action=read&sheetName=${sheetName}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        redirect: 'follow'
+      });
+      const text = await response.text();
+      try {
+        const data = JSON.parse(text);
+        if (data.success === false) throw new Error(data.error || 'Unknown error');
+        return { success: true, data: data.rows || [] };
+      } catch (parseErr) {
+        throw new Error('Invalid response from Apps Script');
+      }
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  // Push data to Google Sheet via Apps Script proxy
+  pushToSheet: async (appsScriptUrl, sheetName, rows) => {
+    try {
+      // Use text/plain to avoid CORS preflight
+      const response = await fetch(appsScriptUrl, {
+        method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action: 'write',
+          sheetName,
+          rows
+        })
+      });
+      const text = await response.text();
+      try {
+        const result = JSON.parse(text);
+        if (result.success === false) throw new Error(result.error || 'Unknown error');
+        return { success: true, count: result.count || rows.length };
+      } catch (parseErr) {
+        throw new Error('Invalid response from Apps Script');
+      }
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  // Convert products to sheet rows format
+  productsToRows: (products) => {
+    return products.map(p => ({
+      id: p.id,
+      name: p.name || '',
+      description: p.description || '',
+      productOwner: p.productOwner || '',
+      engineeringOwner: p.engineeringOwner || '',
+      nextReleaseDate: p.nextReleaseDate ? toInputDate(p.nextReleaseDate) : '',
+      productGuide: p.documentation?.productGuide || '',
+      releaseNotes: p.documentation?.releaseNotes || '',
+      demoScript: p.documentation?.demoScript || '',
+      testCases: p.documentation?.testCases || '',
+      productionChecklist: p.documentation?.productionChecklist || '',
+      updatedAt: p.updatedAt ? new Date(p.updatedAt.toDate ? p.updatedAt.toDate() : p.updatedAt).toISOString() : ''
+    }));
+  },
+
+  // Convert sheet rows to product format
+  rowsToProducts: (rows) => {
+    return rows.map(row => ({
+      id: row.id,
+      name: row.name || '',
+      description: row.description || '',
+      productOwner: row.productOwner || '',
+      engineeringOwner: row.engineeringOwner || '',
+      nextReleaseDate: row.nextReleaseDate || null,
+      documentation: {
+        productGuide: row.productGuide || '',
+        releaseNotes: row.releaseNotes || '',
+        demoScript: row.demoScript || '',
+        testCases: row.testCases || '',
+        productionChecklist: row.productionChecklist || ''
+      },
+      updatedAt: row.updatedAt ? new Date(row.updatedAt) : null
+    }));
+  },
+
+  // Convert deployments to sheet rows format
+  deploymentsToRows: (deployments, clients, products) => {
+    return deployments.map(d => ({
+      id: d.id,
+      clientId: d.clientId || '',
+      clientName: clients.find(c => c.id === d.clientId)?.name || '',
+      productId: d.productId || '',
+      productName: products.find(p => p.id === d.productId)?.name || '',
+      status: d.status || 'Not Started',
+      deploymentType: d.deploymentType || 'generic',
+      nextDeliveryDate: d.nextDeliveryDate ? toInputDate(d.nextDeliveryDate) : '',
+      notes: d.notes || '',
+      updatedAt: d.updatedAt ? new Date(d.updatedAt.toDate ? d.updatedAt.toDate() : d.updatedAt).toISOString() : ''
+    }));
+  },
+
+  // Convert sheet rows to deployment format
+  rowsToDeployments: (rows) => {
+    return rows.map(row => ({
+      id: row.id,
+      clientId: row.clientId || '',
+      productId: row.productId || '',
+      status: row.status || 'Not Started',
+      deploymentType: row.deploymentType || 'generic',
+      nextDeliveryDate: row.nextDeliveryDate || null,
+      notes: row.notes || '',
+      updatedAt: row.updatedAt ? new Date(row.updatedAt) : null
+    }));
+  },
+
+  // Convert clients to sheet rows format
+  clientsToRows: (clients) => {
+    return clients.map(c => ({
+      id: c.id,
+      name: c.name || '',
+      comments: c.comments || '',
+      updatedAt: c.updatedAt ? new Date(c.updatedAt.toDate ? c.updatedAt.toDate() : c.updatedAt).toISOString() : ''
+    }));
+  },
+
+  // Convert sheet rows to client format
+  rowsToClients: (rows) => {
+    return rows.map(row => ({
+      id: row.id,
+      name: row.name || '',
+      comments: row.comments || '',
+      updatedAt: row.updatedAt ? new Date(row.updatedAt) : null
+    }));
+  },
+
+  // Merge with last-write-wins strategy
+  mergeData: (localData, remoteData) => {
+    const merged = new Map();
+    const changes = { added: 0, updated: 0, conflicts: 0 };
+
+    // Add all local data
+    localData.forEach(item => {
+      merged.set(item.id, { ...item, source: 'local' });
+    });
+
+    // Merge remote data with last-write-wins
+    remoteData.forEach(remoteItem => {
+      const localItem = merged.get(remoteItem.id);
+
+      if (!localItem) {
+        // New item from sheet
+        merged.set(remoteItem.id, { ...remoteItem, source: 'remote', isNew: true });
+        changes.added++;
+      } else {
+        // Compare timestamps for conflict resolution
+        const localTime = localItem.updatedAt ? new Date(localItem.updatedAt.toDate ? localItem.updatedAt.toDate() : localItem.updatedAt).getTime() : 0;
+        const remoteTime = remoteItem.updatedAt ? new Date(remoteItem.updatedAt).getTime() : 0;
+
+        if (remoteTime > localTime) {
+          merged.set(remoteItem.id, { ...remoteItem, source: 'remote', wasUpdated: true });
+          changes.updated++;
+        }
+        changes.conflicts++;
+      }
+    });
+
+    return {
+      mergedData: Array.from(merged.values()),
+      changes
+    };
+  }
+};
+
+// ==========================================
+// 🧠 CONTEXTS (STATE MANAGEMENT)
+// ==========================================
+
+const AuthContext = createContext();
+const ToastContext = createContext();
+const NavigationContext = createContext();
+const ThemeContext = createContext();
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const init = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    };
+    init();
+    return onAuthStateChanged(auth, u => { setUser(u); setLoading(false); });
+  }, []);
+
+  return <AuthContext.Provider value={{ user, loading }}>{!loading ? children : <div className="h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900"><Loader2 className="animate-spin text-blue-600" /></div>}</AuthContext.Provider>;
+};
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((msg, type = 'info') => {
+    const id = Date.now();
+    setToasts(p => [...p, { id, msg, type }]);
+    setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 4000);
+  }, []);
+  return (
+    <ToastContext.Provider value={{ addToast }}>
+      {children}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none">
+        {toasts.map(t => (
+          <div key={t.id} className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-xl border text-sm font-medium animate-in slide-in-from-right fade-in duration-300 ${
+            t.type === 'error' ? 'bg-white dark:bg-slate-800 border-rose-100 dark:border-rose-900 text-rose-600 dark:text-rose-400' : 'bg-white dark:bg-slate-800 border-emerald-100 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400'
+          }`}>
+            {t.type === 'error' ? <AlertCircle size={16}/> : <CheckCircle2 size={16}/>}
+            {t.msg}
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+};
+
+const NavigationProvider = ({ children }) => {
+  const [state, setState] = useState({ page: 'dashboard', params: {} });
+  const [history, setHistory] = useState([]);
+
+  const navigate = useCallback((page, params = {}) => {
+    setState({ page, params });
+  }, []);
+
+  const addToHistory = useCallback((type, label, id, page, params) => {
+    setHistory(prev => {
+      const filtered = prev.filter(item => item.id !== id);
+      return [{ type, label, id, page, params }, ...filtered].slice(0, 5);
+    });
+  }, []);
+  
+  // Keyboard Shortcuts Logic
+  useEffect(() => {
+    let gotoMode = false;
+    let gotoTimeout;
+
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+      const key = e.key.toLowerCase();
+
+      if (key === 'n') { navigate('deployments', { action: 'new' }); }
+      if (key === 'g') {
+        gotoMode = true;
+        clearTimeout(gotoTimeout);
+        gotoTimeout = setTimeout(() => { gotoMode = false; }, 1000);
+        return;
+      }
+      if (gotoMode) {
+        switch (key) {
+          case 'h': navigate('dashboard'); break;
+          case 'p': navigate('products'); break;
+          case 'c': navigate('clients'); break;
+          case 'd': navigate('deployments'); break;
+          case 'o': navigate('onboarding'); break;
+          default: break;
+        }
+        gotoMode = false;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate]);
+
+  return <NavigationContext.Provider value={{ ...state, navigate, history, addToHistory }}>{children}</NavigationContext.Provider>;
+};
+
+const ThemeProvider = ({ children }) => {
+  const [isDark, setIsDark] = useState(false);
+  const toggleTheme = () => setIsDark(!isDark);
+  return (
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      <div className={isDark ? 'dark' : ''}>{children}</div>
+    </ThemeContext.Provider>
+  );
+};
+
+const useAuth = () => useContext(AuthContext);
+const useToast = () => useContext(ToastContext);
+const useNav = () => useContext(NavigationContext);
+const useTheme = () => useContext(ThemeContext);
+
+// ==========================================
+// 🎣 HOOKS
+// ==========================================
+
+const useCollection = (colName) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if(!user) return;
+    const q = query(collection(db, 'artifacts', appId, 'public', 'data', colName));
+    const unsub = onSnapshot(q, snap => {
+      setData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
+    return () => unsub();
+  }, [user, colName]);
+
+  return { data, loading };
+};
+
+// ==========================================
+// 🧱 UI PRIMITIVES
+// ==========================================
+
+const Card = ({ children, className = '', onClick }) => (
+  <div onClick={onClick} className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 ${className} ${onClick ? 'cursor-pointer active:scale-[0.99] active:shadow-sm' : ''}`}>
+    {children}
+  </div>
+);
+
+const CustomTooltip = ({ content, children }) => (
+  <div className="group relative inline-block">
+    {children}
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-[10px] font-medium text-white bg-slate-800 dark:bg-slate-700 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
+      {content}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-slate-800 dark:border-t-slate-700" />
+    </div>
+  </div>
+);
+
+const Badge = ({ children, color = 'slate', size = 'sm', className = '', tooltip }) => {
+  const colors = {
+    slate: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800',
+    rose: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800',
+    amber: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800'
+  };
+  const sizes = { sm: 'text-[10px] px-1.5 py-0.5 uppercase tracking-wide font-bold', md: 'text-xs px-2.5 py-1 font-medium' };
+  
+  const badge = (
+    <span className={`inline-flex items-center rounded-md border ${colors[color]} ${sizes[size]} ${className}`}>
+      {children}
+    </span>
+  );
+
+  return tooltip ? <CustomTooltip content={tooltip}>{badge}</CustomTooltip> : badge;
+};
+
+const Button = ({ children, icon: Icon, variant = 'primary', onClick, disabled, className = '', ...props }) => {
+  const variants = {
+    primary: 'bg-slate-900 text-white hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-md hover:shadow-lg border-transparent',
+    secondary: 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm',
+    ghost: 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white border-transparent',
+    danger: 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-800'
+  };
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${className}`}
+      {...props}
+    >
+      {disabled && <Loader2 size={18} className="animate-spin" />}
+      {!disabled && Icon && <Icon size={18} />}
+      {children}
+    </button>
+  );
+};
+
+const Input = ({ label, error, ...props }) => (
+  <div className="space-y-2">
+    {label && <label className="text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 ml-1">{label}</label>}
+    <input
+      {...props}
+      className={`w-full px-4 py-3 bg-white dark:bg-slate-900 border rounded-xl text-sm transition-all outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white ${error ? 'border-rose-300 focus:border-rose-500' : 'border-slate-200 dark:border-slate-700'}`}
+    />
+    {error && <span className="text-xs text-rose-500 ml-1">{error}</span>}
+  </div>
+);
+
+const ProgressBar = ({ value, max = 100, color = 'bg-blue-600' }) => (
+  <div className="h-2 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+    <div className={`h-full ${color} transition-all duration-500 ease-out rounded-full`} style={{ width: `${(value/max)*100}%` }} />
+  </div>
+);
+
+const SearchInput = ({ value, onChange, placeholder = "Search...", className = "" }) => (
+  <div className={`relative ${className}`}>
+    <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white placeholder:text-slate-400"
+    />
+    {value && (
+      <button
+        onClick={() => onChange('')}
+        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-0.5"
+      >
+        <X size={16} />
+      </button>
+    )}
+  </div>
+);
+
+const ViewToggle = ({ view, setView }) => (
+  <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+    <button
+      onClick={() => setView('grid')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        view === 'grid'
+          ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+      }`}
+    >
+      <LayoutGrid size={16} /> <span className="hidden sm:inline">Grid</span>
+    </button>
+    <button
+      onClick={() => setView('kanban')}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+        view === 'kanban'
+          ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+      }`}
+    >
+      <Columns size={16} /> <span className="hidden sm:inline">Kanban</span>
+    </button>
+  </div>
+);
+
+const Sparkles = ({size = 24, className = ""}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+    <path d="M5 3v4"/><path d="M9 3v4"/><path d="M3 5h4"/><path d="M3 9h4"/>
+  </svg>
+);
+
+// ==========================================
+// 🧩 FEATURE COMPONENTS
+// ==========================================
+
+const HealthScoreRing = ({ score }) => {
+  const radius = 30;
+  const stroke = 6;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+  
+  let color = "text-rose-500";
+  if (score > 50) color = "text-amber-500";
+  if (score > 80) color = "text-emerald-500";
+
+  return (
+    <div className="relative flex items-center justify-center w-24 h-24">
+      <CustomTooltip content="Score based on checklist, timeliness, and docs">
+        <svg height={radius * 2} width={radius * 2} className="rotate-[-90deg]">
+          <circle stroke="currentColor" fill="transparent" strokeWidth={stroke} r={normalizedRadius} cx={radius} cy={radius} className="text-slate-100 dark:text-slate-800" />
+          <circle stroke="currentColor" fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset }} strokeLinecap="round" r={normalizedRadius} cx={radius} cy={radius} className={`${color} transition-all duration-1000 ease-out`} />
+        </svg>
+      </CustomTooltip>
+      <div className="absolute flex flex-col items-center">
+        <span className="text-2xl font-bold text-slate-800 dark:text-white">{Math.round(score)}</span>
+        <span className="text-[10px] text-slate-400 uppercase font-bold">Health</span>
+      </div>
+    </div>
+  );
+};
+
+const DeploymentTrendChart = ({ deployments }) => {
+  const data = useMemo(() => {
+    const weeks = {};
+    function getWeekNumber(d) {
+        const onejan = new Date(d.getFullYear(), 0, 1);
+        return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+    }
+    // Generate last 8 weeks keys
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i * 7);
+      const key = `Wk ${getWeekNumber(d)}`;
+      weeks[key] = 0;
+    }
+    
+    deployments.forEach(d => {
+      if (!d.createdAt) return;
+      const date = d.createdAt.toDate ? d.createdAt.toDate() : new Date(d.createdAt);
+      const key = `Wk ${getWeekNumber(date)}`;
+      if (weeks[key] !== undefined) weeks[key]++;
+    });
+
+    return Object.entries(weeks).map(([name, value]) => ({ name, value }));
+  }, [deployments]);
+
+  return (
+    <div className="h-full w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
+          <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} />
+          <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10}} allowDecimals={false} />
+          <RechartsTooltip cursor={{stroke: '#3b82f6', strokeWidth: 2}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+          <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} dot={{r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff'}} activeDot={{r: 6}} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const ChecklistWidget = ({ checklist, onToggle, compact }) => {
+  const completed = checklist.filter(c => c.isCompleted).length;
+  const progress = Math.round((completed / checklist.length) * 100) || 0;
+  
+  if (compact) {
+    return (
+      <CustomTooltip content={`${completed} of ${checklist.length} tasks complete`}>
+        <div className="flex items-center gap-2 cursor-help">
+          <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div className={`h-full transition-all duration-500 ${progress === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${progress}%` }} />
+          </div>
+          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{progress}%</span>
+        </div>
+      </CustomTooltip>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Release Checklist</h4>
+        <Badge color={progress === 100 ? 'emerald' : 'blue'} size="md">{progress}% Ready</Badge>
+      </div>
+      <div className="space-y-1 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+        {checklist.map(item => (
+          <label key={item.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition-colors group">
+            <div className="relative flex items-center pt-0.5">
+              <input 
+                type="checkbox" 
+                checked={item.isCompleted} 
+                onChange={() => onToggle(item)}
+                className="peer h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+              />
+            </div>
+            <span className={`text-sm transition-colors ${item.isCompleted ? 'text-slate-400 line-through' : 'text-slate-700 dark:text-slate-200 font-medium'}`}>
+              {item.item}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const FilterTag = ({ label, value, onRemove }) => (
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 text-xs font-medium animate-in fade-in zoom-in duration-200">
+    <span className="opacity-60">{label}:</span> {value}
+    <button onClick={onRemove} className="hover:bg-blue-100 dark:hover:bg-blue-800 rounded p-0.5 transition-colors"><X size={12}/></button>
+  </span>
+);
+
+const TimelineStrip = ({ items, onSelect }) => (
+  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+    {items.length === 0 && (
+      <div className="text-slate-400 text-sm italic w-full text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+        <Calendar size={32} className="mx-auto mb-2 text-slate-300" />
+        No upcoming releases scheduled
+      </div>
+    )}
+    {items.map(item => {
+      const status = getDeadlineStatus(item.date, item.status || 'In Progress');
+      return (
+        <div key={item.id} onClick={() => onSelect(item)} className="min-w-[200px] p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-lg cursor-pointer transition-all hover:-translate-y-1 flex-shrink-0 group">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`w-2.5 h-2.5 rounded-full ${status.urgent ? 'bg-rose-500 animate-pulse' : 'bg-blue-500'}`} />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">{formatDate(item.date)}</span>
+          </div>
+          <div className="font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors">{item.clientName}</div>
+          <div className="text-sm text-slate-500 truncate mt-1">{item.productName}</div>
+          <div className="mt-3 text-xs text-slate-400 flex justify-between items-center">
+             <span className={status.urgent ? 'text-rose-500 font-medium' : ''}>{item.daysLeft} days left</span>
+             {status.urgent && <AlertTriangle size={14} className="text-rose-500" />}
+          </div>
+        </div>
+      )
+    })}
+  </div>
+);
+
+const ConfirmationModal = ({ title, message, onConfirm, onCancel, isDestructive }) => (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[70] p-3 sm:p-4 animate-in fade-in duration-200">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-4 sm:p-6 border border-slate-100 dark:border-slate-700">
+      <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-4">
+        <div className={`p-2.5 sm:p-3 rounded-full shrink-0 ${isDestructive ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
+          <AlertTriangle size={20} className="sm:w-6 sm:h-6" />
+        </div>
+        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
+      </div>
+      <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 mb-6 sm:mb-8 leading-relaxed">{message}</p>
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+        <Button variant={isDestructive ? 'danger' : 'primary'} onClick={onConfirm} className={isDestructive ? 'bg-rose-600 text-white hover:bg-rose-700 border-none' : ''}>
+          Confirm
+        </Button>
+      </div>
+    </div>
+  </div>
+);
+
+// Deployment Tile Component for Grid/Kanban views
+const DeploymentTile = ({ deployment, onClick }) => {
+  const { client, product, status, nextDeliveryDate, checklist, deploymentType, blockedComments = [] } = deployment;
+  const deadlineStatus = getDeadlineStatus(nextDeliveryDate, status);
+  const completed = checklist?.filter(c => c.isCompleted).length || 0;
+  const total = checklist?.length || 0;
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  // Generate consistent color from client name
+  const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500'];
+  const colorIndex = client?.name?.charCodeAt(0) % colors.length || 0;
+  const avatarColor = colors[colorIndex];
+
+  return (
+    <Card
+      className="p-0 overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer"
+      onClick={onClick}
+    >
+      {/* Header */}
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
+            <Rocket size={22} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
+                {client?.name || 'Generic'}
+              </h3>
+              {blockedComments.length > 0 && (
+                <CustomTooltip content={`${blockedComments.length} comment(s)`}>
+                  <div className="flex items-center gap-1 text-sm text-slate-400">
+                    <MessageSquare size={14} />
+                    <span>{blockedComments.length}</span>
+                  </div>
+                </CustomTooltip>
+              )}
+            </div>
+            <p className="text-sm text-slate-500 mt-2">{product?.name || 'Unknown Product'}</p>
+          </div>
+        </div>
+
+        {/* Status and Deadline badges */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${
+            status === 'Released' ? 'bg-emerald-50 dark:bg-emerald-900/20' :
+            status === 'Blocked' ? 'bg-rose-50 dark:bg-rose-900/20' :
+            status === 'In Progress' ? 'bg-blue-50 dark:bg-blue-900/20' :
+            'bg-slate-100 dark:bg-slate-700'
+          }`}>
+            <div className={`w-2 h-2 rounded-full ${
+              status === 'Released' ? 'bg-emerald-500' :
+              status === 'Blocked' ? 'bg-rose-500' :
+              status === 'In Progress' ? 'bg-blue-500' :
+              'bg-slate-400'
+            }`} />
+            <span className={`text-sm font-medium ${
+              status === 'Released' ? 'text-emerald-700 dark:text-emerald-300' :
+              status === 'Blocked' ? 'text-rose-700 dark:text-rose-300' :
+              status === 'In Progress' ? 'text-blue-700 dark:text-blue-300' :
+              'text-slate-600 dark:text-slate-300'
+            }`}>{status}</span>
+          </div>
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${deadlineStatus.urgent ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-slate-100 dark:bg-slate-700'}`}>
+            <Clock size={14} className={deadlineStatus.color.split(' ')[0]} />
+            <span className={`text-sm font-medium ${deadlineStatus.color.split(' ')[0]}`}>{deadlineStatus.label}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats footer */}
+      <div className="px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className={progress === 100 ? "text-emerald-500" : "text-slate-400"} />
+            <span className="text-sm text-slate-600 dark:text-slate-400">
+              <b className={progress === 100 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"}>{completed}/{total}</b> tasks
+            </span>
+          </div>
+          <span className={`text-sm font-bold ${progress === 100 ? "text-emerald-600" : "text-slate-600 dark:text-slate-300"}`}>{progress}%</span>
+        </div>
+        <ProgressBar value={progress} color={progress === 100 ? 'bg-emerald-500' : deadlineStatus.urgent ? 'bg-rose-500' : 'bg-blue-500'} />
+      </div>
+    </Card>
+  );
+};
+
+// Blocked Comments Panel for threaded discussions
+const BlockedCommentsPanel = ({ deployment, onAddComment }) => {
+  const [newComment, setNewComment] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
+  const comments = deployment.blockedComments || [];
+
+  const rootComments = comments.filter(c => !c.parentId);
+  const getReplies = (parentId) => comments.filter(c => c.parentId === parentId);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+
+    onAddComment({
+      id: crypto.randomUUID(),
+      text: newComment,
+      author: 'Admin',
+      timestamp: new Date().toISOString(),
+      parentId: replyTo
+    });
+
+    setNewComment('');
+    setReplyTo(null);
+  };
+
+  const CommentItem = ({ comment, depth = 0 }) => (
+    <div className={`${depth > 0 ? 'ml-4 border-l-2 border-slate-100 dark:border-slate-700 pl-3' : ''}`}>
+      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{comment.author}</span>
+          <span className="text-[10px] text-slate-400">{formatDate(comment.timestamp)}</span>
+        </div>
+        <p className="text-sm text-slate-700 dark:text-slate-200">{comment.text}</p>
+        <button
+          onClick={() => setReplyTo(comment.id)}
+          className="text-xs text-blue-600 hover:underline mt-2"
+        >
+          Reply
+        </button>
+      </div>
+      {getReplies(comment.id).map(reply => (
+        <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
+      ))}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <h4 className="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
+        <MessageSquare size={16} className="text-rose-500" />
+        Blocked Comments ({comments.length})
+      </h4>
+
+      <div className="max-h-60 overflow-y-auto space-y-2 custom-scrollbar">
+        {rootComments.length === 0 && (
+          <p className="text-sm text-slate-400 italic">No comments yet.</p>
+        )}
+        {rootComments.map(comment => (
+          <CommentItem key={comment.id} comment={comment} />
+        ))}
+      </div>
+
+      {deployment.status === 'Blocked' && (
+        <form onSubmit={handleSubmit} className="space-y-2">
+          {replyTo && (
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <span>Replying to comment...</span>
+              <button type="button" onClick={() => setReplyTo(null)} className="text-rose-500 hover:underline">Cancel</button>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment about this blocker..."
+              className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500/20 outline-none dark:text-white"
+            />
+            <Button type="submit" icon={Send} disabled={!newComment.trim()}>Send</Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+};
+
+// Grid View for deployments
+const DeploymentGridView = ({ deployments, onDeploymentClick }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+    {deployments.map(d => (
+      <DeploymentTile key={d.id} deployment={d} onClick={() => onDeploymentClick(d)} />
+    ))}
+    {deployments.length === 0 && (
+      <div className="col-span-full text-center py-16 text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+        <Rocket size={48} className="mx-auto mb-4 text-slate-300" />
+        <p className="text-lg font-medium">No deployments found</p>
+        <p className="text-sm mt-1">Try adjusting your filters or create a new deployment</p>
+      </div>
+    )}
+  </div>
+);
+
+// Kanban Board for deployments
+const DeploymentKanbanBoard = ({ deployments, onDeploymentClick }) => {
+  const groupedDeployments = useMemo(() => {
+    const groups = {};
+    KANBAN_COLUMNS.forEach(col => groups[col.id] = []);
+    deployments.forEach(d => {
+      if (groups[d.status]) groups[d.status].push(d);
+    });
+    return groups;
+  }, [deployments]);
+
+  return (
+    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-4">
+      <div className="flex gap-4 min-w-max sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:min-w-0">
+        {KANBAN_COLUMNS.map(column => (
+          <div
+            key={column.id}
+            className={`${column.bgColor} rounded-xl p-4 border-t-4 ${column.color} w-72 sm:w-auto flex-shrink-0 sm:flex-shrink`}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-wide">
+                {column.label}
+              </h3>
+              <Badge color="slate" size="sm">{groupedDeployments[column.id].length}</Badge>
+            </div>
+
+            <div className="space-y-3 max-h-[60vh] sm:max-h-[calc(100vh-300px)] overflow-y-auto custom-scrollbar">
+              {groupedDeployments[column.id].length === 0 && (
+                <div className="text-center py-8 text-slate-400 text-sm italic">
+                  No deployments
+                </div>
+              )}
+              {groupedDeployments[column.id].map(d => (
+                <DeploymentTile key={d.id} deployment={d} onClick={() => onDeploymentClick(d)} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 🔍 GLOBAL SEARCH
+// ==========================================
+
+const CommandPalette = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [queryStr, setQueryStr] = useState("");
+  const inputRef = useRef(null);
+  const { navigate } = useNav();
+  const { data: products } = useCollection('products');
+  const { data: clients } = useCollection('clients');
+  const { data: deployments } = useCollection('deployments');
+
+  useEffect(() => {
+    const down = (e) => {
+      if (e.key === "/" && !isOpen && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        setIsOpen(true);
+      }
+      if (e.key === "Escape") setIsOpen(false);
+    }
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, [isOpen]);
+
+  useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
+
+  const results = useMemo(() => {
+    if (!queryStr) return [];
+    const q = queryStr.toLowerCase();
+    return [
+      ...products.filter(p => p.name.toLowerCase().includes(q)).map(p => ({ type: 'Product', label: p.name, id: p.id, page: 'products' })),
+      ...clients.filter(c => c.name.toLowerCase().includes(q)).map(c => ({ type: 'Client', label: c.name, id: c.id, page: 'client-detail', params: { clientId: c.id } })),
+      ...deployments.map(d => {
+        const c = clients.find(cl => cl.id === d.clientId)?.name || '';
+        const p = products.find(pr => pr.id === d.productId)?.name || '';
+        const label = `${c} – ${p}`;
+        return { type: 'Deployment', label, id: d.id, searchStr: label.toLowerCase(), page: 'deployments', params: { filter: { id: d.id } } };
+      }).filter(d => d.searchStr.includes(q))
+    ].slice(0, 8);
+  }, [queryStr, products, clients, deployments]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-start justify-center pt-[10vh] sm:pt-[20vh] p-4" onClick={() => setIsOpen(false)}>
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 dark:border-slate-700 animate-in fade-in slide-in-from-top-4 duration-200" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+          <Search className="text-slate-400 shrink-0" size={20} />
+          <input
+            ref={inputRef}
+            className="flex-1 outline-none text-slate-800 dark:text-white placeholder:text-slate-400 bg-transparent text-base"
+            placeholder="Search..."
+            value={queryStr}
+            onChange={e => setQueryStr(e.target.value)}
+          />
+          <button onClick={() => setIsOpen(false)} className="sm:hidden p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+            <X size={18} />
+          </button>
+          <div className="hidden sm:block text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded">ESC</div>
+        </div>
+        <div className="py-2 max-h-[50vh] sm:max-h-[300px] overflow-y-auto">
+          {results.length === 0 && queryStr && <div className="px-4 py-8 text-center text-slate-400 text-sm">No results found.</div>}
+          {results.length === 0 && !queryStr && <div className="px-4 py-8 text-center text-slate-400 text-sm">Type to search clients, products, deployments...</div>}
+          {results.map((r, i) => (
+            <button
+              key={i}
+              className="w-full text-left px-4 py-3 sm:py-2 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between group transition-colors"
+              onClick={() => {
+                navigate(r.page, r.params);
+                setIsOpen(false);
+                setQueryStr("");
+              }}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                {r.type === 'Product' && <Package size={16} className="text-blue-500 shrink-0" />}
+                {r.type === 'Client' && <Users size={16} className="text-emerald-500 shrink-0" />}
+                {r.type === 'Deployment' && <Rocket size={16} className="text-purple-500 shrink-0" />}
+                <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{r.label}</span>
+              </div>
+              <span className="text-xs text-slate-400 uppercase tracking-wider ml-2 shrink-0">{r.type}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 🚀 PAGES
+// ==========================================
+
+// --- 1. DASHBOARD ---
+const Dashboard = () => {
+  const { navigate } = useNav();
+  const { data: clients } = useCollection('clients');
+  const { data: products } = useCollection('products');
+  const { data: deployments } = useCollection('deployments');
+  const { data: checklists } = useCollection('checklists');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Metrics Logic
+  const metrics = useMemo(() => {
+    const active = deployments.filter(d => d.status !== 'Released');
+    
+    // (A) Releases This Month
+    const releasesMonth = active.filter(d => {
+      const diff = getDaysDiff(d.nextDeliveryDate);
+      return diff >= 0 && diff <= 30;
+    });
+
+    // (B) High Deployment Clients (Top 5)
+    const clientCounts = clients.map(c => ({
+      id: c.id,
+      count: deployments.filter(d => d.clientId === c.id).length
+    })).sort((a,b) => b.count - a.count).slice(0, 5);
+
+    // (C) Products Lacking Documentation
+    const productsMissingDocs = products.filter(p => 
+      !p.documentation || Object.values(p.documentation).some(val => !val || val === "")
+    );
+
+    // (D) Overdue
+    const overdue = active.filter(d => getDaysDiff(d.nextDeliveryDate) < 0);
+
+    // (E) Stalled (Not Released & < 30% checklist)
+    const stalled = active.filter(d => {
+      if (d.status === 'Released') return false;
+      const dChecks = checklists.filter(c => c.deploymentId === d.id);
+      const prog = calculateChecklistProgress(dChecks);
+      return prog < 30;
+    });
+
+    // (F) Products No Deployments
+    const productsNoDeploys = products.filter(p => !deployments.some(d => d.productId === p.id));
+
+    // Forecast Buckets
+    const forecast = { thisWeek: 0, nextWeek: 0, thisMonth: 0 };
+    products.forEach(p => {
+      if(!p.nextReleaseDate) return;
+      const diff = getDaysDiff(p.nextReleaseDate);
+      if(diff >=0 && diff <= 7) forecast.thisWeek++;
+      else if(diff > 7 && diff <= 14) forecast.nextWeek++;
+      else if(diff > 14 && diff <= 30) forecast.thisMonth++;
+    });
+
+    // Status breakdown
+    const statusBreakdown = {
+      notStarted: deployments.filter(d => d.status === 'Not Started').length,
+      inProgress: deployments.filter(d => d.status === 'In Progress').length,
+      blocked: deployments.filter(d => d.status === 'Blocked').length,
+      released: deployments.filter(d => d.status === 'Released').length
+    };
+
+    // Average checklist progress across active deployments
+    const activeWithChecklists = active.map(d => {
+      const dChecks = checklists.filter(c => c.deploymentId === d.id);
+      return calculateChecklistProgress(dChecks);
+    });
+    const avgChecklistProgress = activeWithChecklists.length > 0
+      ? Math.round(activeWithChecklists.reduce((a, b) => a + b, 0) / activeWithChecklists.length)
+      : 0;
+
+    // On-time delivery rate (released deployments that were delivered on/before target)
+    const releasedDeployments = deployments.filter(d => d.status === 'Released');
+    const onTimeReleases = releasedDeployments.filter(d => {
+      if (!d.nextDeliveryDate) return true; // No target = on time
+      const targetDate = d.nextDeliveryDate.toDate ? d.nextDeliveryDate.toDate() : new Date(d.nextDeliveryDate);
+      const releaseDate = d.updatedAt?.toDate ? d.updatedAt.toDate() : new Date();
+      return releaseDate <= targetDate;
+    });
+    const onTimeRate = releasedDeployments.length > 0
+      ? Math.round((onTimeReleases.length / releasedDeployments.length) * 100)
+      : 100;
+
+    // Timeline Items
+    let timeline = active
+      .filter(d => d.nextDeliveryDate)
+      .map(d => ({
+        id: d.id,
+        date: d.nextDeliveryDate,
+        clientName: clients.find(c => c.id === d.clientId)?.name || 'Unknown',
+        productName: products.find(p => p.id === d.productId)?.name || 'Unknown',
+        status: d.status,
+        daysLeft: getDaysDiff(d.nextDeliveryDate)
+      }))
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    // Apply search filter to timeline
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      timeline = timeline.filter(t =>
+        t.clientName.toLowerCase().includes(q) ||
+        t.productName.toLowerCase().includes(q)
+      );
+    }
+
+    timeline = timeline.slice(0, 10);
+
+    return { releasesMonth, clientCounts, productsMissingDocs, overdue, stalled, productsNoDeploys, timeline, forecast, statusBreakdown, avgChecklistProgress, onTimeRate };
+  }, [deployments, clients, products, checklists, searchQuery]);
+
+  const KPICard = ({ label, value, subtext, icon: Icon, color, onClick, urgent }) => (
+    <Card onClick={onClick} className="p-6 flex flex-col justify-between h-40 group relative overflow-hidden border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-lg transition-all duration-300">
+      <div className={`absolute inset-0 opacity-[0.05] ${color.replace('text-', 'bg-')}`} />
+      <div className="flex justify-between items-start z-10">
+        <span className="text-slate-500 font-bold text-xs uppercase tracking-widest">{label}</span>
+        <div className={`p-3 rounded-xl ${color.includes('bg-') ? color.split(' ')[1] : 'bg-slate-100'} group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={22} className={color.split(' ')[0]} />
+        </div>
+      </div>
+      <div className="flex items-end justify-between z-10">
+        <div>
+          <span className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">{value}</span>
+          {subtext && <p className="text-sm text-slate-400 mt-1">{subtext}</p>}
+        </div>
+        <ArrowRight size={18} className="text-slate-300 group-hover:text-blue-600 transition-colors mb-1 -translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100" />
+      </div>
+      {urgent && <div className="absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full m-3 animate-pulse" />}
+    </Card>
+  );
+
+  return (
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Command Center</h1>
+          <p className="text-slate-500 mt-1">Real-time delivery visibility and insights</p>
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search timeline..."
+            className="w-full md:w-72"
+          />
+          <Button onClick={() => navigate('deployments', { action: 'new' })} icon={Plus}>New Deployment</Button>
+        </div>
+      </header>
+
+      {/* Timeline Strip */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+          <Calendar size={12}/> Delivery Timeline
+        </h3>
+        <TimelineStrip items={metrics.timeline} onSelect={(item) => navigate('deployments', { filter: { id: item.id } })} />
+      </div>
+
+      {/* Forecast & Trends Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Release Forecast */}
+        <Card className="p-6 flex items-center justify-between hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-2xl"><Sparkles size={28}/></div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Release Forecast</h3>
+              <div className="flex gap-6 mt-2 text-sm text-slate-500">
+                <span><b className="text-2xl text-slate-800 dark:text-slate-200">{metrics.forecast.thisWeek}</b> <span className="text-slate-400">this week</span></span>
+                <span><b className="text-2xl text-slate-800 dark:text-slate-200">{metrics.forecast.nextWeek}</b> <span className="text-slate-400">next week</span></span>
+              </div>
+            </div>
+          </div>
+          <Button variant="ghost" onClick={() => navigate('products', { filter: 'upcoming' })} className="text-sm">View Schedule <ArrowRight size={14}/></Button>
+        </Card>
+
+        {/* Deployment Health Metrics */}
+        <Card className="p-6 hover:shadow-lg transition-all duration-300">
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wide mb-5">Deployment Health</h3>
+          <div className="grid grid-cols-3 gap-6">
+            {/* Status Breakdown Mini */}
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-slate-400" title="Not Started" />
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500" title="In Progress" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" title="Blocked" />
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Released" />
+              </div>
+              <div className="text-3xl font-bold text-slate-900 dark:text-white">
+                {metrics.statusBreakdown.inProgress + metrics.statusBreakdown.notStarted}
+              </div>
+              <div className="text-sm text-slate-500 mt-1">Active</div>
+              <div className="text-xs text-slate-400 mt-1">
+                {metrics.statusBreakdown.blocked > 0 && <span className="text-amber-600 font-medium">{metrics.statusBreakdown.blocked} blocked</span>}
+              </div>
+            </div>
+            {/* Avg Progress */}
+            <div className="text-center">
+              <div className="relative w-16 h-16 mx-auto mb-2">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-slate-200 dark:text-slate-700" />
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${metrics.avgChecklistProgress * 0.88} 88`} className="text-blue-500" />
+                </svg>
+                <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700 dark:text-slate-300">{metrics.avgChecklistProgress}%</span>
+              </div>
+              <div className="text-sm text-slate-500">Avg Progress</div>
+            </div>
+            {/* On-Time Rate */}
+            <div className="text-center">
+              <div className="text-3xl font-bold text-emerald-600">{metrics.onTimeRate}%</div>
+              <div className="text-sm text-slate-500 mt-1">On-Time Rate</div>
+              <div className="text-xs text-slate-400 mt-2">{metrics.statusBreakdown.released} released</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* KPIs Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
+        <KPICard
+          label="Releases (30d)" value={metrics.releasesMonth.length} icon={Rocket} color="text-blue-600 bg-blue-100"
+          onClick={() => navigate('deployments', { filter: { upcoming: true } })}
+        />
+        <KPICard
+          label="Top Clients" value={metrics.clientCounts.length} subtext="By volume" icon={Users} color="text-emerald-600 bg-emerald-100"
+          onClick={() => navigate('clients', { sort: 'deployments' })}
+        />
+        <KPICard
+          label="Docs Missing" value={metrics.productsMissingDocs.length} icon={FileText} color="text-amber-600 bg-amber-100"
+          onClick={() => navigate('products', { filter: 'missingDocs' })} urgent={metrics.productsMissingDocs.length > 0}
+        />
+        <KPICard
+          label="Overdue" value={metrics.overdue.length} icon={AlertTriangle} color="text-rose-600 bg-rose-100"
+          onClick={() => navigate('deployments', { filter: { overdue: true } })} urgent={metrics.overdue.length > 0}
+        />
+        <KPICard
+          label="Stalled" value={metrics.stalled.length} icon={Clock} color="text-slate-600 bg-slate-100"
+          onClick={() => navigate('deployments', { filter: { stalled: true } })}
+        />
+        <KPICard
+          label="Unused Products" value={metrics.productsNoDeploys.length} icon={Package} color="text-purple-600 bg-purple-100"
+          onClick={() => navigate('products', { filter: 'noDeploys' })}
+        />
+      </div>
+    </div>
+  );
+};
+
+// --- 2. PRODUCTS ---
+const Products = () => {
+  const { data: products } = useCollection('products');
+  const { data: deploys } = useCollection('deployments');
+  const { params, navigate, addToHistory } = useNav();
+  const [editing, setEditing] = useState(null);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [viewingDocs, setViewingDocs] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { addToast } = useToast();
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const docData = {};
+    DOC_TYPES.forEach(t => docData[t.key] = fd.get(t.key) || "");
+    
+    const payload = {
+      name: fd.get('name'),
+      description: fd.get('description'),
+      productOwner: fd.get('productOwner'),
+      engineeringOwner: fd.get('engineeringOwner'),
+      nextReleaseDate: fd.get('nextReleaseDate'),
+      documentation: docData,
+      updatedAt: serverTimestamp()
+    };
+
+    try {
+      if (editing) {
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', editing.id), payload);
+        addToast("Product updated", "success");
+      } else {
+        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), { ...payload, createdAt: serverTimestamp() });
+        addToast("Product created", "success");
+      }
+      setModalOpen(false); setEditing(null);
+    } catch(e) { addToast("Error saving product", "error"); }
+  };
+
+  const handleDelete = (product) => {
+    if (deploys.some(d => d.productId === product.id)) {
+      addToast("Cannot delete product: It is used in active deployments.", "error");
+      return;
+    }
+    setConfirmModal({
+      title: `Delete ${product.name}?`,
+      message: "This action is permanent and cannot be undone.",
+      isDestructive: true,
+      onCancel: () => setConfirmModal(null),
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', product.id));
+          addToast("Product deleted", "success");
+        } catch(e) { addToast("Deletion failed", "error"); }
+        setConfirmModal(null);
+      }
+    });
+  };
+
+  const filteredProducts = useMemo(() => {
+    let res = [...products];
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      res = res.filter(p =>
+        p.name?.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
+        p.productOwner?.toLowerCase().includes(q) ||
+        p.engineeringOwner?.toLowerCase().includes(q)
+      );
+    }
+
+    if (params.filter === 'missingDocs') res = res.filter(p => !p.documentation || Object.values(p.documentation).some(v => !v));
+    if (params.filter === 'upcoming') res = res.filter(p => p.nextReleaseDate && getDaysDiff(p.nextReleaseDate) > 0 && getDaysDiff(p.nextReleaseDate) <= 30);
+
+    return res.sort((a,b) => {
+      if (a.nextReleaseDate && b.nextReleaseDate) return new Date(a.nextReleaseDate) - new Date(b.nextReleaseDate);
+      return 0;
+    });
+  }, [products, params.filter, deploys, searchQuery]);
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Product Hub</h1>
+          <p className="text-slate-500 mt-1">Manage products and documentation</p>
+          {params.filter && <FilterTag label="Filter" value={params.filter} onRemove={() => navigate('products', {})} />}
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search products..."
+            className="w-full md:w-72"
+          />
+          <Button onClick={() => { setEditing(null); setModalOpen(true); }} icon={Plus}>Add Product</Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        {filteredProducts.map(p => {
+          const docCount = Object.values(p.documentation || {}).filter(Boolean).length;
+          const productDeploys = deploys.filter(d => d.productId === p.id);
+          const activeDeploys = productDeploys.filter(d => d.status !== 'Released').length;
+          const hasUpcomingRelease = p.nextReleaseDate && getDaysDiff(p.nextReleaseDate) >= 0 && getDaysDiff(p.nextReleaseDate) <= 30;
+
+          // Generate consistent color from product name
+          const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500'];
+          const colorIndex = p.name?.charCodeAt(0) % colors.length || 0;
+          const avatarColor = colors[colorIndex];
+
+          return (
+            <Card key={p.id} className="p-0 overflow-hidden group hover:shadow-lg transition-all duration-300" onClick={() => addToHistory('Product', p.name, p.id, 'products')}>
+              {/* Header */}
+              <div className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
+                    <Package size={22} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); setViewingDocs(p); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><Eye size={16}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditing(p); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(p); }} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
+                      </div>
+                    </div>
+                    {p.description ? (
+                      <p className="text-sm text-slate-500 mt-2 line-clamp-2">{p.description}</p>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic mt-2">No description</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Owner badges */}
+                {(p.productOwner || p.engineeringOwner) && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {p.productOwner && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <Users size={14} className="text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">{p.productOwner}</span>
+                      </div>
+                    )}
+                    {p.engineeringOwner && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                        <Code size={14} className="text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{p.engineeringOwner}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats footer */}
+              <div className="px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-5">
+                    <div className="flex items-center gap-2">
+                      <FileText size={16} className={docCount === 5 ? "text-emerald-500" : "text-slate-400"} />
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                        <b className={docCount === 5 ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"}>{docCount}/5</b> docs
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Rocket size={16} className="text-slate-400" />
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                        <b className="text-slate-900 dark:text-white">{productDeploys.length}</b> deploys
+                        {activeDeploys > 0 && <span className="text-blue-600 ml-1">({activeDeploys} active)</span>}
+                      </span>
+                    </div>
+                  </div>
+                  {hasUpcomingRelease && (
+                    <div className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
+                      <Calendar size={14} />
+                      <span className="text-sm font-medium">{getDaysDiff(p.nextReleaseDate)}d</span>
+                    </div>
+                  )}
+                </div>
+                {/* Doc progress bar */}
+                <div className="flex gap-1.5 mt-3">
+                  {DOC_TYPES.map((t, i) => (
+                    <CustomTooltip key={i} content={`${t.label}: ${p.documentation?.[t.key] ? 'Provided' : 'Missing'}`}>
+                      <div className={`h-1.5 flex-1 rounded-full ${p.documentation?.[t.key] ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-600'}`} />
+                    </CustomTooltip>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          )
+        })}
+        {filteredProducts.length === 0 && (
+          <div className="col-span-full text-center py-16 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+            <Package size={48} className="mx-auto mb-4 text-slate-300" />
+            <p className="text-lg font-medium text-slate-600 dark:text-slate-400">No products found</p>
+            <p className="text-sm text-slate-400 mt-1">Try adjusting your search or add a new product</p>
+          </div>
+        )}
+      </div>
+
+      {/* Docs Preview Modal */}
+      {viewingDocs && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-3 sm:p-4">
+          <Card className="w-full max-w-lg p-0 animate-in zoom-in-95 duration-200">
+             <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 rounded-t-xl">
+               <div className="min-w-0 flex-1">
+                 <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">{viewingDocs.name}</h2>
+                 <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold mt-1">Documentation Hub</p>
+               </div>
+               <button onClick={() => setViewingDocs(null)} className="ml-2 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><X size={20} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"/></button>
+             </div>
+             <div className="p-4 sm:p-6 space-y-3">
+               {DOC_TYPES.map(t => {
+                 const link = viewingDocs.documentation?.[t.key];
+                 return (
+                   <div key={t.key} className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 group transition-colors gap-3">
+                     <div className="flex items-center gap-3 min-w-0">
+                       {link ? <CheckCircle2 size={18} className="text-emerald-500 shrink-0" /> : <AlertCircle size={18} className="text-rose-500 shrink-0" />}
+                       <span className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{t.label}</span>
+                     </div>
+                     <div className="flex items-center gap-1 shrink-0">
+                       {!link && <Badge color="rose" size="sm">Missing</Badge>}
+                       {link && (
+                         <>
+                           <button onClick={() => { navigator.clipboard.writeText(link); addToast("Link copied"); }} className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"><Copy size={14}/></button>
+                           <a href={link} target="_blank" rel="noreferrer" className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"><ExternalLink size={14}/></a>
+                         </>
+                       )}
+                     </div>
+                   </div>
+                 )
+               })}
+             </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Product Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+          <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto p-0 animate-in zoom-in-95 duration-200">
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur z-10 rounded-t-xl">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">{editing ? 'Edit Product' : 'New Product'}</h2>
+              <button onClick={() => setModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><X size={20} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"/></button>
+            </div>
+            <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
+              <form id="productForm" onSubmit={handleSave} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2"><Input label="Product Name" name="name" defaultValue={editing?.name} required placeholder="e.g. Analytics Engine" /></div>
+                  <div className="sm:col-span-2"><Input label="Description" name="description" defaultValue={editing?.description} placeholder="Brief product overview..." /></div>
+                  <Input label="Product Owner" name="productOwner" defaultValue={editing?.productOwner} placeholder="Name" />
+                  <Input label="Eng Owner" name="engineeringOwner" defaultValue={editing?.engineeringOwner} placeholder="Name" />
+                  <Input label="Next Release Date" name="nextReleaseDate" type="date" defaultValue={toInputDate(editing?.nextReleaseDate)} />
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-4">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><FileText size={16}/> Documentation Links</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    {DOC_TYPES.map(t => {
+                      const hasVal = editing?.documentation?.[t.key];
+                      return (
+                        <div key={t.key} className="flex items-center gap-3">
+                          <div className={`p-1.5 rounded-full shrink-0 ${hasVal ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>
+                            {hasVal ? <CheckCircle2 size={14}/> : <AlertTriangle size={14}/>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <Input label={t.label} name={t.key} defaultValue={hasVal} placeholder="Paste link..." />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 p-4 sm:p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 sticky bottom-0 rounded-b-xl">
+              <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+              <Button type="submit" form="productForm">Save Product</Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {confirmModal && <ConfirmationModal {...confirmModal} />}
+    </div>
+  );
+};
+
+// --- 3. DEPLOYMENT MODAL (With Quick Actions) ---
+const DeploymentModal = ({ editing, setEditing, onClose }) => {
+  const { addToast } = useToast();
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleUpdate = async (data) => {
+    setIsUpdating(true);
+    try {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), { ...data, updatedAt: serverTimestamp() });
+      setEditing(prev => ({ ...prev, ...data })); // Local optimisitc update
+      setTimeout(() => setIsUpdating(false), 500);
+    } catch(e) { setIsUpdating(false); addToast("Update failed", "error"); }
+  };
+
+  const shiftDate = (days) => {
+    if (!editing.nextDeliveryDate) return;
+    const current = editing.nextDeliveryDate.toDate ? editing.nextDeliveryDate.toDate() : new Date(editing.nextDeliveryDate);
+    current.setDate(current.getDate() + days);
+    handleUpdate({ nextDeliveryDate: current });
+    addToast(`Deadline shifted by ${days} days`);
+  };
+
+  const handleAddComment = async (comment) => {
+    const updatedComments = [...(editing.blockedComments || []), comment];
+    await handleUpdate({ blockedComments: updatedComments });
+    addToast("Comment added", "success");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className={`w-full max-w-4xl max-h-[95vh] sm:max-h-[85vh] flex flex-col lg:flex-row overflow-hidden p-0 transition-shadow duration-300 ${isUpdating ? 'shadow-[0_0_0_4px_rgba(59,130,246,0.3)]' : ''}`}>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+          <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate">{editing.client?.name || 'Generic Deployment'}</h2>
+              <p className="text-sm text-slate-500 truncate">{editing.product?.name}</p>
+            </div>
+            <button onClick={onClose} className="ml-2 p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"><X size={20} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"/></button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
+            {/* Status Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Status</label>
+                <CustomTooltip content={getStatusTooltip(editing.status)}>
+                  <select
+                    value={editing.status}
+                    onChange={(e) => handleUpdate({ status: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm font-medium bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    <option>Not Started</option><option>In Progress</option><option>Blocked</option><option>Released</option>
+                  </select>
+                </CustomTooltip>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Deadline</label>
+                <input
+                  type="date"
+                  value={toInputDate(editing.nextDeliveryDate)}
+                  onChange={(e) => handleUpdate({ nextDeliveryDate: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Checklist Section */}
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl p-5 border border-slate-100 dark:border-slate-700">
+              <ChecklistWidget
+                checklist={editing.checklist}
+                onToggle={async (item) => {
+                  // Optimistic local update for immediate feedback
+                  const updatedChecklist = editing.checklist.map(c =>
+                    c.id === item.id ? { ...c, isCompleted: !c.isCompleted } : c
+                  );
+                  setEditing(prev => ({ ...prev, checklist: updatedChecklist }));
+
+                  // Persist to Firestore
+                  try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id), { isCompleted: !item.isCompleted });
+                  } catch (e) {
+                    // Revert on error
+                    setEditing(prev => ({ ...prev, checklist: editing.checklist }));
+                    addToast("Failed to update checklist", "error");
+                  }
+                }}
+              />
+            </div>
+
+            {/* Documentation Section */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-2"><FileText size={16}/> Documentation Status</h4>
+              <div className="grid grid-cols-1 gap-2">
+                {DOC_TYPES.map(t => {
+                  const link = editing.product?.documentation?.[t.key];
+                  return (
+                    <div key={t.key} className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
+                      <div className="flex items-center gap-3">
+                        {link ? <CheckCircle2 size={16} className="text-emerald-500"/> : <AlertTriangle size={16} className="text-rose-500"/>}
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{t.label}</span>
+                      </div>
+                      {link ? (
+                        <a href={link} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline text-xs flex items-center gap-1">Open <ExternalLink size={12}/></a>
+                      ) : (
+                        <span className="text-xs text-rose-500 font-medium">Missing</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Blocked Comments Section - shows when status is Blocked or has existing comments */}
+            {(editing.status === 'Blocked' || (editing.blockedComments && editing.blockedComments.length > 0)) && (
+              <div className="bg-rose-50/50 dark:bg-rose-900/10 rounded-xl p-5 border border-rose-100 dark:border-rose-900/30">
+                <BlockedCommentsPanel deployment={editing} onAddComment={handleAddComment} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions Drawer */}
+        <div className="w-full lg:w-64 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 p-4 sm:p-6 flex flex-col gap-4 sm:gap-6 shrink-0">
+          <div>
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Quick Actions</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2">
+              <Button variant="secondary" className="w-full justify-center sm:justify-start" onClick={() => handleUpdate({ status: 'In Progress' })} icon={Clock}>In Progress</Button>
+              <Button variant="secondary" className="w-full justify-center sm:justify-start text-rose-600" onClick={() => handleUpdate({ status: 'Blocked' })} icon={AlertTriangle}>Blocked</Button>
+              <Button variant="secondary" className="w-full justify-center sm:justify-start text-emerald-600" onClick={() => handleUpdate({ status: 'Released' })} icon={CheckCircle2}>Released</Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-4">
+            <div className="flex-1">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Shift Timeline</h4>
+              <div className="grid grid-cols-3 gap-2">
+                <Button variant="secondary" className="px-0 text-xs" onClick={() => shiftDate(3)}>+3d</Button>
+                <Button variant="secondary" className="px-0 text-xs" onClick={() => shiftDate(7)}>+1w</Button>
+                <Button variant="secondary" className="px-0 text-xs" onClick={() => shiftDate(14)}>+2w</Button>
+              </div>
+            </div>
+
+            <div className="flex-1 lg:mt-auto">
+               <Button variant="danger" icon={Trash2} className="w-full" onClick={async () => {
+                  if(!confirm("Delete deployment?")) return;
+                  await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id));
+                  onClose();
+                  addToast("Deployment deleted");
+                }}>Delete</Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// --- DEPLOYMENTS PAGE ---
+const Deployments = () => {
+  const { params, navigate } = useNav();
+  const { data: deploys } = useCollection('deployments');
+  const { data: clients } = useCollection('clients');
+  const { data: products } = useCollection('products');
+  const { data: checklists } = useCollection('checklists');
+  const { addToast } = useToast();
+
+  const [activeFilters, setActiveFilters] = useState(params.filter || {});
+  const [editing, setEditing] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [newDeploymentType, setNewDeploymentType] = useState('generic');
+
+  useEffect(() => { 
+    if (params.filter) setActiveFilters(prev => ({ ...prev, ...params.filter })); 
+    if (params.action === 'new') setModalOpen(true);
+  }, [params]);
+
+  const removeFilter = (key) => {
+    const newFilters = { ...activeFilters };
+    delete newFilters[key];
+    setActiveFilters(newFilters);
+  };
+
+  const filtered = useMemo(() => {
+    let res = deploys.map(d => ({
+      ...d,
+      client: clients.find(c => c.id === d.clientId),
+      product: products.find(p => p.id === d.productId),
+      checklist: checklists.filter(c => c.deploymentId === d.id)
+    }));
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      res = res.filter(d =>
+        d.client?.name?.toLowerCase().includes(q) ||
+        d.product?.name?.toLowerCase().includes(q)
+      );
+    }
+
+    if (activeFilters.status && activeFilters.status !== 'All') res = res.filter(d => d.status === activeFilters.status);
+    if (activeFilters.id) res = res.filter(d => d.id === activeFilters.id);
+    if (activeFilters.urgent) res = res.filter(d => getDaysDiff(d.nextDeliveryDate) <= 7 && getDaysDiff(d.nextDeliveryDate) >= 0);
+    if (activeFilters.overdue) res = res.filter(d => getDaysDiff(d.nextDeliveryDate) < 0);
+    if (activeFilters.upcoming) res = res.filter(d => getDaysDiff(d.nextDeliveryDate) <= 30 && getDaysDiff(d.nextDeliveryDate) >= 0);
+    if (activeFilters.stalled) res = res.filter(d => d.status !== 'Released' && calculateChecklistProgress(d.checklist) < 30);
+
+    return res.sort((a,b) => new Date(a.nextDeliveryDate || 0) - new Date(b.nextDeliveryDate || 0));
+  }, [deploys, clients, products, checklists, activeFilters, searchQuery]);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const deploymentType = newDeploymentType;
+    const clientId = deploymentType === 'client-specific' ? fd.get('clientId') : null;
+    try {
+      const ref = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'deployments'), {
+        clientId,
+        productId: fd.get('productId'),
+        status: 'Not Started',
+        nextDeliveryDate: fd.get('nextDeliveryDate'),
+        deploymentType,
+        blockedComments: [],
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      STANDARD_CHECKLIST.forEach(item => addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'checklists'), {
+        deploymentId: ref.id, item, isCompleted: false
+      }));
+      addToast("Deployment initialized", "success");
+      setModalOpen(false);
+      setNewDeploymentType('generic'); // Reset for next time
+    } catch(e) { addToast("Failed to create", "error"); }
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Deployments</h1>
+          <p className="text-slate-500 mt-1">Track and manage deployment progress</p>
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search deployments..."
+            className="w-full md:w-72"
+          />
+          <ViewToggle view={viewMode} setView={setViewMode} />
+          <Button onClick={() => setModalOpen(true)} icon={Plus}>New Deployment</Button>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 sm:items-center">
+        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2"><Filter size={14}/> Filters:</div>
+        <select
+          value={activeFilters.status || 'All'}
+          onChange={e => setActiveFilters(prev => ({ ...prev, status: e.target.value }))}
+          className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white w-full sm:w-auto"
+        >
+          <option value="All">Status: All</option><option>Not Started</option><option>In Progress</option><option>Blocked</option><option>Released</option>
+        </select>
+        <div className="flex flex-wrap gap-2 items-center">
+          {Object.entries(activeFilters).map(([key, val]) => {
+            if (key === 'status' || !val) return null;
+            return <FilterTag key={key} label={key === 'id' ? 'Single Item' : key} value="Active" onRemove={() => removeFilter(key)} />
+          })}
+          {Object.keys(activeFilters).length > 0 && <button onClick={() => setActiveFilters({})} className="text-xs text-slate-500 hover:text-rose-500 underline sm:ml-auto">Clear All</button>}
+        </div>
+      </div>
+
+      {/* Grid/Kanban Views */}
+      {viewMode === 'grid' && (
+        <DeploymentGridView deployments={filtered} onDeploymentClick={setEditing} />
+      )}
+      {viewMode === 'kanban' && (
+        <DeploymentKanbanBoard deployments={filtered} onDeploymentClick={setEditing} />
+      )}
+
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+          <Card className="w-full max-w-md p-4 sm:p-6">
+            <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">Start New Deployment</h2>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Deployment Type</label>
+                <select
+                  value={newDeploymentType}
+                  onChange={(e) => setNewDeploymentType(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  required
+                >
+                  {DEPLOYMENT_TYPES.map(t => (
+                    <option key={t.key} value={t.key}>{t.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-400 mt-1">
+                  {newDeploymentType === 'generic'
+                    ? 'Standard deployment for all clients'
+                    : 'Customized deployment for a specific client'}
+                </p>
+              </div>
+              {newDeploymentType === 'client-specific' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Client</label>
+                  <select name="clientId" className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" required>
+                    <option value="">Select client...</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Product</label>
+                <select name="productId" className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" required>
+                  <option value="">Select product...</option>
+                  {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <Input label="Target Date" name="nextDeliveryDate" type="date" required />
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6">
+                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('generic'); }} type="button">Cancel</Button>
+                <Button type="submit">Initialize</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {editing && <DeploymentModal editing={editing} setEditing={setEditing} onClose={() => setEditing(null)} />}
+    </div>
+  );
+};
+
+// --- 4. CLIENT DETAIL ---
+const ClientDetail = ({ clientId }) => {
+  const { navigate, addToHistory } = useNav();
+  const { data: clients } = useCollection('clients');
+  const { data: deploys } = useCollection('deployments');
+  const { data: products } = useCollection('products');
+  const { data: checklists } = useCollection('checklists');
+
+  const client = clients.find(c => c.id === clientId);
+  useEffect(() => { if(client) addToHistory('Client', client.name, client.id, 'client-detail', { clientId: client.id }); }, [client]);
+
+  const dList = deploys.filter(d => d.clientId === clientId);
+
+  // Health Score Calculation - must be before early return
+  const healthScore = useMemo(() => {
+    if (!client || dList.length === 0) return 100;
+
+    // 1. Checklist Progress (40%)
+    let totalCheck = 0;
+    dList.forEach(d => {
+      const checks = checklists.filter(c => c.deploymentId === d.id);
+      totalCheck += calculateChecklistProgress(checks);
+    });
+    const avgCheck = totalCheck / dList.length;
+
+    // 2. On-Time Delivery (30%)
+    const onTimeCount = dList.filter(d => getDaysDiff(d.nextDeliveryDate) >= 0).length;
+    const onTimePct = (onTimeCount / dList.length) * 100;
+
+    // 3. Documentation (30%)
+    let totalDocs = 0;
+    dList.forEach(d => {
+      const p = products.find(x => x.id === d.productId);
+      const filled = Object.values(p?.documentation || {}).filter(Boolean).length;
+      totalDocs += (filled / 5) * 100;
+    });
+    const avgDocs = totalDocs / dList.length;
+
+    return (avgCheck * 0.4) + (onTimePct * 0.3) + (avgDocs * 0.3);
+  }, [client, dList, checklists, products]);
+
+  // Timeline Items - must be before early return
+  const timelineItems = useMemo(() => {
+    if (!client) return [];
+    return dList
+      .filter(d => d.nextDeliveryDate && d.status !== 'Released')
+      .map(d => ({
+        id: d.id,
+        date: d.nextDeliveryDate,
+        clientName: client.name,
+        productName: products.find(p => p.id === d.productId)?.name || 'Unknown',
+        status: d.status,
+        daysLeft: getDaysDiff(d.nextDeliveryDate)
+      }))
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
+  }, [client, dList, products]);
+
+  if (!client) return <div className="p-10 text-center">Loading client...</div>;
+
+  return (
+    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate('clients')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"><ChevronLeft size={20}/></button>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{client.name}</h1>
+          <p className="text-slate-500 text-sm">Client Portfolio Dashboard</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="p-6 col-span-1 flex flex-col items-center justify-center">
+          <HealthScoreRing score={healthScore} />
+          <div className="mt-6 w-full space-y-3">
+            <div className="flex justify-between text-xs text-slate-500"><span>Checklist Avg</span><span>{Math.round(healthScore * 0.4 * 2.5)}%</span></div>
+            <ProgressBar value={healthScore * 0.4 * 2.5} color="bg-blue-500" />
+            <div className="flex justify-between text-xs text-slate-500"><span>Doc Readiness</span><span>{Math.round(healthScore * 0.3 * 3.3)}%</span></div>
+            <ProgressBar value={healthScore * 0.3 * 3.3} color="bg-emerald-500" />
+          </div>
+        </Card>
+
+        <Card className="p-6 col-span-3">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide mb-4">Delivery Timeline</h3>
+          <TimelineStrip items={timelineItems} onSelect={(item) => navigate('deployments', { filter: { id: item.id } })} />
+        </Card>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Active Deployments ({dList.length})</h3>
+        {dList.map(d => {
+          const p = products.find(x => x.id === d.productId);
+          const dlColor = getDeadlineStatus(d.nextDeliveryDate, d.status);
+          const checks = checklists.filter(c => c.deploymentId === d.id);
+          const completion = calculateChecklistProgress(checks);
+          
+          return (
+            <Card key={d.id} className="p-5 flex justify-between items-center group">
+              <div>
+                <div className="font-bold text-slate-900 dark:text-white text-lg mb-1">{p?.name}</div>
+                <div className="flex items-center gap-3">
+                  <Badge color={d.status === 'Blocked' ? 'rose' : 'blue'}>{d.status}</Badge>
+                  <CustomTooltip content={getStatusTooltip(d.status)}>
+                    <span className={`text-xs ${dlColor.color.split(' ')[0]}`}>{dlColor.label}</span>
+                  </CustomTooltip>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">{completion}%</div>
+                <span className="text-xs text-slate-400 uppercase tracking-wider">Ready</span>
+              </div>
+            </Card>
+          )
+        })}
+      </div>
+    </div>
+  );
+};
+
+// --- 5. CLIENTS LIST ---
+const Clients = () => {
+  const { data: clients } = useCollection('clients');
+  const { data: deploys } = useCollection('deployments');
+  const [editing, setEditing] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { addToast } = useToast();
+  const { navigate, params } = useNav();
+
+  const sortedClients = useMemo(() => {
+    let res = [...clients];
+
+    // Search filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      res = res.filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        c.comments?.toLowerCase().includes(q)
+      );
+    }
+
+    if (params.sort === 'deployments') {
+      res = res.sort((a,b) => {
+        const countA = deploys.filter(d => d.clientId === a.id).length;
+        const countB = deploys.filter(d => d.clientId === b.id).length;
+        return countB - countA;
+      });
+    }
+    return res;
+  }, [clients, deploys, params.sort, searchQuery]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = { name: fd.get('name'), comments: fd.get('comments'), updatedAt: serverTimestamp() };
+    try {
+      if (editing) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', editing.id), data);
+      else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'clients'), { ...data, createdAt: serverTimestamp() });
+      addToast("Client saved", "success"); setModalOpen(false); setEditing(null);
+    } catch(e) { addToast("Error saving", "error"); }
+  };
+
+  const handleDelete = (client) => {
+    if (deploys.some(d => d.clientId === client.id)) {
+      addToast("Cannot delete client: Remove their deployments first.", "error");
+      return;
+    }
+    setConfirmModal({
+      title: `Delete ${client.name}?`,
+      message: "This action is permanent and cannot be undone.",
+      isDestructive: true,
+      onCancel: () => setConfirmModal(null),
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', client.id));
+          addToast("Client deleted", "success");
+        } catch(e) { addToast("Deletion failed", "error"); }
+        setConfirmModal(null);
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Client Portfolio</h1>
+          <p className="text-slate-500 mt-1">Manage clients and their deployments</p>
+          {params.sort && <Badge color="blue">Sorted by Volume</Badge>}
+        </div>
+        <div className="flex flex-wrap gap-3 items-center">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search clients..."
+            className="w-full md:w-72"
+          />
+          <Button onClick={() => { setEditing(null); setModalOpen(true); }} icon={Plus}>Add Client</Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        {sortedClients.map(c => {
+          const clientDeploys = deploys.filter(d => d.clientId === c.id);
+          const activeCount = clientDeploys.filter(d => d.status !== 'Released').length;
+          const releasedCount = clientDeploys.filter(d => d.status === 'Released').length;
+          const blockedCount = clientDeploys.filter(d => d.status === 'Blocked').length;
+          const inProgressCount = clientDeploys.filter(d => d.status === 'In Progress').length;
+
+          // Generate consistent color from client name
+          const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500'];
+          const colorIndex = c.name?.charCodeAt(0) % colors.length || 0;
+          const avatarColor = colors[colorIndex];
+
+          return (
+            <Card key={c.id} className="p-0 overflow-hidden group hover:shadow-lg transition-all duration-300" onClick={() => navigate('client-detail', { clientId: c.id })}>
+              {/* Header */}
+              <div className="p-5">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
+                    <Users size={22} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{c.name}</h3>
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); setEditing(c); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(c); }} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
+                      </div>
+                    </div>
+                    {c.comments ? (
+                      <p className="text-sm text-slate-500 mt-2 line-clamp-2">{c.comments}</p>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic mt-2">No notes</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status badges */}
+                {clientDeploys.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {inProgressCount > 0 && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                        <span className="text-sm font-medium text-blue-700 dark:text-blue-300">{inProgressCount} in progress</span>
+                      </div>
+                    )}
+                    {blockedCount > 0 && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                        <div className="w-2 h-2 rounded-full bg-rose-500" />
+                        <span className="text-sm font-medium text-rose-700 dark:text-rose-300">{blockedCount} blocked</span>
+                      </div>
+                    )}
+                    {releasedCount > 0 && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                        <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{releasedCount} released</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats footer */}
+              <div className="px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Rocket size={16} className="text-slate-400" />
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      <b className="text-slate-900 dark:text-white">{clientDeploys.length}</b> projects
+                    </span>
+                  </div>
+                  {activeCount > 0 && (
+                    <span className="text-sm text-blue-600 font-medium">{activeCount} active</span>
+                  )}
+                </div>
+                {/* Status bar */}
+                <div className="flex gap-1.5 mt-3">
+                  {clientDeploys.length > 0 ? (
+                    clientDeploys.slice(0, 6).map((d, i) => (
+                      <CustomTooltip key={i} content={`${d.status}`}>
+                        <div className={`h-2 flex-1 rounded-full ${d.status === 'Released' ? 'bg-emerald-400' : d.status === 'Blocked' ? 'bg-rose-400' : d.status === 'In Progress' ? 'bg-blue-400' : 'bg-slate-300 dark:bg-slate-600'}`} />
+                      </CustomTooltip>
+                    ))
+                  ) : (
+                    [...Array(6)].map((_, i) => <div key={i} className="h-2 flex-1 rounded-full bg-slate-200 dark:bg-slate-600" />)
+                  )}
+                </div>
+              </div>
+            </Card>
+          )
+        })}
+        {sortedClients.length === 0 && (
+          <div className="col-span-full text-center py-16 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+            <Users size={48} className="mx-auto mb-4 text-slate-300" />
+            <p className="text-lg font-medium text-slate-600 dark:text-slate-400">No clients found</p>
+            <p className="text-sm text-slate-400 mt-1">Try adjusting your search or add a new client</p>
+          </div>
+        )}
+      </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+          <Card className="w-full max-w-md p-4 sm:p-6">
+            <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white">{editing ? 'Edit Client' : 'New Client'}</h2>
+            <form onSubmit={handleSave} className="space-y-4">
+              <Input label="Company Name" name="name" defaultValue={editing?.name} required placeholder="Enter company name" />
+              <Input label="Notes" name="comments" defaultValue={editing?.comments} placeholder="Optional notes about this client" />
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
+                <Button variant="secondary" onClick={() => setModalOpen(false)} type="button">Cancel</Button>
+                <Button type="submit">Save Profile</Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {confirmModal && <ConfirmationModal {...confirmModal} />}
+    </div>
+  );
+};
+
+const Onboarding = () => {
+  const { data: clients } = useCollection('clients');
+  const { data: deploys } = useCollection('deployments');
+  const { data: products } = useCollection('products');
+  const { data: checklists } = useCollection('checklists');
+  const { navigate } = useNav();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredClients = useMemo(() => {
+    if (!searchQuery) return clients;
+    const q = searchQuery.toLowerCase();
+    return clients.filter(c => c.name?.toLowerCase().includes(q));
+  }, [clients, searchQuery]);
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Onboarding Health</h1>
+          <p className="text-slate-500 mt-1">Monitor client deployment progress</p>
+        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search clients..."
+          className="w-full md:w-72"
+        />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+        {filteredClients.map(client => {
+          const clientDeploys = deploys.filter(d => d.clientId === client.id);
+          if (clientDeploys.length === 0) return null;
+
+          // Calculate client health metrics
+          const totalChecks = clientDeploys.reduce((acc, d) => {
+            const checks = checklists.filter(c => c.deploymentId === d.id);
+            return acc + (checks.filter(c => c.isCompleted).length / (checks.length || 1)) * 100;
+          }, 0);
+          const avgCompletion = Math.round(totalChecks / clientDeploys.length);
+          const blockedCount = clientDeploys.filter(d => d.status === 'Blocked').length;
+
+          // Generate consistent color from client name
+          const colors = ['bg-blue-500', 'bg-emerald-500', 'bg-purple-500', 'bg-amber-500', 'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500'];
+          const colorIndex = client.name?.charCodeAt(0) % colors.length || 0;
+          const avatarColor = colors[colorIndex];
+
+          return (
+            <Card key={client.id} className="p-0 overflow-hidden hover:shadow-lg transition-all duration-300">
+              {/* Client Header */}
+              <div className="p-5 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
+                      <Users size={22} />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white">{client.name}</h3>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-sm text-slate-500">{clientDeploys.length} projects</span>
+                        {blockedCount > 0 && <Badge color="rose" size="sm">{blockedCount} blocked</Badge>}
+                      </div>
+                    </div>
+                  </div>
+                  {/* Overall progress circle */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right hidden sm:block">
+                      <div className="text-xs text-slate-400 uppercase tracking-wide font-bold">Avg Progress</div>
+                      <div className="text-xl font-bold text-slate-900 dark:text-white">{avgCompletion}%</div>
+                    </div>
+                    <div className="relative w-12 h-12">
+                      <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-slate-200 dark:text-slate-700" />
+                        <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${avgCompletion * 0.88} 88`} className={avgCompletion === 100 ? "text-emerald-500" : blockedCount > 0 ? "text-amber-500" : "text-blue-500"} />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-300 sm:hidden">{avgCompletion}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Deployments list */}
+              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                {clientDeploys.map(d => {
+                  const prod = products.find(p => p.id === d.productId);
+                  const deadlineStatus = getDeadlineStatus(d.nextDeliveryDate, d.status);
+                  const checks = checklists.filter(c => c.deploymentId === d.id);
+                  const completed = checks.filter(c => c.isCompleted).length;
+                  const total = checks.length || 1;
+                  const completion = Math.round((completed / total) * 100);
+
+                  return (
+                    <div key={d.id} className="p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer group" onClick={() => navigate('deployments', { filter: { id: d.id } })}>
+                      <div className="flex items-center gap-3">
+                        {/* Product icon */}
+                        <div className="w-10 h-10 bg-slate-100 dark:bg-slate-700 rounded-lg flex items-center justify-center shrink-0">
+                          <Package size={18} className="text-slate-500 dark:text-slate-400" />
+                        </div>
+
+                        {/* Product info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-slate-900 dark:text-white truncate group-hover:text-blue-600 transition-colors">{prod?.name || 'Unknown Product'}</span>
+                            <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                              d.status === 'Released' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                              d.status === 'Blocked' ? 'bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' :
+                              d.status === 'In Progress' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
+                              'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                            }`}>{d.status}</div>
+                          </div>
+                          <div className={`text-xs mt-0.5 ${deadlineStatus.color.split(' ')[0]}`}>{deadlineStatus.label}</div>
+                        </div>
+
+                        {/* Progress */}
+                        <div className="w-24 hidden md:block">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-slate-400">{completed}/{total}</span>
+                            <span className={completion === 100 ? "text-emerald-600 font-bold" : "text-slate-600 dark:text-slate-300"}>{completion}%</span>
+                          </div>
+                          <ProgressBar value={completion} color={completion === 100 ? 'bg-emerald-500' : deadlineStatus.urgent ? 'bg-rose-500' : 'bg-blue-500'} />
+                        </div>
+
+                        {/* Arrow */}
+                        <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all shrink-0" />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )
+        })}
+        {filteredClients.filter(c => deploys.filter(d => d.clientId === c.id).length > 0).length === 0 && (
+          <div className="col-span-full text-center py-16 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+            <CheckCircle2 size={48} className="mx-auto mb-4 text-slate-300" />
+            <p className="text-lg font-medium text-slate-600 dark:text-slate-400">No onboarding projects</p>
+            <p className="text-sm text-slate-400 mt-1">Create deployments to track onboarding progress</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- 7. SETTINGS ---
+const SettingsPage = () => {
+  const { addToast } = useToast();
+  const { data: products } = useCollection('products');
+  const { data: deployments } = useCollection('deployments');
+  const { data: clients } = useCollection('clients');
+  const { data: checklists } = useCollection('checklists');
+
+  const [sheetUrl, setSheetUrl] = useState('');
+  const [appsScriptUrl, setAppsScriptUrl] = useState('');
+  const [syncEnabled, setSyncEnabled] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, success, error
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [syncDetails, setSyncDetails] = useState(null);
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('controlTowerSettings');
+    if (savedSettings) {
+      const settings = JSON.parse(savedSettings);
+      setSheetUrl(settings.sheetUrl || '');
+      setAppsScriptUrl(settings.appsScriptUrl || '');
+      setSyncEnabled(settings.syncEnabled || false);
+      setLastSyncTime(settings.lastSyncTime ? new Date(settings.lastSyncTime) : null);
+    }
+  }, []);
+
+  // Save settings to localStorage
+  const handleSaveSettings = () => {
+    const settings = {
+      sheetUrl,
+      appsScriptUrl,
+      syncEnabled,
+      lastSyncTime: lastSyncTime?.toISOString() || null
+    };
+    localStorage.setItem('controlTowerSettings', JSON.stringify(settings));
+    addToast("Settings saved successfully", "success");
+  };
+
+  // Export Products to CSV
+  const handleExportProducts = () => {
+    const result = exportToCSV(products, 'products', PRODUCT_EXPORT_COLUMNS);
+    if (result.success) {
+      addToast(`Exported ${result.count} products to CSV`, "success");
+    } else {
+      addToast(result.error || "Export failed", "error");
+    }
+  };
+
+  // Export Deployments to CSV
+  const handleExportDeployments = () => {
+    const enrichedDeployments = deployments.map(d => ({
+      ...d,
+      clientName: clients.find(c => c.id === d.clientId)?.name || 'Unknown',
+      productName: products.find(p => p.id === d.productId)?.name || 'Unknown',
+      checklistProgress: calculateChecklistProgress(checklists.filter(c => c.deploymentId === d.id))
+    }));
+    const result = exportToCSV(enrichedDeployments, 'deployments', DEPLOYMENT_EXPORT_COLUMNS);
+    if (result.success) {
+      addToast(`Exported ${result.count} deployments to CSV`, "success");
+    } else {
+      addToast(result.error || "Export failed", "error");
+    }
+  };
+
+  // Export Clients to CSV
+  const handleExportClients = () => {
+    const enrichedClients = clients.map(c => ({
+      ...c,
+      deploymentCount: deployments.filter(d => d.clientId === c.id).length
+    }));
+    const result = exportToCSV(enrichedClients, 'clients', CLIENT_EXPORT_COLUMNS);
+    if (result.success) {
+      addToast(`Exported ${result.count} clients to CSV`, "success");
+    } else {
+      addToast(result.error || "Export failed", "error");
+    }
+  };
+
+  // Test Apps Script connection with detailed diagnostics
+  const [testResults, setTestResults] = useState(null);
+
+  const handleTestConnection = async () => {
+    if (!appsScriptUrl) {
+      addToast("Please enter the Apps Script URL first", "error");
+      return;
+    }
+
+    // Validate URL format
+    const urlChecks = {
+      hasScriptGoogle: appsScriptUrl.includes('script.google.com'),
+      hasMacros: appsScriptUrl.includes('/macros/'),
+      endsWithExec: appsScriptUrl.endsWith('/exec'),
+      isHttps: appsScriptUrl.startsWith('https://'),
+    };
+
+    if (!urlChecks.hasScriptGoogle || !urlChecks.endsWithExec) {
+      setTestResults({
+        status: 'error',
+        urlChecks,
+        message: 'Invalid URL format. Must be a Google Apps Script URL ending with /exec'
+      });
+      addToast("Invalid Apps Script URL format", "error");
+      return;
+    }
+
+    setSyncStatus('syncing');
+    setTestResults({ status: 'testing', message: 'Running comprehensive diagnostics...' });
+
+    const results = {
+      status: 'unknown',
+      urlChecks,
+      timestamp: new Date().toISOString(),
+      tests: []
+    };
+
+    // Test 1: Basic connectivity with test action
+    try {
+      const testUrl = `${appsScriptUrl}?action=test`;
+      console.log('Test 1: Fetching', testUrl);
+
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        redirect: 'follow'
+      });
+
+      results.tests.push({
+        name: 'Basic Connection',
+        status: response.ok ? 'pass' : 'fail',
+        httpStatus: response.status,
+        statusText: response.statusText,
+        url: response.url,
+        redirected: response.redirected
+      });
+
+      const text = await response.text();
+      console.log('Test 1 Response:', text.substring(0, 500));
+
+      // Check if it's HTML (error page)
+      if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+        results.tests.push({
+          name: 'Response Type',
+          status: 'fail',
+          message: 'Received HTML instead of JSON. Script may not be deployed correctly.',
+          preview: text.substring(0, 200)
+        });
+        results.status = 'error';
+        results.message = 'Apps Script returned HTML. Please check deployment settings.';
+      } else {
+        // Try to parse JSON
+        try {
+          const data = JSON.parse(text);
+          results.tests.push({
+            name: 'Response Type',
+            status: 'pass',
+            message: 'Valid JSON response',
+            data: data
+          });
+
+          if (data.success === true) {
+            results.status = 'success';
+            results.message = data.message || 'Connection successful!';
+          } else if (data.success === false) {
+            results.status = 'error';
+            results.message = data.error || 'Script returned error';
+          } else {
+            results.status = 'warning';
+            results.message = 'Unexpected response format';
+          }
+        } catch (parseErr) {
+          results.tests.push({
+            name: 'Response Type',
+            status: 'warning',
+            message: 'Response is not valid JSON',
+            preview: text.substring(0, 200)
+          });
+          results.status = 'warning';
+          results.message = 'Response received but not valid JSON';
+        }
+      }
+    } catch (e) {
+      console.error('Test 1 Error:', e);
+      results.tests.push({
+        name: 'Basic Connection',
+        status: 'fail',
+        error: e.message,
+        errorType: e.name
+      });
+      results.status = 'error';
+      results.message = `Connection failed: ${e.message}`;
+    }
+
+    // Test 2: Check spreadsheet access
+    if (results.status === 'success') {
+      try {
+        console.log('Test 2: Checking spreadsheet access');
+        const checkUrl = `${appsScriptUrl}?action=checkAccess`;
+        const checkResponse = await fetch(checkUrl, { method: 'GET', redirect: 'follow' });
+        const checkText = await checkResponse.text();
+        console.log('Test 2 Response:', checkText);
+
+        try {
+          const checkData = JSON.parse(checkText);
+          results.tests.push({
+            name: 'Spreadsheet Access',
+            status: checkData.success ? 'pass' : 'fail',
+            message: checkData.success ? `Connected to: ${checkData.spreadsheetName}` : (checkData.error || 'Cannot access spreadsheet'),
+            data: checkData
+          });
+
+          if (!checkData.success) {
+            results.status = 'error';
+            results.message = checkData.error || 'Cannot access spreadsheet';
+          }
+        } catch (e) {
+          results.tests.push({
+            name: 'Spreadsheet Access',
+            status: 'warning',
+            message: 'Could not parse response',
+            preview: checkText.substring(0, 200)
+          });
+        }
+      } catch (e) {
+        console.error('Test 2 Error:', e);
+        results.tests.push({
+          name: 'Spreadsheet Access',
+          status: 'fail',
+          error: e.message
+        });
+      }
+    }
+
+    // Test 3: Check each sheet exists and is readable
+    const sheetsToCheck = ['Products', 'Deployments', 'Clients'];
+    if (results.status === 'success') {
+      for (const sheetName of sheetsToCheck) {
+        try {
+          console.log(`Test 3: Checking ${sheetName} sheet`);
+          const readUrl = `${appsScriptUrl}?action=read&sheetName=${sheetName}`;
+          const readResponse = await fetch(readUrl, { method: 'GET', redirect: 'follow' });
+          const readText = await readResponse.text();
+          console.log(`Test 3 (${sheetName}) Response:`, readText.substring(0, 300));
+
+          try {
+            const readData = JSON.parse(readText);
+            results.tests.push({
+              name: `Read "${sheetName}" Sheet`,
+              status: readData.success !== false ? 'pass' : 'fail',
+              message: readData.success !== false
+                ? `Sheet exists with ${readData.rows?.length || 0} rows`
+                : (readData.error || 'Cannot read sheet'),
+              data: { rowCount: readData.rows?.length || 0, success: readData.success, error: readData.error }
+            });
+          } catch (e) {
+            results.tests.push({
+              name: `Read "${sheetName}" Sheet`,
+              status: 'warning',
+              message: 'Could not parse response',
+              preview: readText.substring(0, 200)
+            });
+          }
+        } catch (e) {
+          results.tests.push({
+            name: `Read "${sheetName}" Sheet`,
+            status: 'fail',
+            error: e.message
+          });
+        }
+      }
+    }
+
+    // Test 4: Test actual write with a single test row
+    if (results.status === 'success') {
+      try {
+        console.log('Test 4: Testing write capability with test data');
+        const testRow = {
+          id: '_test_row_' + Date.now(),
+          name: 'TEST - DELETE ME',
+          description: 'Test row from Control Tower diagnostic',
+          updatedAt: new Date().toISOString()
+        };
+
+        const writeTestResponse = await fetch(appsScriptUrl, {
+          method: 'POST',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'write',
+            sheetName: 'Products',
+            rows: [testRow]
+          })
+        });
+
+        const writeText = await writeTestResponse.text();
+        console.log('Test 4 Response:', writeText);
+
+        try {
+          const writeData = JSON.parse(writeText);
+          results.tests.push({
+            name: 'Write Test Row',
+            status: writeData.success !== false ? 'pass' : 'fail',
+            message: writeData.success !== false
+              ? `Successfully wrote test row (added: ${writeData.added}, updated: ${writeData.updated})`
+              : (writeData.error || 'Write failed'),
+            data: writeData
+          });
+
+          if (writeData.success === false) {
+            results.status = 'error';
+            results.message = writeData.error || 'Write operation failed';
+          }
+        } catch (e) {
+          results.tests.push({
+            name: 'Write Test Row',
+            status: 'fail',
+            message: 'Could not parse write response',
+            preview: writeText.substring(0, 200)
+          });
+          results.status = 'error';
+        }
+      } catch (e) {
+        console.error('Test 4 Error:', e);
+        results.tests.push({
+          name: 'Write Test Row',
+          status: 'fail',
+          error: e.message
+        });
+        results.status = 'error';
+      }
+    }
+
+    // Determine overall status
+    const failedTests = results.tests.filter(t => t.status === 'fail');
+    const warningTests = results.tests.filter(t => t.status === 'warning');
+
+    if (failedTests.length > 0) {
+      results.status = 'error';
+      results.message = `${failedTests.length} test(s) failed. Check details below.`;
+    } else if (warningTests.length > 0) {
+      results.status = 'warning';
+      results.message = `Tests passed with ${warningTests.length} warning(s).`;
+    } else if (results.tests.length > 0) {
+      results.status = 'success';
+      results.message = 'All tests passed! Ready to sync.';
+    }
+
+    setTestResults(results);
+    setSyncStatus(results.status === 'success' ? 'success' : 'error');
+
+    if (results.status === 'success') {
+      addToast("All tests passed! Apps Script is working.", "success");
+    } else {
+      addToast(`Tests completed with issues. Check diagnostics below.`, "error");
+    }
+  };
+
+  // Push all data to Google Sheet
+  const handlePushToSheet = async () => {
+    if (!appsScriptUrl) {
+      addToast("Please configure the Apps Script URL", "error");
+      return;
+    }
+
+    setSyncStatus('syncing');
+    setSyncDetails({ action: 'push' });
+
+    let totalCount = 0;
+    const errors = [];
+
+    // Push Products
+    const productRows = SheetsSync.productsToRows(products);
+    const productResult = await SheetsSync.pushToSheet(appsScriptUrl, 'Products', productRows);
+    if (productResult.success) {
+      totalCount += productResult.count;
+    } else {
+      errors.push(`Products: ${productResult.error}`);
+    }
+
+    // Push Deployments
+    const deploymentRows = SheetsSync.deploymentsToRows(deployments, clients, products);
+    const deploymentResult = await SheetsSync.pushToSheet(appsScriptUrl, 'Deployments', deploymentRows);
+    if (deploymentResult.success) {
+      totalCount += deploymentResult.count;
+    } else {
+      errors.push(`Deployments: ${deploymentResult.error}`);
+    }
+
+    // Push Clients
+    const clientRows = SheetsSync.clientsToRows(clients);
+    const clientResult = await SheetsSync.pushToSheet(appsScriptUrl, 'Clients', clientRows);
+    if (clientResult.success) {
+      totalCount += clientResult.count;
+    } else {
+      errors.push(`Clients: ${clientResult.error}`);
+    }
+
+    if (errors.length === 0) {
+      setSyncStatus('success');
+      setLastSyncTime(new Date());
+      setSyncDetails({ action: 'push', count: totalCount });
+      addToast(`Pushed ${products.length} products, ${deployments.length} deployments, ${clients.length} clients to Sheet`, "success");
+      handleSaveSettings();
+    } else {
+      setSyncStatus('error');
+      setSyncDetails({ action: 'push', error: errors.join('; ') });
+      addToast(`Push partially failed: ${errors.join('; ')}`, "error");
+    }
+  };
+
+  // Pull all data from Google Sheet
+  const handlePullFromSheet = async () => {
+    if (!appsScriptUrl) {
+      addToast("Please configure the Apps Script URL", "error");
+      return;
+    }
+
+    setSyncStatus('syncing');
+    setSyncDetails({ action: 'pull' });
+
+    let totalAdded = 0;
+    let totalUpdated = 0;
+    const errors = [];
+
+    // Pull Products
+    const productResult = await SheetsSync.fetchFromSheet(appsScriptUrl, 'Products');
+    if (productResult.success) {
+      const remoteProducts = SheetsSync.rowsToProducts(productResult.data);
+      const { mergedData, changes } = SheetsSync.mergeData(products, remoteProducts);
+
+      for (const item of mergedData) {
+        if (item.source === 'remote' && (item.isNew || item.wasUpdated)) {
+          try {
+            if (item.isNew) {
+              await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), {
+                ...item,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+            } else {
+              await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', item.id), {
+                name: item.name,
+                description: item.description,
+                productOwner: item.productOwner,
+                engineeringOwner: item.engineeringOwner,
+                nextReleaseDate: item.nextReleaseDate,
+                documentation: item.documentation,
+                updatedAt: serverTimestamp()
+              });
+            }
+          } catch (e) {
+            console.error('Failed to update product:', e);
+          }
+        }
+      }
+      totalAdded += changes.added;
+      totalUpdated += changes.updated;
+    } else {
+      errors.push(`Products: ${productResult.error}`);
+    }
+
+    // Pull Deployments
+    const deploymentResult = await SheetsSync.fetchFromSheet(appsScriptUrl, 'Deployments');
+    if (deploymentResult.success) {
+      const remoteDeployments = SheetsSync.rowsToDeployments(deploymentResult.data);
+      const { mergedData, changes } = SheetsSync.mergeData(deployments, remoteDeployments);
+
+      for (const item of mergedData) {
+        if (item.source === 'remote' && (item.isNew || item.wasUpdated)) {
+          try {
+            if (item.isNew) {
+              await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'deployments'), {
+                ...item,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+            } else {
+              await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', item.id), {
+                clientId: item.clientId,
+                productId: item.productId,
+                status: item.status,
+                deploymentType: item.deploymentType,
+                nextDeliveryDate: item.nextDeliveryDate,
+                notes: item.notes,
+                updatedAt: serverTimestamp()
+              });
+            }
+          } catch (e) {
+            console.error('Failed to update deployment:', e);
+          }
+        }
+      }
+      totalAdded += changes.added;
+      totalUpdated += changes.updated;
+    } else {
+      errors.push(`Deployments: ${deploymentResult.error}`);
+    }
+
+    // Pull Clients
+    const clientResult = await SheetsSync.fetchFromSheet(appsScriptUrl, 'Clients');
+    if (clientResult.success) {
+      const remoteClients = SheetsSync.rowsToClients(clientResult.data);
+      const { mergedData, changes } = SheetsSync.mergeData(clients, remoteClients);
+
+      for (const item of mergedData) {
+        if (item.source === 'remote' && (item.isNew || item.wasUpdated)) {
+          try {
+            if (item.isNew) {
+              await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'clients'), {
+                ...item,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+              });
+            } else {
+              await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', item.id), {
+                name: item.name,
+                comments: item.comments,
+                updatedAt: serverTimestamp()
+              });
+            }
+          } catch (e) {
+            console.error('Failed to update client:', e);
+          }
+        }
+      }
+      totalAdded += changes.added;
+      totalUpdated += changes.updated;
+    } else {
+      errors.push(`Clients: ${clientResult.error}`);
+    }
+
+    if (errors.length === 0) {
+      setSyncStatus('success');
+      setLastSyncTime(new Date());
+      setSyncDetails({ action: 'pull', added: totalAdded, updated: totalUpdated });
+      addToast(`Pulled from sheet: ${totalAdded} added, ${totalUpdated} updated`, "success");
+      handleSaveSettings();
+    } else {
+      setSyncStatus('error');
+      setSyncDetails({ action: 'pull', error: errors.join('; ') });
+      addToast(`Pull partially failed: ${errors.join('; ')}`, "error");
+    }
+  };
+
+  // Full bi-directional sync
+  const handleFullSync = async () => {
+    if (!appsScriptUrl) {
+      addToast("Please configure the Apps Script URL", "error");
+      return;
+    }
+
+    setSyncStatus('syncing');
+    setSyncDetails({ action: 'full' });
+
+    // First pull, then push
+    await handlePullFromSheet();
+    await handlePushToSheet();
+
+    setSyncStatus('success');
+    addToast("Full sync completed for Products, Deployments, and Clients", "success");
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
+          <p className="text-slate-500 text-sm mt-1">Configure sync and export options</p>
+        </div>
+      </div>
+
+      {/* Google Sheets Sync Section */}
+      <Card className="p-4 sm:p-6">
+        <div className="flex items-start sm:items-center justify-between gap-3 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl shrink-0">
+              <RefreshCw size={20} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Google Sheets Sync</h2>
+              <p className="text-sm text-slate-500">Bi-directional sync with Google Sheets</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowSetupGuide(!showSetupGuide)}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline shrink-0"
+          >
+            {showSetupGuide ? 'Hide' : 'Setup Guide'}
+          </button>
+        </div>
+
+        {/* Setup Guide */}
+        {showSetupGuide && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+            <h4 className="font-bold text-blue-900 dark:text-blue-200 mb-2">Setup Instructions</h4>
+            <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-2 list-decimal list-inside">
+              <li>Create a new Google Sheet with a "Products" tab</li>
+              <li>Add headers: id, name, description, productOwner, engineeringOwner, nextReleaseDate, productGuide, releaseNotes, demoScript, testCases, productionChecklist, updatedAt</li>
+              <li>Go to Extensions → Apps Script</li>
+              <li>Copy the Apps Script code (see documentation) and deploy as Web App</li>
+              <li>Set permissions to "Anyone with link"</li>
+              <li>Copy the Web App URL and paste below</li>
+            </ol>
+            <div className="mt-3 p-2 bg-slate-900 rounded text-xs text-emerald-400 font-mono overflow-x-auto">
+              See CLAUDE.md or project docs for the full Apps Script code
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Google Sheet URL</label>
+            <input
+              type="url"
+              value={sheetUrl}
+              onChange={(e) => setSheetUrl(e.target.value)}
+              placeholder="https://docs.google.com/spreadsheets/d/your-sheet-id/..."
+              className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Apps Script Web App URL</label>
+            <input
+              type="url"
+              value={appsScriptUrl}
+              onChange={(e) => setAppsScriptUrl(e.target.value)}
+              placeholder="https://script.google.com/macros/s/your-script-id/exec"
+              className="w-full px-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-white"
+            />
+            <p className="text-xs text-slate-400">The deployed Apps Script URL that handles read/write operations</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+            <Button onClick={handleTestConnection} variant="secondary" icon={Zap} disabled={syncStatus === 'syncing' || !appsScriptUrl}>
+              Test Connection
+            </Button>
+            <Button onClick={handlePushToSheet} variant="secondary" icon={ArrowUpRight} disabled={syncStatus === 'syncing' || !appsScriptUrl}>
+              Push to Sheet
+            </Button>
+            <Button onClick={handlePullFromSheet} variant="secondary" icon={Download} disabled={syncStatus === 'syncing' || !appsScriptUrl}>
+              Pull from Sheet
+            </Button>
+            <Button onClick={handleFullSync} icon={RefreshCw} disabled={syncStatus === 'syncing' || !appsScriptUrl}>
+              {syncStatus === 'syncing' ? 'Syncing...' : 'Full Sync'}
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            {lastSyncTime && (
+              <span className="text-slate-500">Last synced: {formatDate(lastSyncTime)}</span>
+            )}
+            {syncStatus === 'success' && syncDetails && (
+              <Badge color="emerald" size="sm">
+                {syncDetails.action === 'push' && `Pushed ${syncDetails.count} items`}
+                {syncDetails.action === 'pull' && `Added ${syncDetails.added}, Updated ${syncDetails.updated}`}
+                {syncDetails.action === 'full' && 'Sync Complete'}
+              </Badge>
+            )}
+            {syncStatus === 'error' && (
+              <Badge color="rose" size="sm">Sync Failed</Badge>
+            )}
+          </div>
+
+          {/* Diagnostic Results Panel */}
+          {testResults && (
+            <div className={`mt-4 p-4 rounded-lg border ${
+              testResults.status === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' :
+              testResults.status === 'error' ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800' :
+              testResults.status === 'testing' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' :
+              'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className={`font-bold text-sm ${
+                  testResults.status === 'success' ? 'text-emerald-800 dark:text-emerald-200' :
+                  testResults.status === 'error' ? 'text-rose-800 dark:text-rose-200' :
+                  testResults.status === 'testing' ? 'text-blue-800 dark:text-blue-200' :
+                  'text-amber-800 dark:text-amber-200'
+                }`}>
+                  Diagnostic Results
+                </h4>
+                <button
+                  onClick={() => setTestResults(null)}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Status Message */}
+              <p className={`text-sm mb-3 ${
+                testResults.status === 'success' ? 'text-emerald-700 dark:text-emerald-300' :
+                testResults.status === 'error' ? 'text-rose-700 dark:text-rose-300' :
+                'text-amber-700 dark:text-amber-300'
+              }`}>
+                {testResults.message}
+              </p>
+
+              {/* URL Checks */}
+              {testResults.urlChecks && (
+                <div className="mb-3">
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">URL Validation</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(testResults.urlChecks).map(([key, value]) => (
+                      <span key={key} className={`text-xs px-2 py-1 rounded ${
+                        value ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-200' :
+                        'bg-rose-100 dark:bg-rose-800 text-rose-700 dark:text-rose-200'
+                      }`}>
+                        {value ? '✓' : '✗'} {key}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Test Results */}
+              {testResults.tests && testResults.tests.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Test Results</p>
+                  {testResults.tests.map((test, i) => (
+                    <div key={i} className={`p-2 rounded text-xs ${
+                      test.status === 'pass' ? 'bg-emerald-100/50 dark:bg-emerald-900/30' :
+                      test.status === 'fail' ? 'bg-rose-100/50 dark:bg-rose-900/30' :
+                      'bg-amber-100/50 dark:bg-amber-900/30'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`font-bold ${
+                          test.status === 'pass' ? 'text-emerald-700 dark:text-emerald-300' :
+                          test.status === 'fail' ? 'text-rose-700 dark:text-rose-300' :
+                          'text-amber-700 dark:text-amber-300'
+                        }`}>
+                          {test.status === 'pass' ? '✓' : test.status === 'fail' ? '✗' : '⚠'} {test.name}
+                        </span>
+                        {test.httpStatus && (
+                          <span className="text-slate-500">HTTP {test.httpStatus}</span>
+                        )}
+                      </div>
+                      {test.message && (
+                        <p className="text-slate-600 dark:text-slate-300">{test.message}</p>
+                      )}
+                      {test.error && (
+                        <p className="text-rose-600 dark:text-rose-400">Error: {test.error}</p>
+                      )}
+                      {test.preview && (
+                        <pre className="mt-1 p-2 bg-slate-900 text-slate-300 rounded text-[10px] overflow-x-auto max-h-24">
+                          {test.preview}
+                        </pre>
+                      )}
+                      {test.data && (
+                        <pre className="mt-1 p-2 bg-slate-900 text-emerald-400 rounded text-[10px] overflow-x-auto max-h-24">
+                          {JSON.stringify(test.data, null, 2)}
+                        </pre>
+                      )}
+                      {test.url && test.redirected && (
+                        <p className="text-slate-500 mt-1">Redirected to: {test.url}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {testResults.timestamp && (
+                <p className="text-[10px] text-slate-400 mt-2">
+                  Tested at: {new Date(testResults.timestamp).toLocaleString()}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+
+      {/* Export Section */}
+      <Card className="p-4 sm:p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+            <Download size={20} className="text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Export Data</h2>
+            <p className="text-sm text-slate-500">Download your data as CSV files</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <button
+            onClick={handleExportProducts}
+            className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <Package size={20} className="text-blue-600 dark:text-blue-400" />
+              <Badge color="slate" size="sm">{products.length}</Badge>
+            </div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Export Products</h3>
+            <p className="text-xs text-slate-500 mt-1">Name, owners, docs, dates</p>
+          </button>
+          <button
+            onClick={handleExportDeployments}
+            className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <Rocket size={20} className="text-purple-600 dark:text-purple-400" />
+              <Badge color="slate" size="sm">{deployments.length}</Badge>
+            </div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Export Deployments</h3>
+            <p className="text-xs text-slate-500 mt-1">Status, progress, dates</p>
+          </button>
+          <button
+            onClick={handleExportClients}
+            className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <Users size={20} className="text-emerald-600 dark:text-emerald-400" />
+              <Badge color="slate" size="sm">{clients.length}</Badge>
+            </div>
+            <h3 className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Export Clients</h3>
+            <p className="text-xs text-slate-500 mt-1">Name, notes, deployment count</p>
+          </button>
+        </div>
+      </Card>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button onClick={handleSaveSettings} icon={Save}>Save Settings</Button>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================
+// 🏗 LAYOUT
+// ==========================================
+
+// NavItem Component Definition - Moved outside Sidebar to avoid re-creation
+const NavItem = ({ id, icon: Icon, label, active, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group ${active ? 'bg-slate-900 dark:bg-blue-600 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'}`}
+  >
+    <Icon size={18} className={active ? 'text-blue-400 dark:text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'} />
+    {label}
+  </button>
+);
+
+const Sidebar = () => {
+  const { page, navigate, history } = useNav();
+  const { isDark, toggleTheme } = useTheme();
+  
+  return (
+    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen z-40 hidden md:flex transition-colors">
+      <div className="p-5">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="h-10 w-10 bg-slate-900 dark:bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20 shrink-0">
+            <Rocket size={20} />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-tight">Control Tower</h1>
+            <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Enterprise</span>
+          </div>
+        </div>
+        
+        <nav className="space-y-1">
+          <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" active={page === 'dashboard'} onClick={() => navigate('dashboard')} />
+          <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Modules</div>
+          <NavItem id="products" icon={Package} label="Products" active={page === 'products'} onClick={() => navigate('products')} />
+          <NavItem id="clients" icon={Users} label="Clients" active={page === 'clients' || page === 'client-detail'} onClick={() => navigate('clients')} />
+          <NavItem id="deployments" icon={Rocket} label="Deployments" active={page === 'deployments'} onClick={() => navigate('deployments')} />
+          <NavItem id="onboarding" icon={CheckCircle2} label="Onboarding" active={page === 'onboarding'} onClick={() => navigate('onboarding')} />
+          <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</div>
+          <NavItem id="settings" icon={Settings} label="Settings" active={page === 'settings'} onClick={() => navigate('settings')} />
+        </nav>
+
+        {history.length > 0 && (
+          <div className="mt-6 animate-in slide-in-from-left-2 duration-300">
+            <div className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+              <History size={12}/> Recently Viewed
+            </div>
+            {history.map((h, i) => (
+              <button key={i} onClick={() => navigate(h.page, h.params)} className="w-full text-left px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 truncate transition-colors">
+                {h.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      
+      <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="mb-4 px-2">
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1"><Keyboard size={10}/> Shortcuts</div>
+          <div className="space-y-1">
+            {[{k:'/',l:'Search'},{k:'n',l:'New'},{k:'g+h',l:'Home'}].map(s => (
+              <div key={s.k} className="flex justify-between text-[10px] text-slate-500">
+                <span>{s.l}</span><span className="bg-slate-100 dark:bg-slate-800 px-1 rounded font-mono">{s.k}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-white text-[10px] font-bold">AD</div>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Admin</span>
+          </div>
+          <button onClick={toggleTheme} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            {isDark ? <Sun size={14}/> : <Moon size={14}/>}
+          </button>
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+const MobileHeader = () => {
+  const { page, navigate } = useNav();
+  const { isDark, toggleTheme } = useTheme();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navItems = [
+    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'products', icon: Package, label: 'Products' },
+    { id: 'clients', icon: Users, label: 'Clients' },
+    { id: 'deployments', icon: Rocket, label: 'Deployments' },
+    { id: 'onboarding', icon: CheckCircle2, label: 'Onboarding' },
+    { id: 'settings', icon: Settings, label: 'Settings' },
+  ];
+
+  return (
+    <>
+      <div className="md:hidden h-14 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sticky top-0 z-50">
+        <button onClick={() => setMenuOpen(true)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+          <List size={22} />
+        </button>
+        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
+          <Rocket className="text-blue-600" size={18}/> Control Tower
+        </div>
+        <button onClick={toggleTheme} className="p-2 -mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+          {isDark ? <Sun size={20}/> : <Moon size={20}/>}
+        </button>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-[60] animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 shadow-xl animate-in slide-in-from-left duration-300">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 bg-slate-900 dark:bg-blue-600 text-white rounded-lg flex items-center justify-center">
+                  <Rocket size={16} />
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white">Control Tower</span>
+              </div>
+              <button onClick={() => setMenuOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                <X size={20} />
+              </button>
+            </div>
+            <nav className="p-4 space-y-1">
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { navigate(item.id); setMenuOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                    page === item.id
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <item.icon size={20} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">AD</div>
+                <div>
+                  <div className="text-sm font-medium text-slate-900 dark:text-white">Admin</div>
+                  <div className="text-xs text-slate-500">Administrator</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+const MainContent = () => {
+  const { page, params } = useNav();
+  return (
+    <main className="flex-1 bg-slate-50/50 dark:bg-slate-950 min-h-screen transition-colors">
+      <MobileHeader />
+      <div className="w-full p-4 md:p-6 lg:p-8">
+        <CommandPalette />
+        {page === 'dashboard' && <Dashboard />}
+        {page === 'products' && <Products />}
+        {page === 'clients' && <Clients />}
+        {page === 'client-detail' && <ClientDetail clientId={params.clientId} />}
+        {page === 'deployments' && <Deployments />}
+        {page === 'onboarding' && <Onboarding />}
+        {page === 'settings' && <SettingsPage />}
+      </div>
+    </main>
+  );
+};
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <NavigationProvider>
+          <ToastProvider>
+            <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
+              <Sidebar />
+              <MainContent />
+            </div>
+          </ToastProvider>
+        </NavigationProvider>
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+
