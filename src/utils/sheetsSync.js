@@ -1,19 +1,24 @@
 // Google Sheets Sync Service
 export const SheetsSync = {
-  productsToRows: (products) => products.map(p => ({
-    id: p.id,
-    name: p.name || '',
-    description: p.description || '',
-    productOwner: p.productOwner || '',
-    engineeringOwner: p.engineeringOwner || '',
-    nextReleaseDate: p.nextReleaseDate || '',
-    productGuide: p.documentation?.productGuide || '',
-    releaseNotes: p.documentation?.releaseNotes || '',
-    demoScript: p.documentation?.demoScript || '',
-    testCases: p.documentation?.testCases || '',
-    productionChecklist: p.documentation?.productionChecklist || '',
-    updatedAt: p.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
-  })),
+  productsToRows: (products) => products.map(p => {
+    const parent = p.parentId ? products.find(pp => pp.id === p.parentId) : null;
+    return {
+      id: p.id,
+      name: p.name || '',
+      parentId: p.parentId || '',
+      parentName: parent?.name || '',
+      description: p.description || '',
+      productOwner: p.productOwner || '',
+      engineeringOwner: p.engineeringOwner || '',
+      nextReleaseDate: p.nextReleaseDate || '',
+      productGuide: p.documentation?.productGuide || '',
+      releaseNotes: p.documentation?.releaseNotes || '',
+      demoScript: p.documentation?.demoScript || '',
+      testCases: p.documentation?.testCases || '',
+      productionChecklist: p.documentation?.productionChecklist || '',
+      updatedAt: p.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString()
+    };
+  }),
 
   deploymentsToRows: (deployments, clients, products) => deployments.map(d => ({
     id: d.id,

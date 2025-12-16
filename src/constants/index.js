@@ -46,6 +46,8 @@ export const PRODUCT_AVATAR_COLORS = [
 export const PRODUCT_EXPORT_COLUMNS = [
   { key: 'id', label: 'ID' },
   { key: 'name', label: 'Name' },
+  { key: 'parentId', label: 'Parent ID' },
+  { key: 'parentName', label: 'Parent Name' },
   { key: 'description', label: 'Description' },
   { key: 'productOwner', label: 'Product Owner' },
   { key: 'engineeringOwner', label: 'Engineering Owner' },

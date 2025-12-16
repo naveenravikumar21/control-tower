@@ -17,6 +17,19 @@ export const Deployments = () => {
   const { params, navigate } = useNav();
   const { addToast } = useToast();
 
+  // Organize products into parent/sub-project hierarchy
+  const productHierarchy = useMemo(() => {
+    const parentProducts = products.filter(p => !p.parentId);
+    const subProjectsByParent = {};
+    products.forEach(p => {
+      if (p.parentId) {
+        if (!subProjectsByParent[p.parentId]) subProjectsByParent[p.parentId] = [];
+        subProjectsByParent[p.parentId].push(p);
+      }
+    });
+    return { parentProducts, subProjectsByParent };
+  }, [products]);
+
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -162,7 +175,20 @@ export const Deployments = () => {
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Product</label>
                 <select name="productId" className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" required>
                   <option value="">Select product...</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {productHierarchy.parentProducts.map(parent => {
+                    const subProjects = productHierarchy.subProjectsByParent[parent.id] || [];
+                    if (subProjects.length === 0) {
+                      return <option key={parent.id} value={parent.id}>{parent.name}</option>;
+                    }
+                    return (
+                      <optgroup key={parent.id} label={parent.name}>
+                        <option value={parent.id}>{parent.name}</option>
+                        {subProjects.map(sp => (
+                          <option key={sp.id} value={sp.id}>↳ {sp.name}</option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
                 </select>
               </div>
               <Input label="Target Date" name="nextDeliveryDate" type="date" required />
