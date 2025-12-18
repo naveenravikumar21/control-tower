@@ -3,7 +3,7 @@ import {
   FileText, Plus, Edit2, Trash2, Copy, Download, Eye, X, Check,
   Sparkles, TrendingUp, Bug, Shield, Zap, AlertTriangle, Clock,
   ChevronDown, ChevronRight, Calendar, Package, Tag, Search,
-  Globe, Lock, History, Users, Building2
+  Globe, Lock, History, Users, Building2, Wand2, CheckCircle2, Rocket, Server
 } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
@@ -26,18 +26,27 @@ const IconMap = {
 export const ReleaseNotes = () => {
   const { data: releaseNotes } = useCollection('releaseNotes');
   const { data: products } = useCollection('products');
+  const { data: deployments } = useCollection('deployments');
+  const { data: checklists } = useCollection('checklists');
+  const { data: clients } = useCollection('clients');
+  const { data: microservices } = useCollection('microservices');
+  const { data: productServiceVersions } = useCollection('productServiceVersions');
   const { addToast } = useToast();
   const { navigate } = useNav();
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [isPreviewOpen, setPreviewOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isImportOpen, setImportOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState('');
   const [exportVisibility, setExportVisibility] = useState('all'); // 'all', 'public', 'internal'
   const [openDropdown, setOpenDropdown] = useState(null); // 'copy-{noteId}' or 'pdf-{noteId}'
+  const [selectedDeploymentId, setSelectedDeploymentId] = useState('');
+  const [selectedChecklistItems, setSelectedChecklistItems] = useState([]);
+  const [showServiceVersions, setShowServiceVersions] = useState(false);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -55,7 +64,8 @@ export const ReleaseNotes = () => {
     releaseDate: '',
     title: '',
     summary: '',
-    items: []
+    items: [],
+    serviceVersions: {} // { serviceId: version }
   });
   const [newItem, setNewItem] = useState({ type: 'feature', title: '', description: '', visibility: 'public' });
 
@@ -78,6 +88,98 @@ export const ReleaseNotes = () => {
 
     return notes.sort((a, b) => new Date(b.releaseDate || b.createdAt) - new Date(a.releaseDate || a.createdAt));
   }, [releaseNotes, searchQuery, selectedProduct]);
+
+  // Get deployments for the selected product (for import)
+  const productDeployments = useMemo(() => {
+    if (!formData.productId) return [];
+    return deployments
+      .filter(d => d.productId === formData.productId)
+      .map(d => {
+        const client = clients.find(c => c.id === d.clientId);
+        let clientName = client?.name;
+        if (!clientName) {
+          if (d.deploymentType === 'ga') clientName = 'GA Release';
+          else if (d.deploymentType === 'generic') clientName = 'Generic';
+          else clientName = 'GA Release';
+        }
+        const deployChecklist = checklists.filter(c => c.deploymentId === d.id);
+        const completedCount = deployChecklist.filter(c => c.isCompleted).length;
+        return {
+          ...d,
+          clientName,
+          checklist: deployChecklist,
+          completedCount,
+          totalCount: deployChecklist.length
+        };
+      })
+      .sort((a, b) => new Date(b.nextDeliveryDate || 0) - new Date(a.nextDeliveryDate || 0));
+  }, [deployments, formData.productId, clients, checklists]);
+
+  // Get checklist items for selected deployment
+  const selectedDeploymentChecklist = useMemo(() => {
+    if (!selectedDeploymentId) return [];
+    const deployment = productDeployments.find(d => d.id === selectedDeploymentId);
+    return deployment?.checklist || [];
+  }, [selectedDeploymentId, productDeployments]);
+
+  // Get service dependencies for the selected product
+  const productDependencies = useMemo(() => {
+    if (!formData.productId) return [];
+    return productServiceVersions
+      .filter(ps => ps.productId === formData.productId)
+      .map(ps => {
+        const service = microservices.find(s => s.id === ps.serviceId);
+        return {
+          ...ps,
+          serviceName: service?.name || 'Unknown',
+          currentVersion: service?.currentVersion
+        };
+      })
+      .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''));
+  }, [productServiceVersions, formData.productId, microservices]);
+
+  // Import selected checklist items as release note items
+  const importChecklistItems = () => {
+    if (selectedChecklistItems.length === 0) {
+      addToast("Please select at least one item to import", "error");
+      return;
+    }
+
+    const newItems = selectedChecklistItems.map(checkItem => ({
+      id: crypto.randomUUID(),
+      type: 'feature', // Default type, user can change
+      title: checkItem.name,
+      description: checkItem.isCompleted ? 'Completed' : 'Pending',
+      visibility: 'public'
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, ...newItems]
+    }));
+
+    addToast(`Imported ${newItems.length} item${newItems.length !== 1 ? 's' : ''}`, "success");
+    setImportOpen(false);
+    setSelectedDeploymentId('');
+    setSelectedChecklistItems([]);
+  };
+
+  // Toggle checklist item selection
+  const toggleChecklistItem = (item) => {
+    setSelectedChecklistItems(prev => {
+      const exists = prev.find(i => i.id === item.id);
+      if (exists) {
+        return prev.filter(i => i.id !== item.id);
+      }
+      return [...prev, item];
+    });
+  };
+
+  // Select all completed items
+  const selectAllCompleted = () => {
+    const completedItems = selectedDeploymentChecklist.filter(c => c.isCompleted);
+    setSelectedChecklistItems(completedItems);
+  };
 
   // Open modal for new release note
   const openNewModal = () => {
@@ -106,7 +208,8 @@ export const ReleaseNotes = () => {
       items: (note.items || []).map(item => ({
         ...item,
         visibility: item.visibility || 'public' // Ensure visibility field exists
-      }))
+      })),
+      serviceVersions: note.serviceVersions || {}
     });
     setNewItem({ type: 'feature', title: '', description: '', visibility: 'public' });
     setModalOpen(true);
@@ -377,6 +480,25 @@ export const ReleaseNotes = () => {
   // Preview release note
   const [previewNote, setPreviewNote] = useState(null);
   const [previewVisibility, setPreviewVisibility] = useState('all');
+
+  // Get service versions for preview note (enriched with service names)
+  const previewServiceVersions = useMemo(() => {
+    if (!previewNote?.serviceVersions) return [];
+    return Object.entries(previewNote.serviceVersions)
+      .filter(([_, version]) => version) // Only show services with versions set
+      .map(([serviceId, version]) => {
+        const service = microservices.find(s => s.id === serviceId);
+        const productDep = productServiceVersions.find(ps => ps.productId === previewNote.productId && ps.serviceId === serviceId);
+        return {
+          serviceId,
+          serviceName: service?.name || 'Unknown',
+          version,
+          currentVersion: service?.currentVersion,
+          defaultVersion: productDep?.version
+        };
+      })
+      .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''));
+  }, [previewNote, microservices, productServiceVersions]);
 
   const openPreview = (note) => {
     setPreviewNote(note);
@@ -673,7 +795,18 @@ export const ReleaseNotes = () => {
 
               {/* Add Item Section */}
               <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
-                <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Add Release Items</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-white">Add Release Items</h4>
+                  {formData.productId && productDeployments.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedDeploymentId(''); setSelectedChecklistItems([]); setImportOpen(true); }}
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 rounded-lg transition-colors"
+                    >
+                      <Wand2 size={14} /> Import from Deployment
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-3">
                   <div className="grid grid-cols-4 gap-3">
                     <select
@@ -770,6 +903,50 @@ export const ReleaseNotes = () => {
                   </div>
                 </div>
               )}
+
+              {/* Service Versions Section */}
+              {productDependencies.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Server size={16} className="text-cyan-500" />
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide">
+                      Service Versions
+                    </h3>
+                    <span className="text-xs text-slate-400">({productDependencies.length} dependencies)</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Specify the required service versions for this release. Leave blank to use the default dependency version.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {productDependencies.map(dep => (
+                      <div key={dep.serviceId} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-slate-900 dark:text-white">{dep.serviceName}</div>
+                          <div className="text-xs text-slate-500 flex items-center gap-1">
+                            Default: <span className="font-mono text-cyan-600 dark:text-cyan-400">v{dep.version || '?'}</span>
+                            {dep.currentVersion && dep.version !== dep.currentVersion && (
+                              <span className="text-amber-600 dark:text-amber-400">(latest: {dep.currentVersion})</span>
+                            )}
+                          </div>
+                        </div>
+                        <input
+                          type="text"
+                          value={formData.serviceVersions?.[dep.serviceId] || ''}
+                          onChange={(e) => setFormData(prev => ({
+                            ...prev,
+                            serviceVersions: {
+                              ...prev.serviceVersions,
+                              [dep.serviceId]: e.target.value
+                            }
+                          }))}
+                          placeholder={dep.version || dep.currentVersion || 'version'}
+                          className="w-24 px-2 py-1.5 border border-slate-200 dark:border-slate-600 rounded text-sm font-mono bg-white dark:bg-slate-900 dark:text-white"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
@@ -833,6 +1010,19 @@ export const ReleaseNotes = () => {
                   </button>
                 </div>
                 <div className="flex items-center gap-2 ml-auto">
+                  {previewServiceVersions.length > 0 && (
+                    <button
+                      onClick={() => setShowServiceVersions(!showServiceVersions)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                        showServiceVersions
+                          ? 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-300'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <Server size={14} />
+                      Services {showServiceVersions ? 'On' : 'Off'}
+                    </button>
+                  )}
                   <Button variant="secondary" onClick={() => copyToClipboard(previewNote, previewVisibility)} icon={Copy}>
                     Copy
                   </Button>
@@ -865,6 +1055,25 @@ export const ReleaseNotes = () => {
                     <strong>Release Date:</strong> {formatDate(previewNote.releaseDate)}
                   </p>
                 </div>
+
+                {/* Service Versions Section (toggleable) */}
+                {showServiceVersions && previewServiceVersions.length > 0 && (
+                  <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide flex items-center gap-2 mb-3">
+                      <Server size={16} className="text-cyan-500" /> Required Service Versions
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {previewServiceVersions.map(sv => (
+                        <div key={sv.serviceId} className="flex items-center justify-between gap-2 p-2 bg-white dark:bg-slate-900 rounded border border-slate-200 dark:border-slate-700">
+                          <span className="text-sm text-slate-700 dark:text-slate-300 truncate">{sv.serviceName}</span>
+                          <span className="text-sm font-mono font-medium text-cyan-600 dark:text-cyan-400 shrink-0">
+                            v{sv.version}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {previewNote.title && (
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mt-6">{previewNote.title}</h3>
@@ -993,6 +1202,140 @@ export const ReleaseNotes = () => {
             <div className="p-4 border-t border-slate-200 dark:border-slate-700">
               <Button variant="secondary" onClick={() => setIsHistoryOpen(false)} className="w-full">
                 Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Import from Deployment Modal */}
+      {isImportOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-3 sm:p-4">
+          <Card className="w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Wand2 size={20} className="text-purple-500" /> Import from Deployment
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Select checklist items to add as release notes
+                </p>
+              </div>
+              <button onClick={() => setImportOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              {/* Deployment Selector */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1.5">
+                  Select Deployment
+                </label>
+                <select
+                  value={selectedDeploymentId}
+                  onChange={(e) => { setSelectedDeploymentId(e.target.value); setSelectedChecklistItems([]); }}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white"
+                >
+                  <option value="">Choose a deployment...</option>
+                  {productDeployments.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.clientName} - {d.status} ({d.completedCount}/{d.totalCount} completed)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Checklist Items */}
+              {selectedDeploymentId && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+                      Checklist Items ({selectedDeploymentChecklist.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={selectAllCompleted}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Select all completed
+                    </button>
+                  </div>
+
+                  {selectedDeploymentChecklist.length === 0 ? (
+                    <div className="text-center py-6 text-slate-500">
+                      <CheckCircle2 size={32} className="mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No checklist items found</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {selectedDeploymentChecklist.map(item => {
+                        const isSelected = selectedChecklistItems.find(i => i.id === item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => toggleChecklistItem(item)}
+                            className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                              isSelected
+                                ? 'bg-purple-50 dark:bg-purple-900/20 border-2 border-purple-300 dark:border-purple-700'
+                                : 'bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-600'
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 ${
+                              isSelected
+                                ? 'bg-purple-500 text-white'
+                                : 'border-2 border-slate-300 dark:border-slate-600'
+                            }`}>
+                              {isSelected && <Check size={12} />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium ${item.isCompleted ? 'text-slate-700 dark:text-slate-300' : 'text-slate-500'}`}>
+                                {item.name}
+                              </p>
+                            </div>
+                            {item.isCompleted ? (
+                              <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded-full">
+                                Completed
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-xs rounded-full">
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {selectedChecklistItems.length > 0 && (
+                    <div className="mt-3 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <p className="text-sm text-purple-700 dark:text-purple-300">
+                        <strong>{selectedChecklistItems.length}</strong> item{selectedChecklistItems.length !== 1 ? 's' : ''} selected for import
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!selectedDeploymentId && productDeployments.length > 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <Rocket size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Select a deployment to see its checklist items</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setImportOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={importChecklistItems}
+                disabled={selectedChecklistItems.length === 0}
+                icon={Wand2}
+              >
+                Import {selectedChecklistItems.length > 0 ? `(${selectedChecklistItems.length})` : ''}
               </Button>
             </div>
           </Card>

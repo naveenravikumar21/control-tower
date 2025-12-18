@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell, Tag, Eye, Download, Globe, Lock } from 'lucide-react';
+import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell, Tag, Eye, Download, Globe, Lock, Server } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, getDeadlineStatus, formatDate, toInputDate } from '../utils';
@@ -16,6 +16,8 @@ export const ProductDetail = ({ productId }) => {
   const { data: clients } = useCollection('clients');
   const { data: checklists } = useCollection('checklists');
   const { data: releaseNotes } = useCollection('releaseNotes');
+  const { data: microservices } = useCollection('microservices');
+  const { data: productServiceVersions } = useCollection('productServiceVersions');
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -24,6 +26,9 @@ export const ProductDetail = ({ productId }) => {
   const [selectedParentId, setSelectedParentId] = useState('');
   const [notificationEmails, setNotificationEmails] = useState([]);
   const [newEmail, setNewEmail] = useState('');
+  const [isDependencyModalOpen, setDependencyModalOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState('');
+  const [serviceVersion, setServiceVersion] = useState('');
 
   // Get all parent products (for parent selector)
   const parentProducts = useMemo(() =>
@@ -63,6 +68,86 @@ export const ProductDetail = ({ productId }) => {
 
   // Get the latest version
   const latestVersion = productReleaseNotes[0];
+
+  // Get product's microservice dependencies
+  const productDependencies = useMemo(() => {
+    return productServiceVersions
+      .filter(ps => ps.productId === productId)
+      .map(ps => {
+        const service = microservices.find(s => s.id === ps.serviceId);
+        return {
+          ...ps,
+          serviceName: service?.name || 'Unknown',
+          serviceStatus: service?.status || 'unknown',
+          currentVersion: service?.currentVersion,
+          isOutdated: service?.currentVersion && ps.version !== service.currentVersion
+        };
+      })
+      .sort((a, b) => (a.serviceName || '').localeCompare(b.serviceName || ''));
+  }, [productServiceVersions, productId, microservices]);
+
+  // Get services not yet added as dependencies
+  const availableServices = useMemo(() => {
+    const usedServiceIds = productDependencies.map(d => d.serviceId);
+    return microservices
+      .filter(s => s.status !== 'archived' && !usedServiceIds.includes(s.id))
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }, [microservices, productDependencies]);
+
+  // Add dependency
+  const handleAddDependency = async () => {
+    if (!selectedServiceId) {
+      addToast("Please select a service", "error");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'productServiceVersions'), {
+        productId,
+        serviceId: selectedServiceId,
+        version: serviceVersion.trim() || '',
+        createdAt: serverTimestamp()
+      });
+      addToast("Dependency added", "success");
+      setDependencyModalOpen(false);
+      setSelectedServiceId('');
+      setServiceVersion('');
+    } catch (e) {
+      addToast("Error adding dependency", "error");
+    }
+  };
+
+  // Update dependency version
+  const handleUpdateDependency = async (depId, newVersion) => {
+    try {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'productServiceVersions', depId), {
+        version: newVersion,
+        updatedAt: serverTimestamp()
+      });
+      addToast("Version updated", "success");
+    } catch (e) {
+      addToast("Error updating version", "error");
+    }
+  };
+
+  // Remove dependency
+  const handleRemoveDependency = (dep) => {
+    setConfirmModal({
+      title: `Remove ${dep.serviceName}?`,
+      message: "This will remove the service dependency from this product.",
+      isDestructive: true,
+      onCancel: () => setConfirmModal(null),
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'productServiceVersions', dep.id));
+          addToast("Dependency removed", "success");
+        } catch (e) {
+          addToast("Error removing dependency", "error");
+        }
+        setConfirmModal(null);
+      }
+    });
+  };
 
   // Stats
   const stats = useMemo(() => {
@@ -395,6 +480,80 @@ export const ProductDetail = ({ productId }) => {
             );
           })}
         </div>
+      </Card>
+
+      {/* Microservice Dependencies Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide flex items-center gap-2">
+            <Server size={16} /> Service Dependencies ({productDependencies.length})
+          </h3>
+          {availableServices.length > 0 && (
+            <Button variant="secondary" size="sm" onClick={() => setDependencyModalOpen(true)} icon={Plus}>
+              Add Service
+            </Button>
+          )}
+        </div>
+
+        {productDependencies.length === 0 ? (
+          <EmptyState
+            icon={Server}
+            title="No dependencies defined"
+            description="Add microservice dependencies to track required service versions"
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {productDependencies.map(dep => (
+              <div
+                key={dep.id}
+                className={`p-3 rounded-lg border transition-all ${
+                  dep.isOutdated
+                    ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                    : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Server size={16} className="text-cyan-500 shrink-0" />
+                    <div>
+                      <div className="font-medium text-slate-900 dark:text-white text-sm">{dep.serviceName}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        {dep.version ? (
+                          <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${
+                            dep.isOutdated
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                              : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+                          }`}>
+                            v{dep.version}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-400 italic">No version set</span>
+                        )}
+                        {dep.isOutdated && (
+                          <span className="text-[10px] text-amber-600 dark:text-amber-400">
+                            (latest: {dep.currentVersion})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveDependency(dep)}
+                    className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-slate-400 hover:text-red-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {productDependencies.length > 0 && availableServices.length === 0 && (
+          <p className="mt-3 text-xs text-slate-500 italic">
+            All available services have been added as dependencies.
+          </p>
+        )}
       </Card>
 
       {/* Release Versions Section */}
@@ -846,6 +1005,62 @@ export const ProductDetail = ({ productId }) => {
                 <Button type="submit">Save</Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Add Dependency Modal */}
+      {isDependencyModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+          <Card className="w-full max-w-md p-4 sm:p-6">
+            <h2 className="text-lg font-bold mb-4 text-slate-900 dark:text-white flex items-center gap-2">
+              <Server size={20} className="text-cyan-500" /> Add Service Dependency
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1.5">
+                  Select Service *
+                </label>
+                <select
+                  value={selectedServiceId}
+                  onChange={(e) => {
+                    setSelectedServiceId(e.target.value);
+                    const service = microservices.find(s => s.id === e.target.value);
+                    if (service?.currentVersion) setServiceVersion(service.currentVersion);
+                  }}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white"
+                >
+                  <option value="">Choose a service...</option>
+                  {availableServices.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} {s.currentVersion ? `(v${s.currentVersion})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <Input
+                label="Required Version"
+                value={serviceVersion}
+                onChange={(e) => setServiceVersion(e.target.value)}
+                placeholder="e.g., 2.1.0"
+              />
+
+              {selectedServiceId && (
+                <p className="text-xs text-slate-500">
+                  Latest version: <span className="font-mono text-cyan-600 dark:text-cyan-400">
+                    v{microservices.find(s => s.id === selectedServiceId)?.currentVersion || '?'}
+                  </span>
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button variant="secondary" onClick={() => { setDependencyModalOpen(false); setSelectedServiceId(''); setServiceVersion(''); }}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAddDependency}>Add Dependency</Button>
+              </div>
+            </div>
           </Card>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, Package, Users, Rocket, CheckCircle2,
-  History, Sun, Moon, Keyboard, List, X, Settings, FileText
+  History, Sun, Moon, Keyboard, List, X, Settings, FileText, Server, Grid3X3
 } from 'lucide-react';
 
 // Import from extracted modules
@@ -22,7 +22,9 @@ import {
   ClientDetail,
   Onboarding,
   SettingsPage,
-  ReleaseNotes
+  ReleaseNotes,
+  Microservices,
+  CompatibilityMatrix
 } from './pages';
 
 // ==========================================
@@ -64,6 +66,8 @@ const Sidebar = () => {
           <NavItem id="deployments" icon={Rocket} label="Deployments" active={page === 'deployments'} onClick={() => navigate('deployments')} />
           <NavItem id="onboarding" icon={CheckCircle2} label="Onboarding" active={page === 'onboarding'} onClick={() => navigate('onboarding')} />
           <NavItem id="release-notes" icon={FileText} label="Release Notes" active={page === 'release-notes'} onClick={() => navigate('release-notes')} />
+          <NavItem id="microservices" icon={Server} label="Microservices" active={page === 'microservices'} onClick={() => navigate('microservices')} />
+          <NavItem id="compatibility" icon={Grid3X3} label="Compatibility" active={page === 'compatibility'} onClick={() => navigate('compatibility')} />
           <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</div>
           <NavItem id="settings" icon={Settings} label="Settings" active={page === 'settings'} onClick={() => navigate('settings')} />
         </nav>
@@ -122,6 +126,8 @@ const MobileHeader = () => {
     { id: 'deployments', icon: Rocket, label: 'Deployments' },
     { id: 'onboarding', icon: CheckCircle2, label: 'Onboarding' },
     { id: 'release-notes', icon: FileText, label: 'Release Notes' },
+    { id: 'microservices', icon: Server, label: 'Microservices' },
+    { id: 'compatibility', icon: Grid3X3, label: 'Compatibility' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -204,6 +210,8 @@ const MainContent = () => {
         {page === 'deployments' && <Deployments />}
         {page === 'onboarding' && <Onboarding />}
         {page === 'release-notes' && <ReleaseNotes />}
+        {page === 'microservices' && <Microservices />}
+        {page === 'compatibility' && <CompatibilityMatrix />}
         {page === 'settings' && <SettingsPage />}
       </div>
     </main>
