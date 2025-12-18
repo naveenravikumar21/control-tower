@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus } from 'lucide-react';
+import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, getDeadlineStatus, formatDate, toInputDate } from '../utils';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
 import { DOC_TYPES, PRODUCT_AVATAR_COLORS } from '../constants';
 import { Card, Badge, ProgressBar, EmptyState, Button, Input, CustomTooltip, ConfirmationModal } from '../components/ui/index.jsx';
-import { TimelineStrip } from '../components/features';
+import { TimelineStrip, NotesPanel } from '../components/features';
 
 export const ProductDetail = ({ productId }) => {
   const { navigate, addToHistory } = useNav();
@@ -21,6 +21,8 @@ export const ProductDetail = ({ productId }) => {
   const [confirmModal, setConfirmModal] = useState(null);
   const [isSubProject, setIsSubProject] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState('');
+  const [notificationEmails, setNotificationEmails] = useState([]);
+  const [newEmail, setNewEmail] = useState('');
 
   // Get all parent products (for parent selector)
   const parentProducts = useMemo(() =>
@@ -130,6 +132,7 @@ export const ProductDetail = ({ productId }) => {
       nextReleaseDate: fd.get('nextReleaseDate'),
       documentation: docData,
       parentId,
+      notificationEmails,
       updatedAt: serverTimestamp()
     };
 
@@ -153,9 +156,39 @@ export const ProductDetail = ({ productId }) => {
       setEditing(null);
       setIsSubProject(false);
       setSelectedParentId('');
+      setNotificationEmails([]);
+      setNewEmail('');
     } catch (e) {
       addToast("Error saving", "error");
     }
+  };
+
+  const handleAddEmail = () => {
+    if (!newEmail.trim()) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      addToast("Please enter a valid email address", "error");
+      return;
+    }
+    if (notificationEmails.includes(newEmail.toLowerCase())) {
+      addToast("Email already added", "error");
+      return;
+    }
+    setNotificationEmails([...notificationEmails, newEmail.toLowerCase()]);
+    setNewEmail('');
+  };
+
+  const handleRemoveEmail = (email) => {
+    setNotificationEmails(notificationEmails.filter(e => e !== email));
+  };
+
+  const openEditModal = (item, asSubProject = false) => {
+    setEditing(item);
+    setIsSubProject(asSubProject);
+    setSelectedParentId(item?.parentId || '');
+    setNotificationEmails(item?.notificationEmails || []);
+    setNewEmail('');
+    setModalOpen(true);
   };
 
   const handleDelete = (item) => {
@@ -190,6 +223,17 @@ export const ProductDetail = ({ productId }) => {
     });
   };
 
+  const handleAddNote = async (note) => {
+    try {
+      const notes = [...(product.notes || []), note];
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', productId), {
+        notes,
+        updatedAt: serverTimestamp()
+      });
+      addToast("Note added", "success");
+    } catch(e) { addToast("Failed to add note", "error"); }
+  };
+
   if (!product) return <div className="p-10 text-center text-slate-500">Loading product...</div>;
 
   const colorIndex = product.name?.charCodeAt(0) % PRODUCT_AVATAR_COLORS.length || 0;
@@ -221,7 +265,7 @@ export const ProductDetail = ({ productId }) => {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => { setEditing(product); setIsSubProject(false); setModalOpen(true); }} icon={Edit2}>
+          <Button variant="secondary" onClick={() => openEditModal(product)} icon={Edit2}>
             Edit
           </Button>
           <Button variant="ghost" onClick={() => handleDelete(product)} className="text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20">
@@ -249,6 +293,25 @@ export const ProductDetail = ({ productId }) => {
         <Card className="p-4">
           <div className="text-xs text-slate-400 uppercase tracking-wide mb-1">Sub-Projects</div>
           <div className="font-semibold text-slate-900 dark:text-white">{subProjects.length}</div>
+        </Card>
+        <Card className="p-4 col-span-2 md:col-span-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell size={16} className={product.notificationEmails?.length > 0 ? "text-blue-500" : "text-slate-300"} />
+              <span className="text-xs text-slate-400 uppercase tracking-wide">Notifications</span>
+            </div>
+            {product.notificationEmails?.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {product.notificationEmails.map(email => (
+                  <span key={email} className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs rounded-full flex items-center gap-1">
+                    <Mail size={10} /> {email}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400">No notifications configured</span>
+            )}
+          </div>
         </Card>
       </div>
 
@@ -316,6 +379,16 @@ export const ProductDetail = ({ productId }) => {
         </div>
       </Card>
 
+      {/* Notes Section */}
+      <Card className="p-6">
+        <NotesPanel
+          notes={product.notes || []}
+          onAddNote={handleAddNote}
+          title="Product Notes"
+          placeholder="Add a note about this product..."
+        />
+      </Card>
+
       {/* Timeline */}
       {timelineItems.length > 0 && (
         <Card className="p-6">
@@ -332,7 +405,7 @@ export const ProductDetail = ({ productId }) => {
           <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <FolderPlus size={20} /> Sub-Projects ({subProjects.length})
           </h3>
-          <Button variant="secondary" size="sm" onClick={() => { setEditing(null); setIsSubProject(true); setSelectedParentId(productId); setModalOpen(true); }} icon={Plus}>
+          <Button variant="secondary" size="sm" onClick={() => { setEditing(null); setIsSubProject(true); setSelectedParentId(productId); setNotificationEmails([]); setNewEmail(''); setModalOpen(true); }} icon={Plus}>
             Add Sub-Project
           </Button>
         </div>
@@ -373,7 +446,7 @@ export const ProductDetail = ({ productId }) => {
                           </h4>
                           <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                             <button
-                              onClick={(e) => { e.stopPropagation(); setEditing(sp); setIsSubProject(false); setSelectedParentId(sp.parentId || ''); setModalOpen(true); }}
+                              onClick={(e) => { e.stopPropagation(); openEditModal(sp); }}
                               className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             >
                               <Edit2 size={14} />
@@ -599,8 +672,59 @@ export const ProductDetail = ({ productId }) => {
                   <Input key={t.key} label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." className="mb-2" />
                 ))}
               </div>
+
+              {/* Notification Emails */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center gap-2 mb-3">
+                  <Bell size={14} className="text-blue-500" />
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Notification Emails</span>
+                </div>
+                <p className="text-xs text-slate-400 mb-3">
+                  These emails will receive notifications when deadlines are within 7 days.
+                </p>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddEmail(); }}}
+                    placeholder="email@example.com"
+                    className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddEmail}
+                    className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                {notificationEmails.length > 0 && (
+                  <div className="space-y-2">
+                    {notificationEmails.map(email => (
+                      <div key={email} className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Mail size={14} className="text-slate-400" />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{email}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEmail(email)}
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {notificationEmails.length === 0 && (
+                  <p className="text-xs text-slate-400 italic">No notification emails configured.</p>
+                )}
+              </div>
+
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
-                <Button variant="secondary" onClick={() => { setModalOpen(false); setEditing(null); setIsSubProject(false); setSelectedParentId(''); }} type="button">Cancel</Button>
+                <Button variant="secondary" onClick={() => { setModalOpen(false); setEditing(null); setIsSubProject(false); setSelectedParentId(''); setNotificationEmails([]); setNewEmail(''); }} type="button">Cancel</Button>
                 <Button type="submit">Save</Button>
               </div>
             </form>

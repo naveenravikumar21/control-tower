@@ -4,7 +4,7 @@ import { useNav } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, formatDate } from '../utils';
 import { Button, Card, SearchInput, Sparkles } from '../components/ui/index.jsx';
-import { KPICard, TimelineStrip } from '../components/features';
+import { KPICard, TimelineStrip, GanttChart } from '../components/features';
 
 export const Dashboard = () => {
   const { navigate } = useNav();
@@ -470,6 +470,14 @@ export const Dashboard = () => {
           </div>
         </Card>
       </div>
+
+      {/* Gantt Chart */}
+      <GanttChart
+        deployments={deployments}
+        products={products}
+        clients={clients}
+        onSelect={(d) => navigate('deployments', { filter: { id: d.id } })}
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
         <KPICard

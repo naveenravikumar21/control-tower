@@ -174,22 +174,38 @@ export const Products = () => {
               className="p-0 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
               onClick={() => navigate('product-detail', { productId: p.id })}
             >
-              <div className="p-5 flex-1">
+              <div className="p-5 flex-1 relative">
+                {/* Action buttons - absolute positioned */}
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedParentId(p.id); setEditing(null); setModalOpen(true); }}
+                    className="p-1.5 bg-white dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 rounded-lg text-slate-400 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors shadow-sm border border-slate-200 dark:border-slate-600"
+                    title="Add Sub-Project"
+                  >
+                    <FolderPlus size={16}/>
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditing(p); setSelectedParentId(p.parentId || ''); setModalOpen(true); }}
+                    className="p-1.5 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg text-slate-400 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm border border-slate-200 dark:border-slate-600"
+                    title="Edit"
+                  >
+                    <Edit2 size={16}/>
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(p, e)}
+                    className="p-1.5 bg-white dark:bg-slate-700 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg text-slate-400 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-colors shadow-sm border border-slate-200 dark:border-slate-600"
+                    title="Delete"
+                  >
+                    <Trash2 size={16}/>
+                  </button>
+                </div>
+
                 <div className="flex items-start gap-4">
                   <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
                     <Package size={22} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
-                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                        <CustomTooltip content="Add Sub-Project">
-                          <button onClick={(e) => { e.stopPropagation(); setSelectedParentId(p.id); setEditing(null); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"><FolderPlus size={16}/></button>
-                        </CustomTooltip>
-                        <button onClick={(e) => { e.stopPropagation(); setEditing(p); setSelectedParentId(p.parentId || ''); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
-                        <button onClick={(e) => handleDelete(p, e)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
-                      </div>
-                    </div>
+                  <div className="flex-1 min-w-0 pr-20">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
                     {p.description ? (
                       <p className="text-sm text-slate-500 mt-2 line-clamp-2">{p.description}</p>
                     ) : (
@@ -208,7 +224,7 @@ export const Products = () => {
                 )}
               </div>
 
-              <div className="px-5 py-3.5 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+              <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
@@ -235,7 +251,7 @@ export const Products = () => {
                 <div className="border-t border-slate-200 dark:border-slate-700">
                   <button
                     onClick={(e) => toggleExpanded(p.id, e)}
-                    className="w-full px-5 py-3 flex items-center justify-between text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                    className="w-full px-5 py-3 flex items-center justify-between text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -251,7 +267,7 @@ export const Products = () => {
                           <div
                             key={sp.id}
                             onClick={(e) => { e.stopPropagation(); navigate('product-detail', { productId: sp.id }); }}
-                            className="flex items-center justify-between p-3 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+                            className="flex items-center justify-between p-3 bg-slate-100/50 dark:bg-slate-700/50 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-600/50 transition-colors cursor-pointer"
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />

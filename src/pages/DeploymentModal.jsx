@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2 } from 'lucide-react';
+import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw } from 'lucide-react';
 import { useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, updateDoc, deleteDoc } from '../utils/firebase';
 import { toInputDate, getDeadlineStatus } from '../utils';
 import { DOC_TYPES } from '../constants';
 import { Button, Card, Badge, ConfirmationModal } from '../components/ui/index.jsx';
-import { BlockedCommentsPanel } from '../components/features';
+import { BlockedCommentsPanel, NotesPanel } from '../components/features';
 
 export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const { data: products } = useCollection('products');
@@ -25,11 +25,24 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
 
   const handleStatusChange = async (newStatus) => {
     try {
+      const oldStatus = editing.status;
+      const statusChange = {
+        id: crypto.randomUUID(),
+        text: `Status changed from "${oldStatus}" to "${newStatus}"`,
+        author: 'System',
+        timestamp: new Date().toISOString(),
+        type: 'status_change',
+        fromStatus: oldStatus,
+        toStatus: newStatus
+      };
+      const statusHistory = [...(editing.statusHistory || []), statusChange];
+
       await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
         status: newStatus,
+        statusHistory,
         updatedAt: serverTimestamp()
       });
-      setEditing({ ...editing, status: newStatus });
+      setEditing({ ...editing, status: newStatus, statusHistory });
       addToast(`Status updated to ${newStatus}`, "success");
     } catch(e) { addToast("Failed to update status", "error"); }
   };
@@ -40,6 +53,30 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
         isCompleted: !item.isCompleted
       });
     } catch(e) { addToast("Failed to update checklist", "error"); }
+  };
+
+  const handleMarkAllComplete = async () => {
+    try {
+      const incomplete = deploymentChecklist.filter(c => !c.isCompleted);
+      await Promise.all(incomplete.map(item =>
+        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id), {
+          isCompleted: true
+        })
+      ));
+      addToast(`Marked ${incomplete.length} items complete`, "success");
+    } catch(e) { addToast("Failed to update checklist", "error"); }
+  };
+
+  const handleResetChecklist = async () => {
+    try {
+      const completed = deploymentChecklist.filter(c => c.isCompleted);
+      await Promise.all(completed.map(item =>
+        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id), {
+          isCompleted: false
+        })
+      ));
+      addToast(`Reset ${completed.length} items`, "success");
+    } catch(e) { addToast("Failed to reset checklist", "error"); }
   };
 
   const handleDateChange = async (e) => {
@@ -83,6 +120,18 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
       setEditing({ ...editing, blockedComments: comments });
       addToast("Comment added", "success");
     } catch(e) { addToast("Failed to add comment", "error"); }
+  };
+
+  const handleAddNote = async (note) => {
+    try {
+      const notes = [...(editing.notes || []), note];
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
+        notes,
+        updatedAt: serverTimestamp()
+      });
+      setEditing({ ...editing, notes });
+      addToast("Note added", "success");
+    } catch(e) { addToast("Failed to add note", "error"); }
   };
 
   return (
@@ -156,7 +205,29 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-bold text-slate-800 dark:text-white">Release Checklist</h4>
-                <span className="text-xs text-slate-400">{completedCount} of {totalCount} complete</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">{completedCount} of {totalCount}</span>
+                  {completedCount < totalCount && (
+                    <button
+                      onClick={handleMarkAllComplete}
+                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
+                      title="Mark all complete"
+                    >
+                      <CheckCheck size={14} />
+                      Complete All
+                    </button>
+                  )}
+                  {completedCount > 0 && (
+                    <button
+                      onClick={handleResetChecklist}
+                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+                      title="Reset checklist"
+                    >
+                      <RotateCcw size={14} />
+                      Reset
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {deploymentChecklist.map(item => (
@@ -179,6 +250,16 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
             {editing.status === 'Blocked' && (
               <BlockedCommentsPanel deployment={editing} onAddComment={handleAddComment} />
             )}
+
+            {/* Notes & Activity */}
+            <NotesPanel
+              notes={editing.notes || []}
+              onAddNote={handleAddNote}
+              title="Notes & Activity"
+              placeholder="Add a note about this deployment..."
+              showStatusHistory={true}
+              statusHistory={editing.statusHistory || []}
+            />
 
             {product?.documentation && Object.values(product.documentation).some(Boolean) && (
               <div>

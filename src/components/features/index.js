@@ -7,4 +7,7 @@ export { HealthScoreRing } from './HealthScoreRing';
 export { TimelineStrip } from './TimelineStrip';
 export { ChecklistWidget } from './ChecklistWidget';
 export { BlockedCommentsPanel } from './BlockedCommentsPanel';
+export { NotesPanel } from './NotesPanel';
+export { NotificationCenter } from './NotificationCenter';
 export { CommandPalette } from './CommandPalette';
+export { GanttChart } from './GanttChart';

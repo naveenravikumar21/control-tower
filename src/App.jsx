@@ -9,9 +9,10 @@ import {
   AuthProvider,
   ToastProvider,
   NavigationProvider, useNav,
-  ThemeProvider, useTheme
+  ThemeProvider, useTheme,
+  NotificationProvider
 } from './contexts';
-import { CommandPalette } from './components/features';
+import { CommandPalette, NotificationCenter } from './components/features';
 import {
   Dashboard,
   Products,
@@ -95,9 +96,12 @@ const Sidebar = () => {
             <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-white text-[10px] font-bold">AD</div>
             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Admin</span>
           </div>
-          <button onClick={toggleTheme} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            {isDark ? <Sun size={14}/> : <Moon size={14}/>}
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationCenter />
+            <button onClick={toggleTheme} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+              {isDark ? <Sun size={14}/> : <Moon size={14}/>}
+            </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -127,9 +131,12 @@ const MobileHeader = () => {
         <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
           <Rocket className="text-blue-600" size={18}/> Control Tower
         </div>
-        <button onClick={toggleTheme} className="p-2 -mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-          {isDark ? <Sun size={20}/> : <Moon size={20}/>}
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationCenter openDirection="down" alignRight />
+          <button onClick={toggleTheme} className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            {isDark ? <Sun size={20}/> : <Moon size={20}/>}
+          </button>
+        </div>
       </div>
 
       {menuOpen && (
@@ -209,10 +216,12 @@ export default function App() {
       <AuthProvider>
         <NavigationProvider>
           <ToastProvider>
-            <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
-              <Sidebar />
-              <MainContent />
-            </div>
+            <NotificationProvider>
+              <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
+                <Sidebar />
+                <MainContent />
+              </div>
+            </NotificationProvider>
           </ToastProvider>
         </NavigationProvider>
       </AuthProvider>
