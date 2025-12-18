@@ -11,7 +11,7 @@ export const DeploymentTile = ({ deployment, onClick }) => {
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   // Determine display name based on deployment type
-  const displayName = client?.name || (deploymentType === 'ga' ? 'GA' : deploymentType === 'generic' ? 'Generic' : 'GA');
+  const displayName = client?.name || (deploymentType === 'ga' ? 'GA' : deploymentType === 'eap' ? 'EAP' : deploymentType === 'generic' ? 'Generic' : 'GA');
   const avatarColor = getAvatarColor(displayName, AVATAR_COLORS);
 
   return (
@@ -33,6 +33,9 @@ export const DeploymentTile = ({ deployment, onClick }) => {
                 </h3>
                 {deploymentType === 'ga' && (
                   <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded">GA</span>
+                )}
+                {deploymentType === 'eap' && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded">EAP</span>
                 )}
               </div>
               {blockedComments.length > 0 && (
