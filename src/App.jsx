@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, Package, Users, Rocket, CheckCircle2,
-  History, Sun, Moon, Keyboard, List, X, Settings
+  History, Sun, Moon, Keyboard, List, X, Settings, FileText
 } from 'lucide-react';
 
 // Import from extracted modules
@@ -21,7 +21,8 @@ import {
   Clients,
   ClientDetail,
   Onboarding,
-  SettingsPage
+  SettingsPage,
+  ReleaseNotes
 } from './pages';
 
 // ==========================================
@@ -62,6 +63,7 @@ const Sidebar = () => {
           <NavItem id="clients" icon={Users} label="Clients" active={page === 'clients' || page === 'client-detail'} onClick={() => navigate('clients')} />
           <NavItem id="deployments" icon={Rocket} label="Deployments" active={page === 'deployments'} onClick={() => navigate('deployments')} />
           <NavItem id="onboarding" icon={CheckCircle2} label="Onboarding" active={page === 'onboarding'} onClick={() => navigate('onboarding')} />
+          <NavItem id="release-notes" icon={FileText} label="Release Notes" active={page === 'release-notes'} onClick={() => navigate('release-notes')} />
           <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</div>
           <NavItem id="settings" icon={Settings} label="Settings" active={page === 'settings'} onClick={() => navigate('settings')} />
         </nav>
@@ -119,6 +121,7 @@ const MobileHeader = () => {
     { id: 'clients', icon: Users, label: 'Clients' },
     { id: 'deployments', icon: Rocket, label: 'Deployments' },
     { id: 'onboarding', icon: CheckCircle2, label: 'Onboarding' },
+    { id: 'release-notes', icon: FileText, label: 'Release Notes' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -200,6 +203,7 @@ const MainContent = () => {
         {page === 'client-detail' && <ClientDetail clientId={params.clientId} />}
         {page === 'deployments' && <Deployments />}
         {page === 'onboarding' && <Onboarding />}
+        {page === 'release-notes' && <ReleaseNotes />}
         {page === 'settings' && <SettingsPage />}
       </div>
     </main>

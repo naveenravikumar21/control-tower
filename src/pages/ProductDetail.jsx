@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell } from 'lucide-react';
+import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell, Tag, Eye, Download, Globe, Lock } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, getDeadlineStatus, formatDate, toInputDate } from '../utils';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
-import { DOC_TYPES, PRODUCT_AVATAR_COLORS } from '../constants';
+import { DOC_TYPES, PRODUCT_AVATAR_COLORS, RELEASE_NOTE_TYPES } from '../constants';
 import { Card, Badge, ProgressBar, EmptyState, Button, Input, CustomTooltip, ConfirmationModal } from '../components/ui/index.jsx';
 import { TimelineStrip, NotesPanel } from '../components/features';
 
@@ -15,6 +15,7 @@ export const ProductDetail = ({ productId }) => {
   const { data: deploys } = useCollection('deployments');
   const { data: clients } = useCollection('clients');
   const { data: checklists } = useCollection('checklists');
+  const { data: releaseNotes } = useCollection('releaseNotes');
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -52,6 +53,16 @@ export const ProductDetail = ({ productId }) => {
   // All related deployments (product + sub-projects)
   const allDeploys = useMemo(() =>
     [...productDeploys, ...subProjectDeploys], [productDeploys, subProjectDeploys]);
+
+  // Get release notes for this product, sorted by date (newest first)
+  const productReleaseNotes = useMemo(() =>
+    releaseNotes
+      .filter(n => n.productId === productId)
+      .sort((a, b) => new Date(b.releaseDate || b.createdAt) - new Date(a.releaseDate || a.createdAt)),
+    [releaseNotes, productId]);
+
+  // Get the latest version
+  const latestVersion = productReleaseNotes[0];
 
   // Stats
   const stats = useMemo(() => {
@@ -260,7 +271,14 @@ export const ProductDetail = ({ productId }) => {
                 <Package size={12} /> {parentProduct.name}
               </button>
             )}
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{product.name}</h1>
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{product.name}</h1>
+              {latestVersion && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-semibold">
+                  <Tag size={14} /> v{latestVersion.version}
+                </span>
+              )}
+            </div>
             <p className="text-slate-500 text-sm mt-1">{product.description || 'No description'}</p>
           </div>
         </div>
@@ -377,6 +395,106 @@ export const ProductDetail = ({ productId }) => {
             );
           })}
         </div>
+      </Card>
+
+      {/* Release Versions Section */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide flex items-center gap-2">
+            <Tag size={16} /> Release Versions ({productReleaseNotes.length})
+          </h3>
+          <Button variant="secondary" size="sm" onClick={() => navigate('release-notes')} icon={Plus}>
+            New Version
+          </Button>
+        </div>
+
+        {productReleaseNotes.length === 0 ? (
+          <EmptyState
+            icon={Tag}
+            title="No release notes"
+            description="Create release notes to document version changes"
+          />
+        ) : (
+          <div className="space-y-3">
+            {productReleaseNotes.map((note, index) => {
+              const publicCount = (note.items || []).filter(i => (i.visibility || 'public') === 'public').length;
+              const internalCount = (note.items || []).filter(i => i.visibility === 'internal').length;
+              const itemCounts = {};
+              (note.items || []).forEach(item => {
+                itemCounts[item.type] = (itemCounts[item.type] || 0) + 1;
+              });
+
+              return (
+                <div
+                  key={note.id}
+                  className={`p-4 rounded-lg border transition-all hover:shadow-md cursor-pointer ${
+                    index === 0
+                      ? 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                      : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+                  }`}
+                  onClick={() => navigate('release-notes')}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-lg font-bold ${index === 0 ? 'text-blue-700 dark:text-blue-300' : 'text-slate-900 dark:text-white'}`}>
+                          v{note.version}
+                        </span>
+                        {index === 0 && (
+                          <Badge color="blue" size="sm">Latest</Badge>
+                        )}
+                        {note.title && (
+                          <span className="text-sm text-slate-500">- {note.title}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={12} />
+                          {formatDate(note.releaseDate)}
+                        </span>
+                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                          <Globe size={12} />
+                          {publicCount} public
+                        </span>
+                        {internalCount > 0 && (
+                          <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                            <Lock size={12} />
+                            {internalCount} internal
+                          </span>
+                        )}
+                      </div>
+                      {/* Item type badges */}
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {Object.entries(itemCounts).map(([type, count]) => {
+                          const typeConfig = RELEASE_NOTE_TYPES.find(t => t.key === type);
+                          if (!typeConfig) return null;
+                          return (
+                            <span
+                              key={type}
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${typeConfig.bg} ${typeConfig.color}`}
+                            >
+                              {typeConfig.emoji} {count}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <CustomTooltip content="View">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigate('release-notes'); }}
+                          className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 transition-colors"
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </CustomTooltip>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       {/* Notes Section */}

@@ -71,3 +71,15 @@ export const CLIENT_EXPORT_COLUMNS = [
   { key: 'name', label: 'Name' },
   { key: 'comments', label: 'Notes' },
 ];
+
+// Release note item types
+export const RELEASE_NOTE_TYPES = [
+  { key: 'feature', label: 'New Feature', icon: 'Sparkles', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30', emoji: '✨' },
+  { key: 'improvement', label: 'Improvement', icon: 'TrendingUp', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30', emoji: '📈' },
+  { key: 'bugfix', label: 'Bug Fix', icon: 'Bug', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30', emoji: '🐛' },
+  { key: 'security', label: 'Security', icon: 'Shield', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30', emoji: '🔒' },
+  { key: 'performance', label: 'Performance', icon: 'Zap', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', emoji: '⚡' },
+  { key: 'breaking', label: 'Breaking Change', icon: 'AlertTriangle', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-900/30', emoji: '⚠️' },
+  { key: 'deprecated', label: 'Deprecated', icon: 'Clock', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800', emoji: '🕐' },
+  { key: 'docs', label: 'Documentation', icon: 'FileText', color: 'text-cyan-600 dark:text-cyan-400', bg: 'bg-cyan-100 dark:bg-cyan-900/30', emoji: '📚' },
+];

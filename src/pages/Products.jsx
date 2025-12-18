@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
+import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus, Tag } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
@@ -10,6 +10,7 @@ import { Button, Input, Card, Badge, CustomTooltip, SearchInput, ConfirmationMod
 export const Products = () => {
   const { data: products } = useCollection('products');
   const { data: deploys } = useCollection('deployments');
+  const { data: releaseNotes } = useCollection('releaseNotes');
   const { params, navigate } = useNav();
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -34,6 +35,19 @@ export const Products = () => {
     });
     return map;
   }, [products]);
+
+  // Get latest release version for each product
+  const latestVersionByProduct = useMemo(() => {
+    const map = {};
+    releaseNotes.forEach(note => {
+      if (!note.productId || !note.version) return;
+      const existing = map[note.productId];
+      if (!existing || new Date(note.releaseDate || note.createdAt) > new Date(existing.releaseDate || existing.createdAt)) {
+        map[note.productId] = note;
+      }
+    });
+    return map;
+  }, [releaseNotes]);
 
   const toggleExpanded = (productId, e) => {
     e.stopPropagation();
@@ -167,6 +181,7 @@ export const Products = () => {
           const subProjects = subProjectsByParent[p.id] || [];
           const hasSubProjects = subProjects.length > 0;
           const isExpanded = expandedProducts[p.id];
+          const latestVersion = latestVersionByProduct[p.id];
 
           return (
             <Card
@@ -205,7 +220,14 @@ export const Products = () => {
                     <Package size={22} />
                   </div>
                   <div className="flex-1 min-w-0 pr-20">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
+                      {latestVersion && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
+                          <Tag size={10} /> v{latestVersion.version}
+                        </span>
+                      )}
+                    </div>
                     {p.description ? (
                       <p className="text-sm text-slate-500 mt-2 line-clamp-2">{p.description}</p>
                     ) : (

@@ -7,3 +7,4 @@ export { Clients } from './Clients';
 export { ClientDetail } from './ClientDetail';
 export { Onboarding } from './Onboarding';
 export { SettingsPage } from './Settings';
+export { ReleaseNotes } from './ReleaseNotes';
