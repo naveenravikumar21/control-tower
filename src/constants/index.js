@@ -16,6 +16,7 @@ export const DOC_TYPES = [
 
 // Deployment types
 export const DEPLOYMENT_TYPES = [
+  { key: 'ga', label: 'General Availability (GA)', description: 'General availability release for all clients' },
   { key: 'generic', label: 'Generic', description: 'Standard deployment for all clients' },
   { key: 'client-specific', label: 'Client-Specific', description: 'Customized for specific client needs' }
 ];

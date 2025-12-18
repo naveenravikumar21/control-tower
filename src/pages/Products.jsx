@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ExternalLink, Copy, Eye, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
+import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
@@ -13,7 +13,6 @@ export const Products = () => {
   const { params, navigate } = useNav();
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
-  const [viewingDocs, setViewingDocs] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProducts, setExpandedProducts] = useState({});
@@ -36,14 +35,8 @@ export const Products = () => {
     return map;
   }, [products]);
 
-  // Calculate deployment progress for a product/sub-project
-  const getDeploymentProgress = (productId) => {
-    const productDeploys = deploys.filter(d => d.productId === productId);
-    const released = productDeploys.filter(d => d.status === 'Released').length;
-    return { released, total: productDeploys.length };
-  };
-
-  const toggleExpanded = (productId) => {
+  const toggleExpanded = (productId, e) => {
+    e.stopPropagation();
     setExpandedProducts(prev => ({ ...prev, [productId]: !prev[productId] }));
   };
 
@@ -78,12 +71,12 @@ export const Products = () => {
     } catch(e) { addToast("Error saving product", "error"); }
   };
 
-  const handleDelete = (product) => {
+  const handleDelete = (product, e) => {
+    e?.stopPropagation();
     if (deploys.some(d => d.productId === product.id)) {
       addToast("Cannot delete product: It is used in active deployments.", "error");
       return;
     }
-    // Check if product has sub-projects
     if (subProjectsByParent[product.id]?.length > 0) {
       addToast("Cannot delete product: It has sub-projects. Delete sub-projects first.", "error");
       return;
@@ -104,12 +97,10 @@ export const Products = () => {
   };
 
   const sortedProducts = useMemo(() => {
-    // Start with parent products only (sub-projects shown nested)
     let res = [...parentProducts];
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      // Include parents that match OR have matching sub-projects
       res = res.filter(p => {
         const parentMatches = p.name?.toLowerCase().includes(q) ||
           p.description?.toLowerCase().includes(q) ||
@@ -130,12 +121,16 @@ export const Products = () => {
       res = res.filter(p => !deploys.some(d => d.productId === p.id));
     } else if (params.filter === 'upcoming') {
       res = res.filter(p => {
-        if (!p.nextReleaseDate) return false;
-        const diff = getDaysDiff(p.nextReleaseDate);
-        return diff >= 0 && diff <= 30;
-      }).sort((a, b) => new Date(a.nextReleaseDate) - new Date(b.nextReleaseDate));
+        const hasUpcomingRelease = (product) => {
+          if (!product.nextReleaseDate) return false;
+          const diff = getDaysDiff(product.nextReleaseDate);
+          return diff >= 0 && diff <= 30;
+        };
+        if (hasUpcomingRelease(p)) return true;
+        const subProjects = subProjectsByParent[p.id] || [];
+        return subProjects.some(sp => hasUpcomingRelease(sp));
+      }).sort((a, b) => new Date(a.nextReleaseDate || '9999-12-31') - new Date(b.nextReleaseDate || '9999-12-31'));
     } else if (params.filter === 'subprojects') {
-      // Show only products that have sub-projects
       res = res.filter(p => subProjectsByParent[p.id]?.length > 0);
     }
     return res;
@@ -174,7 +169,11 @@ export const Products = () => {
           const isExpanded = expandedProducts[p.id];
 
           return (
-            <Card key={p.id} className="p-0 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col">
+            <Card
+              key={p.id}
+              className="p-0 overflow-hidden group hover:shadow-lg transition-all duration-300 flex flex-col cursor-pointer"
+              onClick={() => navigate('product-detail', { productId: p.id })}
+            >
               <div className="p-5 flex-1">
                 <div className="flex items-start gap-4">
                   <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
@@ -185,10 +184,10 @@ export const Products = () => {
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <CustomTooltip content="Add Sub-Project">
-                          <button onClick={() => { setSelectedParentId(p.id); setEditing(null); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"><FolderPlus size={16}/></button>
+                          <button onClick={(e) => { e.stopPropagation(); setSelectedParentId(p.id); setEditing(null); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"><FolderPlus size={16}/></button>
                         </CustomTooltip>
-                        <button onClick={() => { setEditing(p); setSelectedParentId(p.parentId || ''); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
-                        <button onClick={() => handleDelete(p)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditing(p); setSelectedParentId(p.parentId || ''); setModalOpen(true); }} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"><Edit2 size={16}/></button>
+                        <button onClick={(e) => handleDelete(p, e)} className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"><Trash2 size={16}/></button>
                       </div>
                     </div>
                     {p.description ? (
@@ -197,21 +196,6 @@ export const Products = () => {
                       <p className="text-sm text-slate-400 italic mt-2">No description</p>
                     )}
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mt-4 text-sm">
-                  {p.productOwner && (
-                    <div>
-                      <span className="text-slate-400 text-xs block">Product Owner</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{p.productOwner}</span>
-                    </div>
-                  )}
-                  {p.engineeringOwner && (
-                    <div>
-                      <span className="text-slate-400 text-xs block">Eng Owner</span>
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{p.engineeringOwner}</span>
-                    </div>
-                  )}
                 </div>
 
                 {p.nextReleaseDate && (
@@ -240,37 +224,34 @@ export const Products = () => {
                       </span>
                     </div>
                   </div>
-                  <button onClick={() => setViewingDocs(p)} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
-                    <Eye size={12}/> View Docs
-                  </button>
+                  {hasSubProjects && (
+                    <span className="text-xs text-slate-400">{subProjects.length} sub-projects</span>
+                  )}
                 </div>
               </div>
 
-              {/* Sub-Projects Section */}
+              {/* Sub-Projects Preview */}
               {hasSubProjects && (
                 <div className="border-t border-slate-200 dark:border-slate-700">
                   <button
-                    onClick={() => toggleExpanded(p.id)}
+                    onClick={(e) => toggleExpanded(p.id, e)}
                     className="w-full px-5 py-3 flex items-center justify-between text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       {subProjects.length} Sub-Project{subProjects.length !== 1 ? 's' : ''}
                     </span>
-                    <span className="text-xs text-slate-400">
-                      {subProjects.filter(sp => getDeploymentProgress(sp.id).released > 0).length}/{subProjects.length} with releases
-                    </span>
                   </button>
 
                   {isExpanded && (
                     <div className="px-4 pb-4 space-y-2">
-                      {subProjects.map(sp => {
-                        const progress = getDeploymentProgress(sp.id);
+                      {subProjects.slice(0, 3).map(sp => {
                         const spDeadlineStatus = getDeadlineStatus(sp.nextReleaseDate, 'In Progress');
                         return (
                           <div
                             key={sp.id}
-                            className="flex items-center justify-between p-3 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg group/sub"
+                            onClick={(e) => { e.stopPropagation(); navigate('product-detail', { productId: sp.id }); }}
+                            className="flex items-center justify-between p-3 bg-slate-100/50 dark:bg-slate-800/50 rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                           >
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
@@ -283,18 +264,14 @@ export const Products = () => {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-medium px-2 py-1 rounded ${progress.total === 0 ? 'bg-slate-200 dark:bg-slate-700 text-slate-500' : progress.released === progress.total ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                                {progress.total === 0 ? 'No deploys' : `${progress.released}/${progress.total}`}
-                              </span>
-                              <div className="flex gap-0.5 opacity-0 group-hover/sub:opacity-100 transition-opacity">
-                                <button onClick={() => { setEditing(sp); setSelectedParentId(sp.parentId || ''); setModalOpen(true); }} className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-blue-600"><Edit2 size={14}/></button>
-                                <button onClick={() => handleDelete(sp)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-slate-400 hover:text-red-600"><Trash2 size={14}/></button>
-                              </div>
-                            </div>
                           </div>
                         );
                       })}
+                      {subProjects.length > 3 && (
+                        <div className="text-xs text-center text-slate-400 pt-1">
+                          +{subProjects.length - 3} more
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -360,42 +337,6 @@ export const Products = () => {
                 <Button type="submit">{selectedParentId ? 'Save Sub-Project' : 'Save Product'}</Button>
               </div>
             </form>
-          </Card>
-        </div>
-      )}
-
-      {viewingDocs && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
-          <Card className="w-full max-w-md p-4 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{viewingDocs.name} - Documentation</h2>
-              <button onClick={() => setViewingDocs(null)} className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400"><X size={20}/></button>
-            </div>
-            <div className="space-y-3">
-              {DOC_TYPES.map(t => {
-                const url = viewingDocs.documentation?.[t.key];
-                return (
-                  <div key={t.key} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileText size={16} className={url ? "text-emerald-500" : "text-slate-300"} />
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.label}</span>
-                    </div>
-                    {url ? (
-                      <div className="flex gap-1">
-                        <CustomTooltip content="Copy link">
-                          <button onClick={() => { navigator.clipboard.writeText(url); addToast("Link copied!", "success"); }} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500"><Copy size={14}/></button>
-                        </CustomTooltip>
-                        <CustomTooltip content="Open in new tab">
-                          <a href={url} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-blue-600"><ExternalLink size={14}/></a>
-                        </CustomTooltip>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-slate-400">Not added</span>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
           </Card>
         </div>
       )}

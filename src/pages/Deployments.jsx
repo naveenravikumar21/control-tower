@@ -74,6 +74,7 @@ export const Deployments = () => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const deploymentType = newDeploymentType;
+    // Only client-specific deployments need a clientId
     const clientId = deploymentType === 'client-specific' ? fd.get('clientId') : null;
     try {
       const ref = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'deployments'), {
@@ -157,7 +158,9 @@ export const Deployments = () => {
                   ))}
                 </select>
                 <p className="text-xs text-slate-400 mt-1">
-                  {newDeploymentType === 'generic'
+                  {newDeploymentType === 'ga'
+                    ? 'General availability release for all clients'
+                    : newDeploymentType === 'generic'
                     ? 'Standard deployment for all clients'
                     : 'Customized deployment for a specific client'}
                 </p>

@@ -15,6 +15,7 @@ import { CommandPalette } from './components/features';
 import {
   Dashboard,
   Products,
+  ProductDetail,
   Deployments,
   Clients,
   ClientDetail,
@@ -56,7 +57,7 @@ const Sidebar = () => {
         <nav className="space-y-1">
           <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" active={page === 'dashboard'} onClick={() => navigate('dashboard')} />
           <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Modules</div>
-          <NavItem id="products" icon={Package} label="Products" active={page === 'products'} onClick={() => navigate('products')} />
+          <NavItem id="products" icon={Package} label="Products" active={page === 'products' || page === 'product-detail'} onClick={() => navigate('products')} />
           <NavItem id="clients" icon={Users} label="Clients" active={page === 'clients' || page === 'client-detail'} onClick={() => navigate('clients')} />
           <NavItem id="deployments" icon={Rocket} label="Deployments" active={page === 'deployments'} onClick={() => navigate('deployments')} />
           <NavItem id="onboarding" icon={CheckCircle2} label="Onboarding" active={page === 'onboarding'} onClick={() => navigate('onboarding')} />
@@ -187,6 +188,7 @@ const MainContent = () => {
         <CommandPalette />
         {page === 'dashboard' && <Dashboard />}
         {page === 'products' && <Products />}
+        {page === 'product-detail' && <ProductDetail productId={params.productId} />}
         {page === 'clients' && <Clients />}
         {page === 'client-detail' && <ClientDetail clientId={params.clientId} />}
         {page === 'deployments' && <Deployments />}

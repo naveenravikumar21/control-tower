@@ -22,24 +22,36 @@
     <style>
       /* Custom scrollbar styles */
       .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
+        background: #f1f5f9;
+        border-radius: 4px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
+        background: #94a3b8;
+        border-radius: 4px;
       }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+        background: #64748b;
+      }
+      .dark .custom-scrollbar::-webkit-scrollbar-track {
+        background: #1e293b;
       }
       .dark .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #475569;
       }
       .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: #64748b;
+      }
+      /* Always show scrollbar for horizontal scroll */
+      .custom-scrollbar-visible {
+        scrollbar-width: thin;
+        scrollbar-color: #94a3b8 #f1f5f9;
+      }
+      .dark .custom-scrollbar-visible {
+        scrollbar-color: #475569 #1e293b;
       }
       /* Smooth scrolling */
       html {

@@ -92,7 +92,12 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
           <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">{editing.client?.name || 'Generic'}</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {editing.client?.name || (editing.deploymentType === 'ga' ? 'General Availability' : 'Generic')}
+                </h2>
+                {editing.deploymentType === 'ga' && (
+                  <Badge color="blue" size="sm">GA</Badge>
+                )}
                 {editing.deploymentType === 'generic' && (
                   <Badge color="slate" size="sm">Generic</Badge>
                 )}

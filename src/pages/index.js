@@ -1,5 +1,6 @@
 export { Dashboard } from './Dashboard';
 export { Products } from './Products';
+export { ProductDetail } from './ProductDetail';
 export { Deployments } from './Deployments';
 export { DeploymentModal } from './DeploymentModal';
 export { Clients } from './Clients';

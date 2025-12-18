@@ -4,12 +4,15 @@ import { getDeadlineStatus, getAvatarColor } from '../../utils';
 import { AVATAR_COLORS } from '../../constants';
 
 export const DeploymentTile = ({ deployment, onClick }) => {
-  const { client, product, status, nextDeliveryDate, checklist, blockedComments = [] } = deployment;
+  const { client, product, status, nextDeliveryDate, checklist, blockedComments = [], deploymentType } = deployment;
   const deadlineStatus = getDeadlineStatus(nextDeliveryDate, status);
   const completed = checklist?.filter(c => c.isCompleted).length || 0;
   const total = checklist?.length || 0;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const avatarColor = getAvatarColor(client?.name, AVATAR_COLORS);
+
+  // Determine display name based on deployment type
+  const displayName = client?.name || (deploymentType === 'ga' ? 'GA' : deploymentType === 'generic' ? 'Generic' : 'GA');
+  const avatarColor = getAvatarColor(displayName, AVATAR_COLORS);
 
   return (
     <Card
@@ -24,9 +27,14 @@ export const DeploymentTile = ({ deployment, onClick }) => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
-                {client?.name || 'Generic'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
+                  {displayName}
+                </h3>
+                {deploymentType === 'ga' && (
+                  <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded">GA</span>
+                )}
+              </div>
               {blockedComments.length > 0 && (
                 <CustomTooltip content={`${blockedComments.length} comment(s)`}>
                   <div className="flex items-center gap-1 text-sm text-slate-400">

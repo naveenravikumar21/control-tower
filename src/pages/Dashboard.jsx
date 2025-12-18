@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Rocket, Users, FileText, AlertTriangle, Clock, Package, Calendar, Plus, ArrowRight } from 'lucide-react';
 import { useNav } from '../contexts';
 import { useCollection } from '../hooks';
-import { getDaysDiff, calculateChecklistProgress } from '../utils';
+import { getDaysDiff, calculateChecklistProgress, formatDate } from '../utils';
 import { Button, Card, SearchInput, Sparkles } from '../components/ui/index.jsx';
 import { KPICard, TimelineStrip } from '../components/features';
 
@@ -42,21 +42,89 @@ export const Dashboard = () => {
 
     const productsNoDeploys = products.filter(p => !deployments.some(d => d.productId === p.id));
 
-    const forecast = { thisWeek: 0, nextWeek: 0, thisMonth: 0 };
+    // Get parent products and sub-projects grouped
+    const parentProds = products.filter(p => !p.parentId);
+    const subProjectsByParent = {};
     products.forEach(p => {
-      if(!p.nextReleaseDate) return;
-      const diff = getDaysDiff(p.nextReleaseDate);
-      if(diff >=0 && diff <= 7) forecast.thisWeek++;
-      else if(diff > 7 && diff <= 14) forecast.nextWeek++;
-      else if(diff > 14 && diff <= 30) forecast.thisMonth++;
+      if (p.parentId) {
+        if (!subProjectsByParent[p.parentId]) subProjectsByParent[p.parentId] = [];
+        subProjectsByParent[p.parentId].push(p);
+      }
     });
 
-    const statusBreakdown = {
-      notStarted: deployments.filter(d => d.status === 'Not Started').length,
-      inProgress: deployments.filter(d => d.status === 'In Progress').length,
-      blocked: deployments.filter(d => d.status === 'Blocked').length,
-      released: deployments.filter(d => d.status === 'Released').length
+    // Count releases and collect product details
+    const forecast = { thisWeek: [], nextWeek: [], thisMonth: [] };
+    parentProds.forEach(p => {
+      // Check parent product release date
+      let earliestDiff = Infinity;
+      let earliestSource = null;
+      let earliestDate = null;
+      if (p.nextReleaseDate) {
+        earliestDiff = getDaysDiff(p.nextReleaseDate);
+        earliestSource = p.name;
+        earliestDate = p.nextReleaseDate;
+      }
+      // Check all sub-projects for earliest release
+      const subs = subProjectsByParent[p.id] || [];
+      subs.forEach(sp => {
+        if (sp.nextReleaseDate) {
+          const spDiff = getDaysDiff(sp.nextReleaseDate);
+          if (spDiff >= 0 && spDiff < earliestDiff) {
+            earliestDiff = spDiff;
+            earliestSource = sp.name;
+            earliestDate = sp.nextReleaseDate;
+          }
+        }
+      });
+      // Collect product info based on earliest release
+      if (earliestDiff >= 0 && earliestDiff <= 30) {
+        const item = {
+          id: p.id,
+          name: p.name,
+          subProject: earliestSource !== p.name ? earliestSource : null,
+          days: earliestDiff,
+          date: earliestDate
+        };
+        if (earliestDiff <= 7) forecast.thisWeek.push(item);
+        else if (earliestDiff <= 14) forecast.nextWeek.push(item);
+        else forecast.thisMonth.push(item);
+      }
+    });
+    // Sort each by days
+    forecast.thisWeek.sort((a, b) => a.days - b.days);
+    forecast.nextWeek.sort((a, b) => a.days - b.days);
+    forecast.thisMonth.sort((a, b) => a.days - b.days);
+
+    // Get deployment details by status with product/client names
+    const getDeploymentDetails = (d) => {
+      const product = products.find(p => p.id === d.productId);
+      const client = clients.find(c => c.id === d.clientId);
+      let clientName = client?.name;
+      if (!clientName) {
+        if (d.deploymentType === 'ga') clientName = 'GA';
+        else if (d.deploymentType === 'generic') clientName = 'Generic';
+        else clientName = 'GA';
+      }
+      const dChecks = checklists.filter(c => c.deploymentId === d.id);
+      const progress = calculateChecklistProgress(dChecks);
+      return {
+        id: d.id,
+        productName: product?.name || 'Unknown',
+        clientName,
+        status: d.status,
+        daysLeft: getDaysDiff(d.nextDeliveryDate),
+        progress
+      };
     };
+
+    const statusBreakdown = {
+      notStarted: deployments.filter(d => d.status === 'Not Started').map(getDeploymentDetails),
+      inProgress: deployments.filter(d => d.status === 'In Progress').map(getDeploymentDetails),
+      blocked: deployments.filter(d => d.status === 'Blocked').map(getDeploymentDetails),
+      released: deployments.filter(d => d.status === 'Released').map(getDeploymentDetails)
+    };
+    // Sort in-progress by days left (urgent first)
+    statusBreakdown.inProgress.sort((a, b) => a.daysLeft - b.daysLeft);
 
     const activeWithChecklists = active.map(d => {
       const dChecks = checklists.filter(c => c.deploymentId === d.id);
@@ -79,15 +147,29 @@ export const Dashboard = () => {
 
     let timeline = active
       .filter(d => d.nextDeliveryDate)
-      .map(d => ({
-        id: d.id,
-        date: d.nextDeliveryDate,
-        clientName: clients.find(c => c.id === d.clientId)?.name || 'Unknown',
-        productName: products.find(p => p.id === d.productId)?.name || 'Unknown',
-        status: d.status,
-        daysLeft: getDaysDiff(d.nextDeliveryDate)
-      }))
+      .map(d => {
+        const client = clients.find(c => c.id === d.clientId);
+        // Show deployment type label for non-client-specific deployments
+        let clientName = client?.name;
+        if (!clientName) {
+          if (d.deploymentType === 'ga') clientName = 'GA';
+          else if (d.deploymentType === 'generic') clientName = 'Generic';
+          else clientName = 'GA'; // Default to GA for legacy deployments without type
+        }
+        return {
+          id: d.id,
+          date: d.nextDeliveryDate,
+          clientName,
+          productName: products.find(p => p.id === d.productId)?.name || 'Unknown',
+          status: d.status,
+          deploymentType: d.deploymentType,
+          daysLeft: getDaysDiff(d.nextDeliveryDate)
+        };
+      })
       .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    // Filter to next 30 days only
+    timeline = timeline.filter(t => t.daysLeft >= 0 && t.daysLeft <= 30);
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -96,8 +178,6 @@ export const Dashboard = () => {
         t.productName.toLowerCase().includes(q)
       );
     }
-
-    timeline = timeline.slice(0, 10);
 
     return { releasesMonth, clientCounts, productsMissingDocs, overdue, stalled, productsNoDeploys, timeline, forecast, statusBreakdown, avgChecklistProgress, onTimeRate };
   }, [deployments, clients, products, checklists, searchQuery]);
@@ -120,7 +200,7 @@ export const Dashboard = () => {
         </div>
       </header>
 
-      <div className="space-y-3">
+      <div className="space-y-3 overflow-hidden">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <Calendar size={12}/> Delivery Timeline
         </h3>
@@ -128,52 +208,264 @@ export const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 flex items-center justify-between hover:shadow-lg transition-all duration-300">
-          <div className="flex items-center gap-5">
-            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-2xl"><Sparkles size={28}/></div>
-            <div>
+        <Card className="p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-purple-50 dark:bg-purple-900/20 text-purple-600 rounded-xl"><Sparkles size={22}/></div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Release Forecast</h3>
-              <div className="flex gap-6 mt-2 text-sm text-slate-500">
-                <span><b className="text-2xl text-slate-800 dark:text-slate-200">{metrics.forecast.thisWeek}</b> <span className="text-slate-400">this week</span></span>
-                <span><b className="text-2xl text-slate-800 dark:text-slate-200">{metrics.forecast.nextWeek}</b> <span className="text-slate-400">next week</span></span>
-              </div>
             </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate('products', { filter: 'upcoming' })} className="text-xs">View All <ArrowRight size={12}/></Button>
           </div>
-          <Button variant="ghost" onClick={() => navigate('products', { filter: 'upcoming' })} className="text-sm">View Schedule <ArrowRight size={14}/></Button>
+
+          {metrics.forecast.thisWeek.length === 0 && metrics.forecast.nextWeek.length === 0 && metrics.forecast.thisMonth.length === 0 ? (
+            <div className="text-center py-4 text-slate-400 text-sm">No upcoming releases in the next 30 days</div>
+          ) : (
+            <div className="space-y-3">
+              {/* This Week */}
+              {metrics.forecast.thisWeek.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" /> This Week ({metrics.forecast.thisWeek.length})
+                  </div>
+                  <div className="space-y-1.5">
+                    {metrics.forecast.thisWeek.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => navigate('product-detail', { productId: item.id })}
+                        className="flex items-center justify-between p-2.5 bg-rose-50 dark:bg-rose-900/20 rounded-lg cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors group"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Package size={14} className="text-rose-600 shrink-0" />
+                          <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-rose-700 dark:group-hover:text-rose-300">
+                            {item.subProject || item.name}
+                          </span>
+                          {item.subProject && (
+                            <span className="text-xs text-slate-400 truncate hidden sm:inline">({item.name})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-medium text-rose-600 dark:text-rose-400">{item.days === 0 ? 'Today' : item.days === 1 ? 'Tomorrow' : `${item.days}d`}</span>
+                          <ArrowRight size={12} className="text-slate-300 group-hover:text-rose-500 transition-colors" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Next Week */}
+              {metrics.forecast.nextWeek.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" /> Next Week ({metrics.forecast.nextWeek.length})
+                  </div>
+                  <div className="space-y-1.5">
+                    {metrics.forecast.nextWeek.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => navigate('product-detail', { productId: item.id })}
+                        className="flex items-center justify-between p-2.5 bg-amber-50 dark:bg-amber-900/20 rounded-lg cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors group"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Package size={14} className="text-amber-600 shrink-0" />
+                          <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-amber-700 dark:group-hover:text-amber-300">
+                            {item.subProject || item.name}
+                          </span>
+                          {item.subProject && (
+                            <span className="text-xs text-slate-400 truncate hidden sm:inline">({item.name})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">{item.days}d</span>
+                          <ArrowRight size={12} className="text-slate-300 group-hover:text-amber-500 transition-colors" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* This Month */}
+              {metrics.forecast.thisMonth.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" /> This Month ({metrics.forecast.thisMonth.length})
+                  </div>
+                  <div className="space-y-1.5">
+                    {metrics.forecast.thisMonth.slice(0, 3).map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => navigate('product-detail', { productId: item.id })}
+                        className="flex items-center justify-between p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Package size={14} className="text-blue-600 shrink-0" />
+                          <span className="font-medium text-sm text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-700 dark:group-hover:text-blue-300">
+                            {item.subProject || item.name}
+                          </span>
+                          {item.subProject && (
+                            <span className="text-xs text-slate-400 truncate hidden sm:inline">({item.name})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">{item.days}d</span>
+                          <ArrowRight size={12} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                        </div>
+                      </div>
+                    ))}
+                    {metrics.forecast.thisMonth.length > 3 && (
+                      <button
+                        onClick={() => navigate('products', { filter: 'upcoming' })}
+                        className="w-full text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 py-1"
+                      >
+                        +{metrics.forecast.thisMonth.length - 3} more...
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </Card>
 
         <Card className="p-6 hover:shadow-lg transition-all duration-300">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wide mb-5">Deployment Health</h3>
-          <div className="grid grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1.5 mb-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-slate-400" title="Not Started" />
-                <div className="w-2.5 h-2.5 rounded-full bg-blue-500" title="In Progress" />
-                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" title="Blocked" />
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Released" />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wide">Deployment Health</h3>
+            <Button variant="ghost" size="sm" onClick={() => navigate('deployments')} className="text-xs">View All <ArrowRight size={12}/></Button>
+          </div>
+
+          {/* Status Summary - Clickable */}
+          <div className="grid grid-cols-4 gap-2 mb-4">
+            <button
+              onClick={() => navigate('deployments', { filter: { status: 'Not Started' } })}
+              className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-center group"
+            >
+              <div className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-slate-600">{metrics.statusBreakdown.notStarted.length}</div>
+              <div className="text-[10px] text-slate-400 uppercase">Not Started</div>
+            </button>
+            <button
+              onClick={() => navigate('deployments', { filter: { status: 'In Progress' } })}
+              className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-center group"
+            >
+              <div className="text-lg font-bold text-blue-600 dark:text-blue-400">{metrics.statusBreakdown.inProgress.length}</div>
+              <div className="text-[10px] text-blue-600/70 uppercase">In Progress</div>
+            </button>
+            <button
+              onClick={() => navigate('deployments', { filter: { status: 'Blocked' } })}
+              className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors text-center group"
+            >
+              <div className="text-lg font-bold text-amber-600 dark:text-amber-400">{metrics.statusBreakdown.blocked.length}</div>
+              <div className="text-[10px] text-amber-600/70 uppercase">Blocked</div>
+            </button>
+            <button
+              onClick={() => navigate('deployments', { filter: { status: 'Released' } })}
+              className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors text-center group"
+            >
+              <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{metrics.statusBreakdown.released.length}</div>
+              <div className="text-[10px] text-emerald-600/70 uppercase">Released</div>
+            </button>
+          </div>
+
+          {/* Active Deployments List */}
+          <div className="space-y-3">
+            {/* Blocked - Always show if any */}
+            {metrics.statusBreakdown.blocked.length > 0 && (
+              <div>
+                <div className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                  <AlertTriangle size={12} /> Blocked - Needs Attention
+                </div>
+                <div className="space-y-1">
+                  {metrics.statusBreakdown.blocked.slice(0, 2).map(d => (
+                    <div
+                      key={d.id}
+                      onClick={() => navigate('deployments', { filter: { id: d.id } })}
+                      className="flex items-center justify-between p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Rocket size={12} className="text-amber-600 shrink-0" />
+                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{d.productName}</span>
+                        <span className="text-xs text-slate-400 truncate hidden sm:inline">• {d.clientName}</span>
+                      </div>
+                      <ArrowRight size={12} className="text-slate-300 group-hover:text-amber-500 shrink-0" />
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                {metrics.statusBreakdown.inProgress + metrics.statusBreakdown.notStarted}
+            )}
+
+            {/* In Progress - Show top urgent ones */}
+            {metrics.statusBreakdown.inProgress.length > 0 && (
+              <div>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                  <Clock size={12} /> In Progress - Upcoming
+                </div>
+                <div className="space-y-1">
+                  {metrics.statusBreakdown.inProgress.slice(0, 3).map(d => (
+                    <div
+                      key={d.id}
+                      onClick={() => navigate('deployments', { filter: { id: d.id } })}
+                      className="flex items-center justify-between p-2 bg-blue-50/50 dark:bg-blue-900/10 rounded-lg cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/20 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <Rocket size={12} className="text-blue-600 shrink-0" />
+                        <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">{d.productName}</span>
+                        <span className="text-xs text-slate-400 truncate hidden sm:inline">• {d.clientName}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-xs font-medium ${d.daysLeft < 0 ? 'text-rose-600' : d.daysLeft <= 7 ? 'text-amber-600' : 'text-slate-500'}`}>
+                          {d.daysLeft < 0 ? `${Math.abs(d.daysLeft)}d overdue` : d.daysLeft === 0 ? 'Today' : `${d.daysLeft}d`}
+                        </span>
+                        <div className="w-10 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${d.progress}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {metrics.statusBreakdown.inProgress.length > 3 && (
+                    <button
+                      onClick={() => navigate('deployments', { filter: { status: 'In Progress' } })}
+                      className="w-full text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 py-1"
+                    >
+                      +{metrics.statusBreakdown.inProgress.length - 3} more in progress...
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="text-sm text-slate-500 mt-1">Active</div>
-              <div className="text-xs text-slate-400 mt-1">
-                {metrics.statusBreakdown.blocked > 0 && <span className="text-amber-600 font-medium">{metrics.statusBreakdown.blocked} blocked</span>}
+            )}
+
+            {/* Metrics Row */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="relative w-8 h-8">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="4" className="text-slate-200 dark:text-slate-700" />
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray={`${metrics.avgChecklistProgress * 0.88} 88`} className="text-blue-500" />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400">{metrics.avgChecklistProgress}%</span>
+                  </div>
+                  <div className="text-xs text-slate-500">Avg<br/>Progress</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="relative w-8 h-8">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="4" className="text-slate-200 dark:text-slate-700" />
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="4" strokeDasharray={`${metrics.onTimeRate * 0.88} 88`} className="text-emerald-500" />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-slate-600 dark:text-slate-400">{metrics.onTimeRate}%</span>
+                  </div>
+                  <div className="text-xs text-slate-500">On-Time<br/>Rate</div>
+                </div>
               </div>
-            </div>
-            <div className="text-center">
-              <div className="relative w-16 h-16 mx-auto mb-2">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" className="text-slate-200 dark:text-slate-700" />
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray={`${metrics.avgChecklistProgress * 0.88} 88`} className="text-blue-500" />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700 dark:text-slate-300">{metrics.avgChecklistProgress}%</span>
-              </div>
-              <div className="text-sm text-slate-500">Avg Progress</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-emerald-600">{metrics.onTimeRate}%</div>
-              <div className="text-sm text-slate-500 mt-1">On-Time Rate</div>
-              <div className="text-xs text-slate-400 mt-2">{metrics.statusBreakdown.released} released</div>
+              {metrics.overdue.length > 0 && (
+                <button
+                  onClick={() => navigate('deployments', { filter: { overdue: true } })}
+                  className="flex items-center gap-1.5 px-2 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 rounded text-xs font-medium hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
+                >
+                  <AlertTriangle size={12} />
+                  {metrics.overdue.length} Overdue
+                </button>
+              )}
             </div>
           </div>
         </Card>
