@@ -25,6 +25,20 @@ export const ProductDetail = ({ productId }) => {
   const [selectedParentId, setSelectedParentId] = useState('');
   const [notificationEmails, setNotificationEmails] = useState([]);
   const [newEmail, setNewEmail] = useState('');
+  // EAP fields
+  const [eapEnabled, setEapEnabled] = useState(false);
+  const [eapStartDate, setEapStartDate] = useState('');
+  const [eapEndDate, setEapEndDate] = useState('');
+  const [eapJiraUrl, setEapJiraUrl] = useState('');
+  const [eapClientIds, setEapClientIds] = useState([]);
+  // Adapter fields
+  const [isAdapter, setIsAdapter] = useState(false);
+  const [hasEquipmentSA, setHasEquipmentSA] = useState(false);
+  const [hasEquipmentSE, setHasEquipmentSE] = useState(false);
+  const [hasMappingService, setHasMappingService] = useState(false);
+  const [hasConstructionService, setHasConstructionService] = useState(false);
+  // Relevant docs
+  const [relevantDocs, setRelevantDocs] = useState({});
 
   // Get all parent products (for parent selector)
   const parentProducts = useMemo(() =>
@@ -137,6 +151,15 @@ export const ProductDetail = ({ productId }) => {
       parentId = selectedParentId || editing?.parentId || null; // Editing sub-project, use selected or keep existing
     }
 
+    // Build EAP data if enabled
+    const eapData = eapEnabled ? {
+      isActive: true,
+      startDate: eapStartDate || null,
+      endDate: eapEndDate || null,
+      jiraBoardUrl: eapJiraUrl || null,
+      clientIds: eapClientIds
+    } : null;
+
     const payload = {
       name: fd.get('name'),
       description: fd.get('description'),
@@ -144,8 +167,15 @@ export const ProductDetail = ({ productId }) => {
       engineeringOwner: fd.get('engineeringOwner'),
       nextReleaseDate: fd.get('nextReleaseDate'),
       documentation: docData,
+      relevantDocs,
       parentId,
       notificationEmails,
+      eap: eapData,
+      isAdapter,
+      hasEquipmentSA: isAdapter ? hasEquipmentSA : false,
+      hasEquipmentSE: isAdapter ? hasEquipmentSE : false,
+      hasMappingService: isAdapter ? hasMappingService : false,
+      hasConstructionService: isAdapter ? hasConstructionService : false,
       updatedAt: serverTimestamp()
     };
 
@@ -201,7 +231,35 @@ export const ProductDetail = ({ productId }) => {
     setSelectedParentId(item?.parentId || '');
     setNotificationEmails(item?.notificationEmails || []);
     setNewEmail('');
+    // EAP fields
+    setEapEnabled(item?.eap?.isActive || false);
+    setEapStartDate(item?.eap?.startDate || '');
+    setEapEndDate(item?.eap?.endDate || '');
+    setEapJiraUrl(item?.eap?.jiraBoardUrl || '');
+    setEapClientIds(item?.eap?.clientIds || []);
+    // Adapter fields
+    setIsAdapter(item?.isAdapter || false);
+    setHasEquipmentSA(item?.hasEquipmentSA || false);
+    setHasEquipmentSE(item?.hasEquipmentSE || false);
+    setHasMappingService(item?.hasMappingService || false);
+    setHasConstructionService(item?.hasConstructionService || false);
+    // Relevant docs - default all to true for new items
+    if (item?.relevantDocs) {
+      setRelevantDocs(item.relevantDocs);
+    } else {
+      const defaultRelevant = {};
+      docTypes.forEach(t => defaultRelevant[t.key] = true);
+      setRelevantDocs(defaultRelevant);
+    }
     setModalOpen(true);
+  };
+
+  const toggleEapClient = (clientId) => {
+    setEapClientIds(prev =>
+      prev.includes(clientId)
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
   };
 
   const handleDelete = (item) => {
@@ -920,10 +978,160 @@ export const ProductDetail = ({ productId }) => {
                 <Input label="Engineering Owner" name="engineeringOwner" defaultValue={editing?.engineeringOwner} placeholder="Name" />
               </div>
               <Input label="Next Release Date" name="nextReleaseDate" type="date" defaultValue={toInputDate(editing?.nextReleaseDate)} />
+
+              {/* EAP Section */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eapEnabled}
+                      onChange={(e) => setEapEnabled(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500/20"
+                    />
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Sparkles size={16} className="text-purple-500" />
+                      EAP
+                    </span>
+                  </label>
+                </div>
+
+                {eapEnabled && (
+                  <div className="space-y-4 pl-6 border-l-2 border-purple-200 dark:border-purple-800">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Start Date</label>
+                        <input
+                          type="date"
+                          value={eapStartDate}
+                          onChange={(e) => setEapStartDate(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">End Date</label>
+                        <input
+                          type="date"
+                          value={eapEndDate}
+                          onChange={(e) => setEapEndDate(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Jira Board URL</label>
+                      <input
+                        type="url"
+                        value={eapJiraUrl}
+                        onChange={(e) => setEapJiraUrl(e.target.value)}
+                        placeholder="https://jira.example.com/board/..."
+                        className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">EAP Clients</label>
+                      <div className="max-h-32 overflow-y-auto border border-slate-200 dark:border-slate-600 rounded-lg p-2 space-y-1 bg-white dark:bg-slate-900">
+                        {clients.length === 0 ? (
+                          <p className="text-xs text-slate-400 italic p-2">No clients available</p>
+                        ) : (
+                          clients.map(client => (
+                            <label key={client.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={eapClientIds.includes(client.id)}
+                                onChange={() => toggleEapClient(client.id)}
+                                className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500/20"
+                              />
+                              <span className="text-sm text-slate-700 dark:text-slate-300">{client.name}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                      {eapClientIds.length > 0 && (
+                        <p className="text-xs text-purple-600 dark:text-purple-400">{eapClientIds.length} client(s) selected</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Adapter Type Section */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isAdapter}
+                      onChange={(e) => setIsAdapter(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                    />
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Cpu size={16} className="text-indigo-500" />
+                      This is an Adapter
+                    </span>
+                  </label>
+                </div>
+
+                {isAdapter && (
+                  <div className="space-y-3 pl-6 border-l-2 border-indigo-200 dark:border-indigo-800">
+                    <p className="text-xs text-slate-500 mb-2">Select the services this adapter supports:</p>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasEquipmentSA}
+                        onChange={(e) => setHasEquipmentSA(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Equipment - Service Assurance</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasEquipmentSE}
+                        onChange={(e) => setHasEquipmentSE(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Equipment - Service Enablement</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasMappingService}
+                        onChange={(e) => setHasMappingService(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Mapping Service</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasConstructionService}
+                        onChange={(e) => setHasConstructionService(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Construction Service</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
               <div className="pt-2 border-t">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Documentation Links</div>
+                <p className="text-xs text-slate-400 mb-3">Check the box to mark each documentation type as relevant for this product.</p>
                 {docTypes.map(t => (
-                  <Input key={t.key} label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." className="mb-2" />
+                  <div key={t.key} className="flex items-start gap-3 mb-3">
+                    <label className="flex items-center gap-2 cursor-pointer pt-2 shrink-0" title="Mark as relevant for this product">
+                      <input
+                        type="checkbox"
+                        checked={relevantDocs[t.key] !== false}
+                        onChange={(e) => setRelevantDocs(prev => ({ ...prev, [t.key]: e.target.checked }))}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <div className={`flex-1 ${relevantDocs[t.key] === false ? 'opacity-50' : ''}`}>
+                      <Input label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." />
+                    </div>
+                  </div>
                 ))}
               </div>
 

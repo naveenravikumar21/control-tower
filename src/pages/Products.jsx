@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus, Tag, Sparkles, Plug, Cpu } from 'lucide-react';
+import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus, Tag, Sparkles, Plug, Cpu, Bell, Mail } from 'lucide-react';
 import { useNav, useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
@@ -32,6 +32,9 @@ export const Products = () => {
   const [hasConstructionService, setHasConstructionService] = useState(false);
   // Relevant documentation tracking - which docs are applicable for this product
   const [relevantDocs, setRelevantDocs] = useState({});
+  // Notification emails
+  const [notificationEmails, setNotificationEmails] = useState([]);
+  const [newEmail, setNewEmail] = useState('');
   const { addToast } = useToast();
 
   // Get parent products (products without parentId)
@@ -98,6 +101,28 @@ export const Products = () => {
       docTypes.forEach(t => defaultRelevant[t.key] = true);
       setRelevantDocs(defaultRelevant);
     }
+    // Reset notification emails
+    setNotificationEmails(product?.notificationEmails || []);
+    setNewEmail('');
+  };
+
+  const handleAddEmail = () => {
+    if (!newEmail.trim()) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      addToast("Please enter a valid email address", "error");
+      return;
+    }
+    if (notificationEmails.includes(newEmail.toLowerCase())) {
+      addToast("Email already added", "error");
+      return;
+    }
+    setNotificationEmails([...notificationEmails, newEmail.toLowerCase()]);
+    setNewEmail('');
+  };
+
+  const handleRemoveEmail = (email) => {
+    setNotificationEmails(notificationEmails.filter(e => e !== email));
   };
 
   const handleOpenModal = (product = null, parentId = '') => {
@@ -150,6 +175,7 @@ export const Products = () => {
       relevantDocs,
       parentId,
       eap: eapData,
+      notificationEmails,
       // Adapter type fields
       isAdapter,
       hasEquipmentSA: isAdapter ? hasEquipmentSA : false,
@@ -625,6 +651,57 @@ export const Products = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Notification Emails */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center gap-2 mb-3">
+                  <Bell size={14} className="text-blue-500" />
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Notification Emails</span>
+                </div>
+                <p className="text-xs text-slate-400 mb-3">
+                  These emails will receive notifications when deadlines are within 7 days.
+                </p>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddEmail(); }}}
+                    placeholder="email@example.com"
+                    className="flex-1 px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddEmail}
+                    className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+                {notificationEmails.length > 0 && (
+                  <div className="space-y-2">
+                    {notificationEmails.map(email => (
+                      <div key={email} className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Mail size={14} className="text-slate-400" />
+                          <span className="text-sm text-slate-700 dark:text-slate-300">{email}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEmail(email)}
+                          className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {notificationEmails.length === 0 && (
+                  <p className="text-xs text-slate-400 italic">No notification emails configured.</p>
+                )}
+              </div>
+
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
                 <Button variant="secondary" onClick={handleCloseModal} type="button">Cancel</Button>
                 <Button type="submit">{editing ? 'Update' : selectedParentId ? 'Create Sub-Project' : 'Create Product'}</Button>

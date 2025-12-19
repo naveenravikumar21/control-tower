@@ -2,7 +2,7 @@
   "name": "control-tower",
   "private": true,
   "homepage": "https://<your-github-username>.github.io/control-tower",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
