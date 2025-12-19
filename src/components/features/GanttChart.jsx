@@ -121,7 +121,7 @@ export const GanttChart = ({ deployments, products, clients, onSelect }) => {
   const todayPosition = getDatePosition(new Date());
 
   const chartContent = (
-    <>
+    <div className="min-w-[700px]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
@@ -303,7 +303,7 @@ export const GanttChart = ({ deployments, products, clients, onSelect }) => {
           <span className="text-[10px] text-slate-500">Today</span>
         </div>
       </div>
-    </>
+    </div>
   );
 
   // Fullscreen modal
@@ -510,8 +510,10 @@ export const GanttChart = ({ deployments, products, clients, onSelect }) => {
 
   // Normal view
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-      {chartContent}
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-w-full">
+      <div className="overflow-x-auto">
+        {chartContent}
+      </div>
     </div>
   );
 };

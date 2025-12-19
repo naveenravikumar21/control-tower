@@ -81,12 +81,13 @@ export const ProductDetail = ({ productId }) => {
     });
     const avgProgress = allDeploys.length > 0 ? Math.round(totalProgress / allDeploys.length) : 0;
 
-    // Calculate doc readiness
+    // Calculate doc readiness - only count relevant docs
     const docs = product.documentation || {};
-    const filledDocs = Object.values(docs).filter(Boolean).length;
-    const docReadiness = Math.round((filledDocs / docTypes.length) * 100);
+    const relevantDocTypes = docTypes.filter(t => product.relevantDocs?.[t.key] !== false);
+    const filledDocs = relevantDocTypes.filter(t => docs[t.key]).length;
+    const docReadiness = relevantDocTypes.length > 0 ? Math.round((filledDocs / relevantDocTypes.length) * 100) : 100;
 
-    return { totalDeploys: allDeploys.length, released, inProgress, blocked, avgProgress, docReadiness };
+    return { totalDeploys: allDeploys.length, released, inProgress, blocked, avgProgress, docReadiness, relevantDocTypes };
   }, [product, allDeploys, checklists, docTypes]);
 
   // Timeline items
@@ -491,15 +492,20 @@ export const ProductDetail = ({ productId }) => {
       <Card className="p-6">
         <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide mb-4 flex items-center gap-2">
           <FileText size={16} /> Documentation
+          <span className="text-xs font-normal text-slate-400 ml-2">
+            ({metrics.relevantDocTypes?.filter(t => product.documentation?.[t.key]).length || 0}/{metrics.relevantDocTypes?.length || 0} relevant docs)
+          </span>
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {docTypes.map(t => {
             const url = product.documentation?.[t.key];
+            const isRelevant = product.relevantDocs?.[t.key] !== false;
             return (
-              <div key={t.key} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <div key={t.key} className={`flex items-center justify-between p-3 rounded-lg ${isRelevant ? 'bg-slate-50 dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/30 opacity-60'}`}>
                 <div className="flex items-center gap-2">
-                  <FileText size={16} className={url ? "text-emerald-500" : "text-slate-300"} />
+                  <FileText size={16} className={url ? "text-emerald-500" : isRelevant ? "text-slate-300" : "text-slate-200"} />
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.label}</span>
+                  {!isRelevant && <span className="text-[10px] text-slate-400 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">N/A</span>}
                 </div>
                 {url ? (
                   <div className="flex gap-1">
@@ -515,7 +521,7 @@ export const ProductDetail = ({ productId }) => {
                     </CustomTooltip>
                   </div>
                 ) : (
-                  <span className="text-xs text-slate-400">Not added</span>
+                  <span className="text-xs text-slate-400">{isRelevant ? 'Not added' : 'Not required'}</span>
                 )}
               </div>
             );
@@ -667,7 +673,11 @@ export const ProductDetail = ({ productId }) => {
             {subProjects.map(sp => {
               const spDeploys = deploys.filter(d => d.productId === sp.id);
               const deployCount = spDeploys.length;
-              const docsCount = sp.documentation ? Object.values(sp.documentation).filter(Boolean).length : 0;
+              // Count docs based on relevance
+              const spRelevantDocTypes = docTypes.filter(t => sp.relevantDocs?.[t.key] !== false);
+              const spFilledDocs = spRelevantDocTypes.filter(t => sp.documentation?.[t.key]);
+              const docsCount = spFilledDocs.length;
+              const totalRelevantDocs = spRelevantDocTypes.length;
               const spDeadline = getDeadlineStatus(sp.nextReleaseDate, 'In Progress');
               const spColorIndex = sp.name?.charCodeAt(0) % PRODUCT_AVATAR_COLORS.length || 0;
               const spAvatarColor = PRODUCT_AVATAR_COLORS[spColorIndex];
@@ -748,7 +758,7 @@ export const ProductDetail = ({ productId }) => {
                         <div className="flex items-center gap-2">
                           <FileText size={14} className="text-slate-400" />
                           <span className="text-sm text-slate-600 dark:text-slate-400">
-                            <b className={docsCount === docTypes.length ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{docTypes.length}</b> docs
+                            <b className={docsCount === totalRelevantDocs ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{totalRelevantDocs}</b> docs
                           </span>
                         </div>
                       </div>

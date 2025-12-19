@@ -2,7 +2,7 @@ import { Calendar, AlertTriangle } from 'lucide-react';
 import { formatDate, getDeadlineStatus } from '../../utils';
 
 export const TimelineStrip = ({ items, onSelect }) => (
-  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar custom-scrollbar-visible" style={{ maxWidth: '100%' }}>
+  <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar custom-scrollbar-visible max-w-full">
     {items.length === 0 && (
       <div className="text-slate-400 text-sm italic w-full text-center py-8 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
         <Calendar size={32} className="mx-auto mb-2 text-slate-300" />

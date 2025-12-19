@@ -48,14 +48,9 @@ const Sidebar = () => {
   return (
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen z-40 hidden md:flex transition-colors">
       <div className="p-5">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 bg-slate-900 dark:bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20 shrink-0">
-            <Rocket size={20} />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-tight">Control Tower</h1>
-            <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Enterprise</span>
-          </div>
+        <div className="flex flex-col items-start gap-1 mb-6">
+          <img src="/logo.png" alt="CDG Elements" className="h-8 object-contain" />
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Control Tower</span>
         </div>
 
         <nav className="space-y-1">
@@ -134,9 +129,7 @@ const MobileHeader = () => {
         <button onClick={() => setMenuOpen(true)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
           <List size={22} />
         </button>
-        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-          <Rocket className="text-blue-600" size={18}/> Control Tower
-        </div>
+        <img src="/logo.png" alt="CDG Elements" className="h-7 object-contain" />
         <div className="flex items-center gap-1">
           <NotificationCenter openDirection="down" alignRight />
           <button onClick={toggleTheme} className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
@@ -150,11 +143,9 @@ const MobileHeader = () => {
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 shadow-xl animate-in slide-in-from-left duration-300">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-slate-900 dark:bg-blue-600 text-white rounded-lg flex items-center justify-center">
-                  <Rocket size={16} />
-                </div>
-                <span className="font-bold text-slate-900 dark:text-white">Control Tower</span>
+              <div className="flex flex-col items-start gap-0.5">
+                <img src="/logo.png" alt="CDG Elements" className="h-7 object-contain" />
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Control Tower</span>
               </div>
               <button onClick={() => setMenuOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                 <X size={20} />
@@ -195,9 +186,9 @@ const MobileHeader = () => {
 const MainContent = () => {
   const { page, params } = useNav();
   return (
-    <main className="flex-1 bg-slate-50/50 dark:bg-slate-950 min-h-screen transition-colors">
+    <main className="flex-1 bg-slate-50/50 dark:bg-slate-950 min-h-screen transition-colors overflow-x-hidden min-w-0">
       <MobileHeader />
-      <div className="w-full p-4 md:p-6 lg:p-8">
+      <div className="w-full max-w-full p-4 md:p-6 lg:p-8 overflow-x-hidden">
         <CommandPalette />
         {page === 'dashboard' && <Dashboard />}
         {page === 'products' && <Products />}
@@ -226,7 +217,7 @@ export default function App() {
           <NavigationProvider>
             <ToastProvider>
               <NotificationProvider>
-                <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
+                <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 w-full max-w-full overflow-x-hidden">
                   <Sidebar />
                   <MainContent />
                 </div>

@@ -9,14 +9,9 @@ export const Sidebar = () => {
   return (
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen z-40 hidden md:flex transition-colors">
       <div className="p-5">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="h-10 w-10 bg-slate-900 dark:bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20 shrink-0">
-            <Rocket size={20} />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-tight">Control Tower</h1>
-            <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Enterprise</span>
-          </div>
+        <div className="flex flex-col items-start gap-1 mb-6">
+          <img src="/logo.png" alt="CDG Elements" className="h-8 object-contain" />
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Control Tower</span>
         </div>
 
         <nav className="space-y-1">

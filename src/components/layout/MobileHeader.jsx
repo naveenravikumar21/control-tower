@@ -22,9 +22,7 @@ export const MobileHeader = () => {
         <button onClick={() => setMenuOpen(true)} className="p-2 -ml-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
           <List size={22} />
         </button>
-        <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white">
-          <Rocket className="text-blue-600" size={18}/> Control Tower
-        </div>
+        <img src="/logo.png" alt="CDG Elements" className="h-7 object-contain" />
         <button onClick={toggleTheme} className="p-2 -mr-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
           {isDark ? <Sun size={20}/> : <Moon size={20}/>}
         </button>
@@ -36,11 +34,9 @@ export const MobileHeader = () => {
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
           <div className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 shadow-xl animate-in slide-in-from-left duration-300">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 bg-slate-900 dark:bg-blue-600 text-white rounded-lg flex items-center justify-center">
-                  <Rocket size={16} />
-                </div>
-                <span className="font-bold text-slate-900 dark:text-white">Control Tower</span>
+              <div className="flex flex-col items-start gap-0.5">
+                <img src="/logo.png" alt="CDG Elements" className="h-7 object-contain" />
+                <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Control Tower</span>
               </div>
               <button onClick={() => setMenuOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
                 <X size={20} />

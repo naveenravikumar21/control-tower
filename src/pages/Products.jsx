@@ -30,6 +30,8 @@ export const Products = () => {
   const [hasEquipmentSE, setHasEquipmentSE] = useState(false);
   const [hasMappingService, setHasMappingService] = useState(false);
   const [hasConstructionService, setHasConstructionService] = useState(false);
+  // Relevant documentation tracking - which docs are applicable for this product
+  const [relevantDocs, setRelevantDocs] = useState({});
   const { addToast } = useToast();
 
   // Get parent products (products without parentId)
@@ -87,11 +89,21 @@ export const Products = () => {
     setHasEquipmentSE(product?.hasEquipmentSE || false);
     setHasMappingService(product?.hasMappingService || false);
     setHasConstructionService(product?.hasConstructionService || false);
+    // Reset relevant docs - default all to true for new products
+    if (product?.relevantDocs) {
+      setRelevantDocs(product.relevantDocs);
+    } else {
+      // Default all docs to relevant for new products
+      const defaultRelevant = {};
+      docTypes.forEach(t => defaultRelevant[t.key] = true);
+      setRelevantDocs(defaultRelevant);
+    }
   };
 
   const handleOpenModal = (product = null, parentId = '') => {
     setEditing(product);
-    setSelectedParentId(parentId);
+    // When editing, use the product's existing parentId; otherwise use the provided parentId
+    setSelectedParentId(product?.parentId || parentId);
     resetFormState(product);
     setModalOpen(true);
   };
@@ -135,6 +147,7 @@ export const Products = () => {
       engineeringOwner: fd.get('engineeringOwner'),
       nextReleaseDate: fd.get('nextReleaseDate'),
       documentation: docData,
+      relevantDocs,
       parentId,
       eap: eapData,
       // Adapter type fields
@@ -203,7 +216,11 @@ export const Products = () => {
     }
 
     if (params.filter === 'missingDocs') {
-      res = res.filter(p => !p.documentation || Object.values(p.documentation).some(val => !val || val === ""));
+      res = res.filter(p => {
+        // Only check relevant docs for missing status
+        const relevantTypes = docTypes.filter(t => p.relevantDocs?.[t.key] !== false);
+        return relevantTypes.some(t => !p.documentation?.[t.key] || p.documentation[t.key] === "");
+      });
     } else if (params.filter === 'noDeploys') {
       res = res.filter(p => !deploys.some(d => d.productId === p.id));
     } else if (params.filter === 'upcoming') {
@@ -247,7 +264,11 @@ export const Products = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {sortedProducts.map(p => {
           const deployCount = deploys.filter(d => d.productId === p.id).length;
-          const docsCount = p.documentation ? Object.values(p.documentation).filter(Boolean).length : 0;
+          // Count docs based on relevance - only count relevant docs
+          const relevantDocTypes = docTypes.filter(t => p.relevantDocs?.[t.key] !== false);
+          const filledRelevantDocs = relevantDocTypes.filter(t => p.documentation?.[t.key]);
+          const docsCount = filledRelevantDocs.length;
+          const totalRelevantDocs = relevantDocTypes.length;
           const colorIndex = p.name?.charCodeAt(0) % colors.length || 0;
           const avatarColor = colors[colorIndex];
           const deadlineStatus = getDeadlineStatus(p.nextReleaseDate, 'In Progress');
@@ -336,7 +357,7 @@ export const Products = () => {
                     <div className="flex items-center gap-2">
                       <FileText size={14} className="text-slate-400" />
                       <span className="text-sm text-slate-600 dark:text-slate-400">
-                        <b className={docsCount === docTypes.length ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{docTypes.length}</b> docs
+                        <b className={docsCount === totalRelevantDocs ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{totalRelevantDocs}</b> docs
                       </span>
                     </div>
                     {p.isAdapter && (
@@ -587,13 +608,26 @@ export const Products = () => {
 
               <div className="pt-2 border-t">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Documentation Links</div>
+                <p className="text-xs text-slate-400 mb-3">Check the box to mark each documentation type as relevant for this product. Only relevant docs count toward completion.</p>
                 {docTypes.map(t => (
-                  <Input key={t.key} label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." className="mb-2" />
+                  <div key={t.key} className="flex items-start gap-3 mb-3">
+                    <label className="flex items-center gap-2 cursor-pointer pt-2 shrink-0" title="Mark as relevant for this product">
+                      <input
+                        type="checkbox"
+                        checked={relevantDocs[t.key] !== false}
+                        onChange={(e) => setRelevantDocs(prev => ({ ...prev, [t.key]: e.target.checked }))}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                      />
+                    </label>
+                    <div className={`flex-1 ${relevantDocs[t.key] === false ? 'opacity-50' : ''}`}>
+                      <Input label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." />
+                    </div>
+                  </div>
                 ))}
               </div>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
                 <Button variant="secondary" onClick={handleCloseModal} type="button">Cancel</Button>
-                <Button type="submit">{selectedParentId ? 'Save Sub-Project' : 'Save Product'}</Button>
+                <Button type="submit">{editing ? 'Update' : selectedParentId ? 'Create Sub-Project' : 'Create Product'}</Button>
               </div>
             </form>
           </Card>
