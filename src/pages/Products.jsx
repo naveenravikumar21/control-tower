@@ -1,16 +1,17 @@
 import { useState, useMemo } from 'react';
-import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus, Tag } from 'lucide-react';
-import { useNav, useToast } from '../contexts';
+import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus, Tag, Sparkles, Plug, Cpu } from 'lucide-react';
+import { useNav, useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
 import { formatDate, toInputDate, getDaysDiff, getDeadlineStatus } from '../utils';
-import { DOC_TYPES } from '../constants';
 import { Button, Input, Card, Badge, CustomTooltip, SearchInput, ConfirmationModal, EmptyState } from '../components/ui/index.jsx';
 
 export const Products = () => {
+  const { docTypes } = useConfig();
   const { data: products } = useCollection('products');
   const { data: deploys } = useCollection('deployments');
   const { data: releaseNotes } = useCollection('releaseNotes');
+  const { data: clients } = useCollection('clients');
   const { params, navigate } = useNav();
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
@@ -18,6 +19,17 @@ export const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProducts, setExpandedProducts] = useState({});
   const [selectedParentId, setSelectedParentId] = useState('');
+  const [eapEnabled, setEapEnabled] = useState(false);
+  const [eapStartDate, setEapStartDate] = useState('');
+  const [eapEndDate, setEapEndDate] = useState('');
+  const [eapJiraUrl, setEapJiraUrl] = useState('');
+  const [eapClientIds, setEapClientIds] = useState([]);
+  // Adapter type fields
+  const [isAdapter, setIsAdapter] = useState(false);
+  const [hasEquipmentSA, setHasEquipmentSA] = useState(false);
+  const [hasEquipmentSE, setHasEquipmentSE] = useState(false);
+  const [hasMappingService, setHasMappingService] = useState(false);
+  const [hasConstructionService, setHasConstructionService] = useState(false);
   const { addToast } = useToast();
 
   // Get parent products (products without parentId)
@@ -54,13 +66,67 @@ export const Products = () => {
     setExpandedProducts(prev => ({ ...prev, [productId]: !prev[productId] }));
   };
 
+  const resetFormState = (product = null) => {
+    // Reset EAP state
+    if (product?.eap) {
+      setEapEnabled(product.eap.isActive || false);
+      setEapStartDate(product.eap.startDate || '');
+      setEapEndDate(product.eap.endDate || '');
+      setEapJiraUrl(product.eap.jiraBoardUrl || '');
+      setEapClientIds(product.eap.clientIds || []);
+    } else {
+      setEapEnabled(false);
+      setEapStartDate('');
+      setEapEndDate('');
+      setEapJiraUrl('');
+      setEapClientIds([]);
+    }
+    // Reset adapter type state
+    setIsAdapter(product?.isAdapter || false);
+    setHasEquipmentSA(product?.hasEquipmentSA || false);
+    setHasEquipmentSE(product?.hasEquipmentSE || false);
+    setHasMappingService(product?.hasMappingService || false);
+    setHasConstructionService(product?.hasConstructionService || false);
+  };
+
+  const handleOpenModal = (product = null, parentId = '') => {
+    setEditing(product);
+    setSelectedParentId(parentId);
+    resetFormState(product);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+    setEditing(null);
+    setSelectedParentId('');
+    resetFormState();
+  };
+
+  const toggleEapClient = (clientId) => {
+    setEapClientIds(prev =>
+      prev.includes(clientId)
+        ? prev.filter(id => id !== clientId)
+        : [...prev, clientId]
+    );
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const docData = {};
-    DOC_TYPES.forEach(t => docData[t.key] = fd.get(t.key) || "");
+    docTypes.forEach(t => docData[t.key] = fd.get(t.key) || "");
 
     const parentId = fd.get('parentId') || null;
+
+    // Build EAP data if enabled
+    const eapData = eapEnabled ? {
+      isActive: true,
+      startDate: eapStartDate || null,
+      endDate: eapEndDate || null,
+      jiraBoardUrl: eapJiraUrl || null,
+      clientIds: eapClientIds
+    } : null;
 
     const payload = {
       name: fd.get('name'),
@@ -70,6 +136,13 @@ export const Products = () => {
       nextReleaseDate: fd.get('nextReleaseDate'),
       documentation: docData,
       parentId,
+      eap: eapData,
+      // Adapter type fields
+      isAdapter,
+      hasEquipmentSA: isAdapter ? hasEquipmentSA : false,
+      hasEquipmentSE: isAdapter ? hasEquipmentSE : false,
+      hasMappingService: isAdapter ? hasMappingService : false,
+      hasConstructionService: isAdapter ? hasConstructionService : false,
       updatedAt: serverTimestamp()
     };
 
@@ -81,7 +154,7 @@ export const Products = () => {
         await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), { ...payload, createdAt: serverTimestamp() });
         addToast("Product created", "success");
       }
-      setModalOpen(false); setEditing(null); setSelectedParentId('');
+      handleCloseModal();
     } catch(e) { addToast("Error saving product", "error"); }
   };
 
@@ -167,7 +240,7 @@ export const Products = () => {
             placeholder="Search products..."
             className="w-full md:w-72"
           />
-          <Button onClick={() => { setEditing(null); setModalOpen(true); }} icon={Plus}>Add Product</Button>
+          <Button onClick={() => handleOpenModal()} icon={Plus}>Add Product</Button>
         </div>
       </div>
 
@@ -193,14 +266,14 @@ export const Products = () => {
                 {/* Action buttons - absolute positioned */}
                 <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <button
-                    onClick={(e) => { e.stopPropagation(); setSelectedParentId(p.id); setEditing(null); setModalOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); handleOpenModal(null, p.id); }}
                     className="p-1.5 bg-white dark:bg-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/50 rounded-lg text-slate-400 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors shadow-sm border border-slate-200 dark:border-slate-600"
                     title="Add Sub-Project"
                   >
                     <FolderPlus size={16}/>
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setEditing(p); setSelectedParentId(p.parentId || ''); setModalOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); handleOpenModal(p, p.parentId || ''); }}
                     className="p-1.5 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-lg text-slate-400 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shadow-sm border border-slate-200 dark:border-slate-600"
                     title="Edit"
                   >
@@ -222,6 +295,11 @@ export const Products = () => {
                   <div className="flex-1 min-w-0 pr-20">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">{p.name}</h3>
+                      {p.eap?.isActive && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+                          <Sparkles size={10} /> EAP
+                        </span>
+                      )}
                       {latestVersion && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
                           <Tag size={10} /> v{latestVersion.version}
@@ -258,9 +336,15 @@ export const Products = () => {
                     <div className="flex items-center gap-2">
                       <FileText size={14} className="text-slate-400" />
                       <span className="text-sm text-slate-600 dark:text-slate-400">
-                        <b className={docsCount === DOC_TYPES.length ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{DOC_TYPES.length}</b> docs
+                        <b className={docsCount === docTypes.length ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{docTypes.length}</b> docs
                       </span>
                     </div>
+                    {p.isAdapter && (
+                      <div className="flex items-center gap-1.5">
+                        <Cpu size={14} className="text-indigo-500" />
+                        <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Adapter</span>
+                      </div>
+                    )}
                   </div>
                   {hasSubProjects && (
                     <span className="text-xs text-slate-400">{subProjects.length} sub-projects</span>
@@ -364,14 +448,151 @@ export const Products = () => {
                 <Input label="Engineering Owner" name="engineeringOwner" defaultValue={editing?.engineeringOwner} placeholder="Name" />
               </div>
               <Input label="Next Release Date" name="nextReleaseDate" type="date" defaultValue={toInputDate(editing?.nextReleaseDate)} />
+
+              {/* EAP Section */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={eapEnabled}
+                      onChange={(e) => setEapEnabled(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500/20"
+                    />
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Sparkles size={16} className="text-purple-500" />
+                      EAP
+                    </span>
+                  </label>
+                </div>
+
+                {eapEnabled && (
+                  <div className="space-y-4 pl-6 border-l-2 border-purple-200 dark:border-purple-800">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Start Date</label>
+                        <input
+                          type="date"
+                          value={eapStartDate}
+                          onChange={(e) => setEapStartDate(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">End Date</label>
+                        <input
+                          type="date"
+                          value={eapEndDate}
+                          onChange={(e) => setEapEndDate(e.target.value)}
+                          className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Jira Board URL</label>
+                      <input
+                        type="url"
+                        value={eapJiraUrl}
+                        onChange={(e) => setEapJiraUrl(e.target.value)}
+                        placeholder="https://jira.example.com/board/..."
+                        className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">EAP Clients</label>
+                      <div className="max-h-32 overflow-y-auto border border-slate-200 dark:border-slate-600 rounded-lg p-2 space-y-1 bg-white dark:bg-slate-900">
+                        {clients.length === 0 ? (
+                          <p className="text-xs text-slate-400 italic p-2">No clients available</p>
+                        ) : (
+                          clients.map(client => (
+                            <label key={client.id} className="flex items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={eapClientIds.includes(client.id)}
+                                onChange={() => toggleEapClient(client.id)}
+                                className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500/20"
+                              />
+                              <span className="text-sm text-slate-700 dark:text-slate-300">{client.name}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                      {eapClientIds.length > 0 && (
+                        <p className="text-xs text-purple-600 dark:text-purple-400">{eapClientIds.length} client(s) selected</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Adapter Type Section */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isAdapter}
+                      onChange={(e) => setIsAdapter(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                    />
+                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Cpu size={16} className="text-indigo-500" />
+                      This is an Adapter
+                    </span>
+                  </label>
+                </div>
+
+                {isAdapter && (
+                  <div className="space-y-3 pl-6 border-l-2 border-indigo-200 dark:border-indigo-800">
+                    <p className="text-xs text-slate-500 mb-2">Select the services this adapter supports:</p>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasEquipmentSA}
+                        onChange={(e) => setHasEquipmentSA(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Equipment - Service Assurance</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasEquipmentSE}
+                        onChange={(e) => setHasEquipmentSE(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Equipment - Service Enablement</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasMappingService}
+                        onChange={(e) => setHasMappingService(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Mapping Service</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg">
+                      <input
+                        type="checkbox"
+                        checked={hasConstructionService}
+                        onChange={(e) => setHasConstructionService(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                      />
+                      <span className="text-sm text-slate-700 dark:text-slate-300">Construction Service</span>
+                    </label>
+                  </div>
+                )}
+              </div>
+
               <div className="pt-2 border-t">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Documentation Links</div>
-                {DOC_TYPES.map(t => (
+                {docTypes.map(t => (
                   <Input key={t.key} label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." className="mb-2" />
                 ))}
               </div>
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
-                <Button variant="secondary" onClick={() => { setModalOpen(false); setSelectedParentId(''); }} type="button">Cancel</Button>
+                <Button variant="secondary" onClick={handleCloseModal} type="button">Cancel</Button>
                 <Button type="submit">{selectedParentId ? 'Save Sub-Project' : 'Save Product'}</Button>
               </div>
             </form>

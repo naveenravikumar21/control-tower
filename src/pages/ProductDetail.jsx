@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell, Tag, Eye, Download, Globe, Lock } from 'lucide-react';
-import { useNav, useToast } from '../contexts';
+import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell, Tag, Eye, Download, Globe, Lock, Sparkles, Cpu } from 'lucide-react';
+import { useNav, useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, getDeadlineStatus, formatDate, toInputDate } from '../utils';
 import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
-import { DOC_TYPES, PRODUCT_AVATAR_COLORS, RELEASE_NOTE_TYPES } from '../constants';
+import { PRODUCT_AVATAR_COLORS, RELEASE_NOTE_TYPES } from '../constants';
 import { Card, Badge, ProgressBar, EmptyState, Button, Input, CustomTooltip, ConfirmationModal } from '../components/ui/index.jsx';
 import { TimelineStrip, NotesPanel } from '../components/features';
 
 export const ProductDetail = ({ productId }) => {
   const { navigate, addToHistory } = useNav();
   const { addToast } = useToast();
+  const { docTypes } = useConfig();
   const { data: products } = useCollection('products');
   const { data: deploys } = useCollection('deployments');
   const { data: clients } = useCollection('clients');
@@ -83,10 +84,10 @@ export const ProductDetail = ({ productId }) => {
     // Calculate doc readiness
     const docs = product.documentation || {};
     const filledDocs = Object.values(docs).filter(Boolean).length;
-    const docReadiness = Math.round((filledDocs / DOC_TYPES.length) * 100);
+    const docReadiness = Math.round((filledDocs / docTypes.length) * 100);
 
     return { totalDeploys: allDeploys.length, released, inProgress, blocked, avgProgress, docReadiness };
-  }, [product, allDeploys, checklists]);
+  }, [product, allDeploys, checklists, docTypes]);
 
   // Timeline items
   const timelineItems = useMemo(() => {
@@ -125,7 +126,7 @@ export const ProductDetail = ({ productId }) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const docData = {};
-    DOC_TYPES.forEach(t => docData[t.key] = fd.get(t.key) || "");
+    docTypes.forEach(t => docData[t.key] = fd.get(t.key) || "");
 
     // Determine parentId based on context
     let parentId = null;
@@ -273,6 +274,11 @@ export const ProductDetail = ({ productId }) => {
             )}
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{product.name}</h1>
+              {product.eap?.isActive && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm font-semibold">
+                  <Sparkles size={14} /> EAP
+                </span>
+              )}
               {latestVersion && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-semibold">
                   <Tag size={14} /> v{latestVersion.version}
@@ -361,13 +367,133 @@ export const ProductDetail = ({ productId }) => {
         </Card>
       </div>
 
+      {/* EAP Section - only shown if EAP is active */}
+      {product.eap?.isActive && (
+        <Card className="p-6 border-l-4 border-purple-500">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide flex items-center gap-2">
+              <Sparkles size={16} className="text-purple-500" /> EAP
+            </h3>
+            <Badge color="purple" size="sm">Active</Badge>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Timeline */}
+            <div className="space-y-2">
+              <div className="text-xs text-slate-400 uppercase tracking-wide">Timeline</div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="text-xs text-slate-500 mb-1">Start</div>
+                  <div className="font-medium text-slate-900 dark:text-white">
+                    {product.eap.startDate ? formatDate(product.eap.startDate) : 'Not set'}
+                  </div>
+                </div>
+                <div className="text-slate-300 dark:text-slate-600">→</div>
+                <div className="flex-1">
+                  <div className="text-xs text-slate-500 mb-1">End</div>
+                  <div className={`font-medium ${product.eap.endDate && getDaysDiff(product.eap.endDate) < 0 ? 'text-rose-600' : product.eap.endDate && getDaysDiff(product.eap.endDate) <= 30 ? 'text-amber-600' : 'text-slate-900 dark:text-white'}`}>
+                    {product.eap.endDate ? formatDate(product.eap.endDate) : 'Not set'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Jira Board */}
+            <div className="space-y-2">
+              <div className="text-xs text-slate-400 uppercase tracking-wide">Jira Board</div>
+              {product.eap.jiraBoardUrl ? (
+                <a
+                  href={product.eap.jiraBoardUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                >
+                  <ExternalLink size={14} />
+                  Open Jira Board
+                </a>
+              ) : (
+                <span className="text-sm text-slate-400 italic">Not configured</span>
+              )}
+            </div>
+
+            {/* EAP Clients */}
+            <div className="space-y-2">
+              <div className="text-xs text-slate-400 uppercase tracking-wide">EAP Clients ({product.eap.clientIds?.length || 0})</div>
+              {product.eap.clientIds?.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {product.eap.clientIds.map(clientId => {
+                    const client = clients.find(c => c.id === clientId);
+                    return client ? (
+                      <span
+                        key={clientId}
+                        className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-medium cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-600"
+                        onClick={() => navigate('clients', { filter: { id: clientId } })}
+                      >
+                        {client.name}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              ) : (
+                <span className="text-sm text-slate-400 italic">No clients enrolled</span>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Adapter Section - only shown if product is an adapter */}
+      {product.isAdapter && (
+        <Card className="p-6 border-l-4 border-indigo-500">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide flex items-center gap-2">
+              <Cpu size={16} className="text-indigo-500" /> Adapter Product
+            </h3>
+            <Badge color="indigo" size="sm">Adapter</Badge>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs text-slate-400 uppercase tracking-wide mb-3">Supported Services</div>
+            <div className="flex flex-wrap gap-2">
+              {product.hasEquipmentSA && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 rounded-lg text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Equipment - Service Assurance
+                </span>
+              )}
+              {product.hasEquipmentSE && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-lg text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  Equipment - Service Enablement
+                </span>
+              )}
+              {product.hasMappingService && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 rounded-lg text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  Mapping Service
+                </span>
+              )}
+              {product.hasConstructionService && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 rounded-lg text-sm font-medium">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  Construction Service
+                </span>
+              )}
+              {!product.hasEquipmentSA && !product.hasEquipmentSE && !product.hasMappingService && !product.hasConstructionService && (
+                <span className="text-sm text-slate-400 italic">No services configured</span>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Documentation Section */}
       <Card className="p-6">
         <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide mb-4 flex items-center gap-2">
           <FileText size={16} /> Documentation
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {DOC_TYPES.map(t => {
+          {docTypes.map(t => {
             const url = product.documentation?.[t.key];
             return (
               <div key={t.key} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -622,7 +748,7 @@ export const ProductDetail = ({ productId }) => {
                         <div className="flex items-center gap-2">
                           <FileText size={14} className="text-slate-400" />
                           <span className="text-sm text-slate-600 dark:text-slate-400">
-                            <b className={docsCount === DOC_TYPES.length ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{DOC_TYPES.length}</b> docs
+                            <b className={docsCount === docTypes.length ? "text-emerald-600" : "text-slate-900 dark:text-white"}>{docsCount}/{docTypes.length}</b> docs
                           </span>
                         </div>
                       </div>
@@ -786,7 +912,7 @@ export const ProductDetail = ({ productId }) => {
               <Input label="Next Release Date" name="nextReleaseDate" type="date" defaultValue={toInputDate(editing?.nextReleaseDate)} />
               <div className="pt-2 border-t">
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Documentation Links</div>
-                {DOC_TYPES.map(t => (
+                {docTypes.map(t => (
                   <Input key={t.key} label={t.label} name={t.key} defaultValue={editing?.documentation?.[t.key]} placeholder="https://..." className="mb-2" />
                 ))}
               </div>

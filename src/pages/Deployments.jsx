@@ -4,7 +4,7 @@ import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, collection, addDoc } from '../utils/firebase';
 import { getDaysDiff, calculateChecklistProgress } from '../utils';
-import { STANDARD_CHECKLIST, DEPLOYMENT_TYPES } from '../constants';
+import { STANDARD_CHECKLIST, DEPLOYMENT_TYPES, DEPLOYMENT_ENVIRONMENTS, ADAPTOR_STATUSES } from '../constants';
 import { Button, Input, Card, SearchInput, ViewToggle, FilterTag } from '../components/ui/index.jsx';
 import { DeploymentGridView, DeploymentKanbanBoard } from '../components/features';
 import { DeploymentModal } from './DeploymentModal';
@@ -35,7 +35,19 @@ export const Deployments = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [activeFilters, setActiveFilters] = useState(params.filter || {});
-  const [newDeploymentType, setNewDeploymentType] = useState('generic');
+  const [newDeploymentType, setNewDeploymentType] = useState('feature-release');
+  const [newEnvironment, setNewEnvironment] = useState('production');
+  const [newFeatureName, setNewFeatureName] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState('');
+  // Service status states for adapter products
+  const [equipmentSAStatus, setEquipmentSAStatus] = useState('not_started');
+  const [equipmentSEStatus, setEquipmentSEStatus] = useState('not_started');
+  const [mappingStatus, setMappingStatus] = useState('not_started');
+  const [constructionStatus, setConstructionStatus] = useState('not_started');
+
+  // Get selected product to check if it's an adapter
+  const selectedProduct = useMemo(() =>
+    products.find(p => p.id === selectedProductId), [products, selectedProductId]);
 
   useEffect(() => {
     if (params.filter) setActiveFilters(params.filter);
@@ -61,6 +73,7 @@ export const Deployments = () => {
     }
 
     if (activeFilters.status && activeFilters.status !== 'All') res = res.filter(d => d.status === activeFilters.status);
+    if (activeFilters.environment && activeFilters.environment !== 'All') res = res.filter(d => (d.environment || 'production') === activeFilters.environment);
     if (activeFilters.id) res = res.filter(d => d.id === activeFilters.id);
     if (activeFilters.urgent) res = res.filter(d => getDaysDiff(d.nextDeliveryDate) <= 7 && getDaysDiff(d.nextDeliveryDate) >= 0);
     if (activeFilters.overdue) res = res.filter(d => getDaysDiff(d.nextDeliveryDate) < 0);
@@ -76,14 +89,28 @@ export const Deployments = () => {
     const deploymentType = newDeploymentType;
     // Only client-specific deployments need a clientId
     const clientId = deploymentType === 'client-specific' ? fd.get('clientId') : null;
+    const productId = fd.get('productId');
+    const product = products.find(p => p.id === productId);
+
+    // Build service status fields for adapter products
+    const serviceStatuses = product?.isAdapter ? {
+      equipmentSAStatus: product.hasEquipmentSA ? equipmentSAStatus : null,
+      equipmentSEStatus: product.hasEquipmentSE ? equipmentSEStatus : null,
+      mappingStatus: product.hasMappingService ? mappingStatus : null,
+      constructionStatus: product.hasConstructionService ? constructionStatus : null,
+    } : {};
+
     try {
       const ref = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'deployments'), {
         clientId,
-        productId: fd.get('productId'),
+        productId,
         status: 'Not Started',
         nextDeliveryDate: fd.get('nextDeliveryDate'),
         deploymentType,
+        environment: newEnvironment,
+        featureName: deploymentType === 'feature-release' ? newFeatureName : null,
         blockedComments: [],
+        ...serviceStatuses,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
@@ -92,7 +119,14 @@ export const Deployments = () => {
       }));
       addToast("Deployment initialized", "success");
       setModalOpen(false);
-      setNewDeploymentType('generic');
+      setNewDeploymentType('feature-release');
+      setNewEnvironment('production');
+      setNewFeatureName('');
+      setSelectedProductId('');
+      setEquipmentSAStatus('not_started');
+      setEquipmentSEStatus('not_started');
+      setMappingStatus('not_started');
+      setConstructionStatus('not_started');
     } catch(e) { addToast("Failed to create", "error"); }
   };
 
@@ -124,9 +158,19 @@ export const Deployments = () => {
         >
           <option value="All">Status: All</option><option>Not Started</option><option>In Progress</option><option>Blocked</option><option>Released</option>
         </select>
+        <select
+          value={activeFilters.environment || 'All'}
+          onChange={e => setActiveFilters(prev => ({ ...prev, environment: e.target.value }))}
+          className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 dark:text-white w-full sm:w-auto"
+        >
+          <option value="All">Environment: All</option>
+          {DEPLOYMENT_ENVIRONMENTS.map(env => (
+            <option key={env.key} value={env.key}>{env.label}</option>
+          ))}
+        </select>
         <div className="flex flex-wrap gap-2 items-center">
           {Object.entries(activeFilters).map(([key, val]) => {
-            if (key === 'status' || !val) return null;
+            if (key === 'status' || key === 'environment' || !val || val === 'All') return null;
             return <FilterTag key={key} label={key === 'id' ? 'Single Item' : key} value="Active" onRemove={() => removeFilter(key)} />
           })}
           {Object.keys(activeFilters).length > 0 && <button onClick={() => setActiveFilters({})} className="text-xs text-slate-500 hover:text-rose-500 underline sm:ml-auto">Clear All</button>}
@@ -158,13 +202,37 @@ export const Deployments = () => {
                   ))}
                 </select>
                 <p className="text-xs text-slate-400 mt-1">
-                  {newDeploymentType === 'ga'
-                    ? 'General availability release for all clients'
-                    : newDeploymentType === 'generic'
-                    ? 'Standard deployment for all clients'
-                    : 'Customized deployment for a specific client'}
+                  {DEPLOYMENT_TYPES.find(t => t.key === newDeploymentType)?.description || ''}
                 </p>
               </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Environment</label>
+                <select
+                  value={newEnvironment}
+                  onChange={(e) => setNewEnvironment(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  required
+                >
+                  {DEPLOYMENT_ENVIRONMENTS.map(env => (
+                    <option key={env.key} value={env.key}>{env.label}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-400 mt-1">
+                  {DEPLOYMENT_ENVIRONMENTS.find(e => e.key === newEnvironment)?.description || ''}
+                </p>
+              </div>
+              {newDeploymentType === 'feature-release' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Feature Name</label>
+                  <input
+                    type="text"
+                    value={newFeatureName}
+                    onChange={(e) => setNewFeatureName(e.target.value)}
+                    placeholder="e.g., Dark Mode, API v2"
+                    className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+              )}
               {newDeploymentType === 'client-specific' && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Client</label>
@@ -176,27 +244,97 @@ export const Deployments = () => {
               )}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Product</label>
-                <select name="productId" className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all" required>
+                <select
+                  name="productId"
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                  required
+                >
                   <option value="">Select product...</option>
                   {productHierarchy.parentProducts.map(parent => {
                     const subProjects = productHierarchy.subProjectsByParent[parent.id] || [];
                     if (subProjects.length === 0) {
-                      return <option key={parent.id} value={parent.id}>{parent.name}</option>;
+                      return <option key={parent.id} value={parent.id}>{parent.name}{parent.isAdapter ? ' (Adapter)' : ''}</option>;
                     }
                     return (
                       <optgroup key={parent.id} label={parent.name}>
-                        <option value={parent.id}>{parent.name}</option>
+                        <option value={parent.id}>{parent.name}{parent.isAdapter ? ' (Adapter)' : ''}</option>
                         {subProjects.map(sp => (
-                          <option key={sp.id} value={sp.id}>↳ {sp.name}</option>
+                          <option key={sp.id} value={sp.id}>↳ {sp.name}{sp.isAdapter ? ' (Adapter)' : ''}</option>
                         ))}
                       </optgroup>
                     );
                   })}
                 </select>
               </div>
+
+              {/* Service Status Dropdowns for Adapter Products */}
+              {selectedProduct?.isAdapter && (
+                <div className="space-y-3 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
+                  <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Adapter Service Statuses</div>
+                  {selectedProduct.hasEquipmentSA && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Equipment - Service Assurance</label>
+                      <select
+                        value={equipmentSAStatus}
+                        onChange={(e) => setEquipmentSAStatus(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {selectedProduct.hasEquipmentSE && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Equipment - Service Enablement</label>
+                      <select
+                        value={equipmentSEStatus}
+                        onChange={(e) => setEquipmentSEStatus(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {selectedProduct.hasMappingService && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Mapping Service</label>
+                      <select
+                        value={mappingStatus}
+                        onChange={(e) => setMappingStatus(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {selectedProduct.hasConstructionService && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Construction Service</label>
+                      <select
+                        value={constructionStatus}
+                        onChange={(e) => setConstructionStatus(e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <Input label="Target Date" name="nextDeliveryDate" type="date" required />
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6">
-                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('generic'); }} type="button">Cancel</Button>
+                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('feature-release'); setNewEnvironment('production'); setNewFeatureName(''); setSelectedProductId(''); setEquipmentSAStatus('not_started'); setEquipmentSEStatus('not_started'); setMappingStatus('not_started'); setConstructionStatus('not_started'); }} type="button">Cancel</Button>
                 <Button type="submit">Initialize</Button>
               </div>
             </form>

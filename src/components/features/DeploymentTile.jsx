@@ -1,18 +1,40 @@
-import { Rocket, Clock, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Rocket, Clock, CheckCircle2, MessageSquare, Package, Cpu } from 'lucide-react';
 import { Card, CustomTooltip, ProgressBar } from '../ui';
 import { getDeadlineStatus, getAvatarColor } from '../../utils';
-import { AVATAR_COLORS } from '../../constants';
+import { AVATAR_COLORS, DEPLOYMENT_ENVIRONMENTS, DEPLOYMENT_TYPES, ADAPTOR_STATUSES } from '../../constants';
 
 export const DeploymentTile = ({ deployment, onClick }) => {
-  const { client, product, status, nextDeliveryDate, checklist, blockedComments = [], deploymentType } = deployment;
+  const { client, product, status, nextDeliveryDate, checklist, blockedComments = [], deploymentType, environment, featureName, equipmentSAStatus, equipmentSEStatus, mappingStatus, constructionStatus } = deployment;
   const deadlineStatus = getDeadlineStatus(nextDeliveryDate, status);
   const completed = checklist?.filter(c => c.isCompleted).length || 0;
   const total = checklist?.length || 0;
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-  // Determine display name based on deployment type
-  const displayName = client?.name || (deploymentType === 'ga' ? 'GA' : deploymentType === 'eap' ? 'EAP' : deploymentType === 'generic' ? 'Generic' : 'GA');
-  const avatarColor = getAvatarColor(displayName, AVATAR_COLORS);
+  // Check if this deployment has any service statuses (for adapter products)
+  const hasServiceStatuses = equipmentSAStatus !== undefined || equipmentSEStatus !== undefined || mappingStatus !== undefined || constructionStatus !== undefined;
+
+  // Get status color for service badges
+  const getServiceStatusColor = (statusKey) => {
+    const status = ADAPTOR_STATUSES.find(s => s.key === statusKey);
+    if (!status) return 'bg-slate-300';
+    if (status.key === 'completed') return 'bg-emerald-500';
+    if (status.key === 'in_progress') return 'bg-blue-500';
+    return 'bg-slate-300';
+  };
+
+  // Product is now the primary display (label reorder - product first)
+  const productName = product?.name || 'Unknown Product';
+  const avatarColor = getAvatarColor(productName, AVATAR_COLORS);
+
+  // Get environment info
+  const envInfo = DEPLOYMENT_ENVIRONMENTS.find(e => e.key === (environment || 'production')) || DEPLOYMENT_ENVIRONMENTS[2];
+
+  // Get deployment type label
+  const getTypeLabel = () => {
+    if (deploymentType === 'feature-release') return featureName || 'Feature Release';
+    const typeInfo = DEPLOYMENT_TYPES.find(t => t.key === deploymentType);
+    return typeInfo?.label || 'Release';
+  };
 
   return (
     <Card
@@ -23,17 +45,14 @@ export const DeploymentTile = ({ deployment, onClick }) => {
       <div className="p-5">
         <div className="flex items-start gap-4">
           <div className={`w-12 h-12 ${avatarColor} rounded-xl flex items-center justify-center text-white shadow-sm shrink-0`}>
-            <Rocket size={22} />
+            <Package size={22} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
-                  {displayName}
+                  {productName}
                 </h3>
-                {deploymentType === 'ga' && (
-                  <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded">GA</span>
-                )}
                 {deploymentType === 'eap' && (
                   <span className="px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 rounded">EAP</span>
                 )}
@@ -47,7 +66,22 @@ export const DeploymentTile = ({ deployment, onClick }) => {
                 </CustomTooltip>
               )}
             </div>
-            <p className="text-sm text-slate-500 mt-2">{product?.name || 'Unknown Product'}</p>
+            {/* Environment - Type subtitle */}
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${
+                envInfo.color === 'amber' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                envInfo.color === 'blue' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+              }`}>{envInfo.label}</span>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs text-slate-500">{getTypeLabel()}</span>
+            </div>
+            {/* Client name if client-specific */}
+            {client?.name && (
+              <p className="text-sm text-slate-500 mt-2 flex items-center gap-1">
+                <span className="text-slate-400">Client:</span> {client.name}
+              </p>
+            )}
           </div>
         </div>
 
@@ -56,6 +90,43 @@ export const DeploymentTile = ({ deployment, onClick }) => {
           <StatusBadge status={status} />
           <DeadlineBadge deadlineStatus={deadlineStatus} />
         </div>
+
+        {/* Service Status Indicators for Adapter Products */}
+        {hasServiceStatuses && (
+          <div className="flex items-center gap-2 mt-3">
+            <Cpu size={14} className="text-indigo-500" />
+            <div className="flex items-center gap-1.5">
+              {equipmentSAStatus !== null && equipmentSAStatus !== undefined && (
+                <CustomTooltip content={`Equip-SA: ${ADAPTOR_STATUSES.find(s => s.key === equipmentSAStatus)?.label || 'Unknown'}`}>
+                  <div className={`w-6 h-5 rounded ${getServiceStatusColor(equipmentSAStatus)} flex items-center justify-center text-white text-[9px] font-bold`}>
+                    E-SA
+                  </div>
+                </CustomTooltip>
+              )}
+              {equipmentSEStatus !== null && equipmentSEStatus !== undefined && (
+                <CustomTooltip content={`Equip-SE: ${ADAPTOR_STATUSES.find(s => s.key === equipmentSEStatus)?.label || 'Unknown'}`}>
+                  <div className={`w-6 h-5 rounded ${getServiceStatusColor(equipmentSEStatus)} flex items-center justify-center text-white text-[9px] font-bold`}>
+                    E-SE
+                  </div>
+                </CustomTooltip>
+              )}
+              {mappingStatus !== null && mappingStatus !== undefined && (
+                <CustomTooltip content={`Mapping: ${ADAPTOR_STATUSES.find(s => s.key === mappingStatus)?.label || 'Unknown'}`}>
+                  <div className={`w-6 h-5 rounded ${getServiceStatusColor(mappingStatus)} flex items-center justify-center text-white text-[9px] font-bold`}>
+                    Map
+                  </div>
+                </CustomTooltip>
+              )}
+              {constructionStatus !== null && constructionStatus !== undefined && (
+                <CustomTooltip content={`Construction: ${ADAPTOR_STATUSES.find(s => s.key === constructionStatus)?.label || 'Unknown'}`}>
+                  <div className={`w-6 h-5 rounded ${getServiceStatusColor(constructionStatus)} flex items-center justify-center text-white text-[9px] font-bold`}>
+                    Con
+                  </div>
+                </CustomTooltip>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stats footer */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Download, Upload, Package, Rocket, Users, RefreshCw, Loader2, ArrowUp, ArrowDown, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useToast } from '../contexts';
+import { Download, Upload, Package, Rocket, Users, RefreshCw, Loader2, ArrowUp, ArrowDown, CheckCircle2, AlertCircle, FileText, Plus, Trash2, Pencil, X, Save } from 'lucide-react';
+import { useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { formatDate, exportToCSV, calculateChecklistProgress } from '../utils';
 import { PRODUCT_EXPORT_COLUMNS, DEPLOYMENT_EXPORT_COLUMNS, CLIENT_EXPORT_COLUMNS } from '../constants';
@@ -9,6 +9,7 @@ import { SheetsSync } from '../utils/sheetsSync';
 
 export const SettingsPage = () => {
   const { addToast } = useToast();
+  const { docTypes, saveDocTypes } = useConfig();
   const { data: products } = useCollection('products');
   const { data: deployments } = useCollection('deployments');
   const { data: clients } = useCollection('clients');
@@ -19,6 +20,18 @@ export const SettingsPage = () => {
   const [syncEnabled, setSyncEnabled] = useState(false);
   const [syncStatus, setSyncStatus] = useState('idle');
   const [lastSyncTime, setLastSyncTime] = useState(null);
+
+  // Documentation types state
+  const [editingDocTypes, setEditingDocTypes] = useState([]);
+  const [newDocKey, setNewDocKey] = useState('');
+  const [newDocLabel, setNewDocLabel] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [docTypeSaving, setDocTypeSaving] = useState(false);
+
+  useEffect(() => {
+    setEditingDocTypes(docTypes);
+  }, [docTypes]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('controlTowerSettings');
@@ -156,6 +169,64 @@ export const SettingsPage = () => {
     }
   };
 
+  // Documentation types handlers
+  const handleAddDocType = () => {
+    if (!newDocKey.trim() || !newDocLabel.trim()) {
+      addToast("Please enter both key and label", "error");
+      return;
+    }
+    // Convert label to camelCase key if key not provided differently
+    const key = newDocKey.trim().replace(/\s+/g, '');
+    if (editingDocTypes.some(t => t.key === key)) {
+      addToast("A documentation type with this key already exists", "error");
+      return;
+    }
+    setEditingDocTypes([...editingDocTypes, { key, label: newDocLabel.trim() }]);
+    setNewDocKey('');
+    setNewDocLabel('');
+  };
+
+  const handleRemoveDocType = (key) => {
+    setEditingDocTypes(editingDocTypes.filter(t => t.key !== key));
+  };
+
+  const handleStartEdit = (docType) => {
+    setEditingId(docType.key);
+    setEditLabel(docType.label);
+  };
+
+  const handleSaveEdit = () => {
+    setEditingDocTypes(editingDocTypes.map(t =>
+      t.key === editingId ? { ...t, label: editLabel } : t
+    ));
+    setEditingId(null);
+    setEditLabel('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditLabel('');
+  };
+
+  const handleSaveDocTypes = async () => {
+    setDocTypeSaving(true);
+    try {
+      await saveDocTypes(editingDocTypes);
+      addToast("Documentation types saved successfully", "success");
+    } catch (e) {
+      addToast("Failed to save documentation types", "error");
+    }
+    setDocTypeSaving(false);
+  };
+
+  const handleMoveDocType = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= editingDocTypes.length) return;
+    const newTypes = [...editingDocTypes];
+    [newTypes[index], newTypes[newIndex]] = [newTypes[newIndex], newTypes[index]];
+    setEditingDocTypes(newTypes);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div>
@@ -263,6 +334,127 @@ export const SettingsPage = () => {
           </div>
         </Card>
       </div>
+
+      {/* Documentation Types Management */}
+      <Card className="p-6">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <FileText size={20} /> Documentation Types
+        </h3>
+        <p className="text-sm text-slate-500 mb-4">
+          Manage the documentation types available for products. You can add, edit, remove, or reorder types.
+        </p>
+
+        {/* Current doc types list */}
+        <div className="space-y-2 mb-4">
+          {editingDocTypes.map((docType, index) => (
+            <div
+              key={docType.key}
+              className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg group"
+            >
+              {/* Reorder buttons */}
+              <div className="flex flex-col gap-0.5">
+                <button
+                  onClick={() => handleMoveDocType(index, -1)}
+                  disabled={index === 0}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowUp size={12} />
+                </button>
+                <button
+                  onClick={() => handleMoveDocType(index, 1)}
+                  disabled={index === editingDocTypes.length - 1}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowDown size={12} />
+                </button>
+              </div>
+
+              {editingId === docType.key ? (
+                /* Edit mode */
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    className="flex-1 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveEdit}
+                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded"
+                  >
+                    <Save size={14} />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                /* Display mode */
+                <>
+                  <div className="flex-1">
+                    <span className="font-medium text-slate-900 dark:text-white">{docType.label}</span>
+                    <span className="ml-2 text-xs text-slate-400">({docType.key})</span>
+                  </div>
+                  <button
+                    onClick={() => handleStartEdit(docType)}
+                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleRemoveDocType(docType.key)}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Add new doc type */}
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Add New Type</div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newDocKey}
+              onChange={(e) => setNewDocKey(e.target.value)}
+              placeholder="Key (e.g., apiDocs)"
+              className="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+            />
+            <input
+              type="text"
+              value={newDocLabel}
+              onChange={(e) => setNewDocLabel(e.target.value)}
+              placeholder="Label (e.g., API Documentation)"
+              className="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+            />
+            <Button variant="secondary" onClick={handleAddDocType}>
+              <Plus size={16} className="mr-1" /> Add
+            </Button>
+          </div>
+        </div>
+
+        {/* Save button */}
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
+          <Button onClick={handleSaveDocTypes} disabled={docTypeSaving}>
+            {docTypeSaving ? (
+              <><Loader2 size={16} className="mr-2 animate-spin" /> Saving...</>
+            ) : (
+              <><Save size={16} className="mr-2" /> Save Documentation Types</>
+            )}
+          </Button>
+          {JSON.stringify(editingDocTypes) !== JSON.stringify(docTypes) && (
+            <span className="ml-3 text-sm text-amber-600">Unsaved changes</span>
+          )}
+        </div>
+      </Card>
     </div>
   );
 };

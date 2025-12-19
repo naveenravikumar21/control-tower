@@ -17,9 +17,32 @@ export const DOC_TYPES = [
 // Deployment types
 export const DEPLOYMENT_TYPES = [
   { key: 'ga', label: 'General Availability (GA)', description: 'General availability release for all clients' },
-  { key: 'eap', label: 'Early Access Program (EAP)', description: 'Early access release for select clients' },
-  { key: 'generic', label: 'Generic', description: 'Standard deployment for all clients' },
+  { key: 'eap', label: 'EAP', description: 'Early access release for select clients' },
+  { key: 'feature-release', label: 'Feature Release', description: 'Deployment for a specific feature' },
   { key: 'client-specific', label: 'Client-Specific', description: 'Customized for specific client needs' }
+];
+
+// Deployment environments
+export const DEPLOYMENT_ENVIRONMENTS = [
+  { key: 'qa', label: 'QA', color: 'amber', description: 'Quality Assurance environment' },
+  { key: 'sandbox', label: 'Sandbox', color: 'blue', description: 'Pre-production testing environment' },
+  { key: 'production', label: 'Production', color: 'emerald', description: 'Live production environment' }
+];
+
+// Adaptor statuses (used for service status tracking in deployments)
+export const ADAPTOR_STATUSES = [
+  { key: 'not_started', label: 'Not Started', color: 'slate' },
+  { key: 'in_progress', label: 'In Progress', color: 'blue' },
+  { key: 'completed', label: 'Completed', color: 'emerald' },
+  { key: 'na', label: 'N/A', color: 'slate' }
+];
+
+// Adapter services for adapter-type products
+export const ADAPTER_SERVICES = [
+  { key: 'equipmentSA', label: 'Equipment - Service Assurance', short: 'E-SA', color: 'emerald' },
+  { key: 'equipmentSE', label: 'Equipment - Service Enablement', short: 'E-SE', color: 'blue' },
+  { key: 'mappingService', label: 'Mapping Service', short: 'Map', color: 'purple' },
+  { key: 'constructionService', label: 'Construction Service', short: 'Const', color: 'amber' }
 ];
 
 // Deployment statuses

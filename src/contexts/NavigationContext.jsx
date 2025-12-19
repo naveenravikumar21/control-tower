@@ -43,6 +43,7 @@ export const NavigationProvider = ({ children }) => {
       if (combo === 'g+c') { navigate('clients'); keyBuffer = []; }
       if (combo === 'g+d') { navigate('deployments'); keyBuffer = []; }
       if (combo === 'g+o') { navigate('onboarding'); keyBuffer = []; }
+      if (combo === 'g+e') { navigate('eap-dashboard'); keyBuffer = []; }
       if (combo === 'g+s') { navigate('settings'); keyBuffer = []; }
       if (e.key === 'n' && !e.ctrlKey && !e.metaKey) {
         navigate('deployments', { action: 'new' });

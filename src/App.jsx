@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   LayoutDashboard, Package, Users, Rocket, CheckCircle2,
-  History, Sun, Moon, Keyboard, List, X, Settings, FileText
+  History, Sun, Moon, Keyboard, List, X, Settings, FileText, Sparkles
 } from 'lucide-react';
 
 // Import from extracted modules
@@ -10,7 +10,8 @@ import {
   ToastProvider,
   NavigationProvider, useNav,
   ThemeProvider, useTheme,
-  NotificationProvider
+  NotificationProvider,
+  ConfigProvider
 } from './contexts';
 import { CommandPalette, NotificationCenter } from './components/features';
 import {
@@ -22,7 +23,8 @@ import {
   ClientDetail,
   Onboarding,
   SettingsPage,
-  ReleaseNotes
+  ReleaseNotes,
+  EAPDashboard
 } from './pages';
 
 // ==========================================
@@ -64,6 +66,7 @@ const Sidebar = () => {
           <NavItem id="deployments" icon={Rocket} label="Deployments" active={page === 'deployments'} onClick={() => navigate('deployments')} />
           <NavItem id="onboarding" icon={CheckCircle2} label="Onboarding" active={page === 'onboarding'} onClick={() => navigate('onboarding')} />
           <NavItem id="release-notes" icon={FileText} label="Release Notes" active={page === 'release-notes'} onClick={() => navigate('release-notes')} />
+          <NavItem id="eap-dashboard" icon={Sparkles} label="EAP Dashboard" active={page === 'eap-dashboard'} onClick={() => navigate('eap-dashboard')} />
           <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</div>
           <NavItem id="settings" icon={Settings} label="Settings" active={page === 'settings'} onClick={() => navigate('settings')} />
         </nav>
@@ -204,6 +207,7 @@ const MainContent = () => {
         {page === 'deployments' && <Deployments />}
         {page === 'onboarding' && <Onboarding />}
         {page === 'release-notes' && <ReleaseNotes />}
+        {page === 'eap-dashboard' && <EAPDashboard />}
         {page === 'settings' && <SettingsPage />}
       </div>
     </main>
@@ -218,16 +222,18 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NavigationProvider>
-          <ToastProvider>
-            <NotificationProvider>
-              <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
-                <Sidebar />
-                <MainContent />
-              </div>
-            </NotificationProvider>
-          </ToastProvider>
-        </NavigationProvider>
+        <ConfigProvider>
+          <NavigationProvider>
+            <ToastProvider>
+              <NotificationProvider>
+                <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900">
+                  <Sidebar />
+                  <MainContent />
+                </div>
+              </NotificationProvider>
+            </ToastProvider>
+          </NavigationProvider>
+        </ConfigProvider>
       </AuthProvider>
     </ThemeProvider>
   );

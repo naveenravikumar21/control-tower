@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw } from 'lucide-react';
-import { useToast } from '../contexts';
+import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu } from 'lucide-react';
+import { useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, updateDoc, deleteDoc } from '../utils/firebase';
 import { toInputDate, getDeadlineStatus } from '../utils';
-import { DOC_TYPES } from '../constants';
+import { DEPLOYMENT_ENVIRONMENTS, ADAPTOR_STATUSES } from '../constants';
 import { Button, Card, Badge, ConfirmationModal } from '../components/ui/index.jsx';
 import { BlockedCommentsPanel, NotesPanel } from '../components/features';
 
@@ -12,6 +12,7 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const { data: products } = useCollection('products');
   const { data: checklists } = useCollection('checklists');
   const { addToast } = useToast();
+  const { docTypes } = useConfig();
   const [confirmModal, setConfirmModal] = useState(null);
 
   if (!editing) return null;
@@ -134,15 +135,29 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
     } catch(e) { addToast("Failed to add note", "error"); }
   };
 
+  const handleServiceStatusChange = async (field, value) => {
+    try {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
+        [field]: value,
+        updatedAt: serverTimestamp()
+      });
+      setEditing({ ...editing, [field]: value });
+      addToast("Service status updated", "success");
+    } catch(e) { addToast("Failed to update service status", "error"); }
+  };
+
+  // Check if this deployment has any service statuses (for adapter products)
+  const hasServiceStatuses = editing.equipmentSAStatus !== undefined || editing.equipmentSEStatus !== undefined || editing.mappingStatus !== undefined || editing.constructionStatus !== undefined;
+
   return (
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={onClose}>
         <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
           <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {editing.client?.name || (editing.deploymentType === 'ga' ? 'General Availability' : editing.deploymentType === 'eap' ? 'Early Access Program' : 'Generic')}
+                  {editing.client?.name || (editing.deploymentType === 'ga' ? 'General Availability' : editing.deploymentType === 'eap' ? 'EAP' : editing.deploymentType === 'feature-release' ? (editing.featureName || 'Feature Release') : 'Feature Release')}
                 </h2>
                 {editing.deploymentType === 'ga' && (
                   <Badge color="blue" size="sm">GA</Badge>
@@ -150,9 +165,17 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
                 {editing.deploymentType === 'eap' && (
                   <Badge color="purple" size="sm">EAP</Badge>
                 )}
-                {editing.deploymentType === 'generic' && (
-                  <Badge color="slate" size="sm">Generic</Badge>
+                {(editing.deploymentType === 'feature-release' || editing.deploymentType === 'generic') && (
+                  <Badge color="indigo" size="sm">Feature</Badge>
                 )}
+                {(() => {
+                  const envInfo = DEPLOYMENT_ENVIRONMENTS.find(e => e.key === (editing.environment || 'production'));
+                  return envInfo ? (
+                    <Badge color={envInfo.color === 'amber' ? 'amber' : envInfo.color === 'blue' ? 'blue' : 'emerald'} size="sm">
+                      {envInfo.label}
+                    </Badge>
+                  ) : null;
+                })()}
               </div>
               <p className="text-sm text-slate-500">{product?.name || 'Unknown Product'}</p>
             </div>
@@ -204,6 +227,73 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
                 <div className="text-xs text-slate-500">Deadline</div>
               </div>
             </div>
+
+            {/* Adapter Service Statuses */}
+            {(product?.isAdapter || hasServiceStatuses) && (
+              <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+                <h4 className="text-sm font-bold text-indigo-700 dark:text-indigo-300 mb-3 flex items-center gap-2">
+                  <Cpu size={16} /> Adapter Service Statuses
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(product?.hasEquipmentSA || editing.equipmentSAStatus !== undefined) && editing.equipmentSAStatus !== null && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Equipment - Service Assurance</label>
+                      <select
+                        value={editing.equipmentSAStatus || 'not_started'}
+                        onChange={(e) => handleServiceStatusChange('equipmentSAStatus', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {(product?.hasEquipmentSE || editing.equipmentSEStatus !== undefined) && editing.equipmentSEStatus !== null && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Equipment - Service Enablement</label>
+                      <select
+                        value={editing.equipmentSEStatus || 'not_started'}
+                        onChange={(e) => handleServiceStatusChange('equipmentSEStatus', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {(product?.hasMappingService || editing.mappingStatus !== undefined) && editing.mappingStatus !== null && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Mapping Service</label>
+                      <select
+                        value={editing.mappingStatus || 'not_started'}
+                        onChange={(e) => handleServiceStatusChange('mappingStatus', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {(product?.hasConstructionService || editing.constructionStatus !== undefined) && editing.constructionStatus !== null && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-slate-600 dark:text-slate-400">Construction Service</label>
+                      <select
+                        value={editing.constructionStatus || 'not_started'}
+                        onChange={(e) => handleServiceStatusChange('constructionStatus', e.target.value)}
+                        className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                      >
+                        {ADAPTOR_STATUSES.map(s => (
+                          <option key={s.key} value={s.key}>{s.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -268,7 +358,7 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
               <div>
                 <h4 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Product Documentation</h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {DOC_TYPES.map(t => {
+                  {docTypes.map(t => {
                     const url = product.documentation?.[t.key];
                     if (!url) return null;
                     return (

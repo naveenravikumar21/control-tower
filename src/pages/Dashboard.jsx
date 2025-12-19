@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Rocket, Users, FileText, AlertTriangle, Clock, Package, Calendar, Plus, ArrowRight } from 'lucide-react';
+import { Rocket, Users, FileText, AlertTriangle, Clock, Package, Calendar, Plus, ArrowRight, Sparkles } from 'lucide-react';
 import { useNav } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, formatDate } from '../utils';
-import { Button, Card, SearchInput, Sparkles } from '../components/ui/index.jsx';
+import { Button, Card, SearchInput } from '../components/ui/index.jsx';
 import { KPICard, TimelineStrip, GanttChart } from '../components/features';
 
 export const Dashboard = () => {
@@ -41,6 +41,9 @@ export const Dashboard = () => {
     });
 
     const productsNoDeploys = products.filter(p => !deployments.some(d => d.productId === p.id));
+
+    // EAP products count
+    const eapProducts = products.filter(p => p.eap?.isActive);
 
     // Get parent products and sub-projects grouped
     const parentProds = products.filter(p => !p.parentId);
@@ -149,18 +152,23 @@ export const Dashboard = () => {
       .filter(d => d.nextDeliveryDate)
       .map(d => {
         const client = clients.find(c => c.id === d.clientId);
-        // Show deployment type label for non-client-specific deployments
+        const product = products.find(p => p.id === d.productId);
+        const productName = product?.name || 'Unknown';
+
+        // Show "Type - ProductName" for non-client-specific deployments
         let clientName = client?.name;
         if (!clientName) {
-          if (d.deploymentType === 'ga') clientName = 'GA';
-          else if (d.deploymentType === 'generic') clientName = 'Generic';
-          else clientName = 'GA'; // Default to GA for legacy deployments without type
+          const typeLabel = d.deploymentType === 'ga' ? 'GA'
+            : d.deploymentType === 'eap' ? 'EAP'
+            : d.deploymentType === 'feature-release' ? (d.featureName || 'Feature')
+            : 'Release';
+          clientName = `${typeLabel} - ${productName}`;
         }
         return {
           id: d.id,
           date: d.nextDeliveryDate,
           clientName,
-          productName: products.find(p => p.id === d.productId)?.name || 'Unknown',
+          productName,
           status: d.status,
           deploymentType: d.deploymentType,
           daysLeft: getDaysDiff(d.nextDeliveryDate)
@@ -179,7 +187,7 @@ export const Dashboard = () => {
       );
     }
 
-    return { releasesMonth, clientCounts, productsMissingDocs, overdue, stalled, productsNoDeploys, timeline, forecast, statusBreakdown, avgChecklistProgress, onTimeRate };
+    return { releasesMonth, clientCounts, productsMissingDocs, overdue, stalled, productsNoDeploys, eapProducts, timeline, forecast, statusBreakdown, avgChecklistProgress, onTimeRate };
   }, [deployments, clients, products, checklists, searchQuery]);
 
   return (
@@ -479,7 +487,7 @@ export const Dashboard = () => {
         onSelect={(d) => navigate('deployments', { filter: { id: d.id } })}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-5">
         <KPICard
           label="Releases (30d)" value={metrics.releasesMonth.length} icon={Rocket} color="text-blue-600 bg-blue-100"
           onClick={() => navigate('deployments', { filter: { upcoming: true } })}
@@ -503,6 +511,10 @@ export const Dashboard = () => {
         <KPICard
           label="Unused Products" value={metrics.productsNoDeploys.length} icon={Package} color="text-purple-600 bg-purple-100"
           onClick={() => navigate('products', { filter: 'noDeploys' })}
+        />
+        <KPICard
+          label="Active EAPs" value={metrics.eapProducts.length} icon={Sparkles} color="text-purple-600 bg-purple-100"
+          onClick={() => navigate('eap-dashboard')}
         />
       </div>
     </div>

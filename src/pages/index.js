@@ -8,3 +8,4 @@ export { ClientDetail } from './ClientDetail';
 export { Onboarding } from './Onboarding';
 export { SettingsPage } from './Settings';
 export { ReleaseNotes } from './ReleaseNotes';
+export { EAPDashboard } from './EAPDashboard';
