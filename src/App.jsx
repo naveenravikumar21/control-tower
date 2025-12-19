@@ -46,8 +46,9 @@ const Sidebar = () => {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col sticky top-0 h-screen z-40 hidden md:flex transition-colors">
-      <div className="p-5">
+    <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen z-40 hidden md:flex transition-colors">
+      {/* Scrollable navigation area */}
+      <div className="flex-1 overflow-y-auto p-5">
         <div className="flex flex-col items-start gap-1 mb-6">
           <img src="/logo.png" alt="CDG Elements" className="h-8 object-contain" />
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Control Tower</span>
@@ -80,7 +81,8 @@ const Sidebar = () => {
         )}
       </div>
 
-      <div className="mt-auto p-4 border-t border-slate-100 dark:border-slate-800">
+      {/* Fixed bottom section */}
+      <div className="shrink-0 p-4 border-t border-slate-100 dark:border-slate-800">
         <div className="mb-4 px-2">
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1"><Keyboard size={10}/> Shortcuts</div>
           <div className="space-y-1">
@@ -103,7 +105,7 @@ const Sidebar = () => {
             </button>
           </div>
         </div>
-        <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.0</div>
+        <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.1</div>
       </div>
     </aside>
   );
@@ -176,7 +178,7 @@ const MobileHeader = () => {
                   <div className="text-xs text-slate-500">Administrator</div>
                 </div>
               </div>
-              <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.0</div>
+              <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.1</div>
             </div>
           </div>
         </div>
@@ -188,7 +190,7 @@ const MobileHeader = () => {
 const MainContent = () => {
   const { page, params } = useNav();
   return (
-    <main className="flex-1 bg-slate-50/50 dark:bg-slate-950 min-h-screen transition-colors overflow-x-hidden min-w-0">
+    <main className="flex-1 bg-slate-50/50 dark:bg-slate-950 h-screen overflow-y-auto transition-colors overflow-x-hidden min-w-0">
       <MobileHeader />
       <div className="w-full max-w-full p-4 md:p-6 lg:p-8 overflow-x-hidden">
         <CommandPalette />
@@ -219,7 +221,7 @@ export default function App() {
           <NavigationProvider>
             <ToastProvider>
               <NotificationProvider>
-                <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 w-full max-w-full overflow-x-hidden">
+                <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 w-full max-w-full overflow-x-hidden h-screen">
                   <Sidebar />
                   <MainContent />
                 </div>
