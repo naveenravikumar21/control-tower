@@ -493,7 +493,7 @@ export const ProductDetail = ({ productId }) => {
         <h3 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide mb-4 flex items-center gap-2">
           <FileText size={16} /> Documentation
           <span className="text-xs font-normal text-slate-400 ml-2">
-            ({metrics.relevantDocTypes?.filter(t => product.documentation?.[t.key]).length || 0}/{metrics.relevantDocTypes?.length || 0} relevant docs)
+            ({stats.relevantDocTypes?.filter(t => product.documentation?.[t.key]).length || 0}/{stats.relevantDocTypes?.length || 0} relevant docs)
           </span>
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
