@@ -105,7 +105,7 @@ const Sidebar = () => {
             </button>
           </div>
         </div>
-        <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.3</div>
+        <div className="mt-3 text-center text-[10px] text-slate-400">v{__APP_VERSION__}</div>
       </div>
     </aside>
   );
@@ -178,7 +178,7 @@ const MobileHeader = () => {
                   <div className="text-xs text-slate-500">Administrator</div>
                 </div>
               </div>
-              <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.3</div>
+              <div className="mt-3 text-center text-[10px] text-slate-400">v{__APP_VERSION__}</div>
             </div>
           </div>
         </div>
