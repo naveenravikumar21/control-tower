@@ -413,7 +413,7 @@ export const Products = () => {
                   </button>
 
                   {isExpanded && (
-                    <div className="px-4 pb-4 space-y-2">
+                    <div className="px-4 pb-4 space-y-2 overflow-hidden">
                       {subProjects.slice(0, 3).map(sp => {
                         const spDeadlineStatus = getDeadlineStatus(sp.nextReleaseDate, 'In Progress');
                         return (

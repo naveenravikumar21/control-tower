@@ -108,38 +108,38 @@ export const EAPDashboard = () => {
           label="Total EAPs"
           value={stats.total}
           icon={Sparkles}
-          color="purple"
+          color="text-purple-600 bg-purple-100"
         />
         <KPICard
           label="Active"
           value={stats.active}
           icon={Package}
-          color="emerald"
+          color="text-emerald-600 bg-emerald-100"
         />
         <KPICard
           label="Ending Soon"
           value={stats.endingSoon}
           icon={Clock}
-          color="amber"
-          trend={stats.endingSoon > 0 ? 'warning' : undefined}
+          color="text-amber-600 bg-amber-100"
+          urgent={stats.endingSoon > 0}
         />
         <KPICard
           label="Expired"
           value={stats.expired}
           icon={Calendar}
-          color="rose"
+          color="text-rose-600 bg-rose-100"
         />
         <KPICard
           label="EAP Clients"
           value={stats.totalClients}
           icon={Users}
-          color="blue"
+          color="text-blue-600 bg-blue-100"
         />
         <KPICard
           label="EAP Deploys"
           value={stats.totalDeploys}
           icon={Package}
-          color="indigo"
+          color="text-indigo-600 bg-indigo-100"
         />
       </div>
 
@@ -261,7 +261,7 @@ export const EAPDashboard = () => {
                   <div
                     key={client.id}
                     className="group inline-flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 cursor-pointer transition-colors"
-                    onClick={() => navigate('clients', { filter: { id: client.id } })}
+                    onClick={() => navigate('client-detail', { clientId: client.id })}
                   >
                     <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm">
                       {client.name?.charAt(0) || '?'}

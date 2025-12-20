@@ -14,9 +14,11 @@ export const NavigationProvider = ({ children }) => {
     setParams(newParams);
   }, []);
 
-  const addToHistory = useCallback((type, name, id, targetPage) => {
+  const addToHistory = useCallback((type, name, id, targetPage, params = {}) => {
     setHistory(prev => {
-      const newEntry = { type, label: `${type}: ${name}`, page: targetPage, params: { id } };
+      // Use provided params or default to { id }
+      const navParams = Object.keys(params).length > 0 ? params : { id };
+      const newEntry = { type, label: `${type}: ${name}`, page: targetPage, params: navParams };
       const filtered = prev.filter(h => h.label !== newEntry.label);
       return [newEntry, ...filtered].slice(0, 5);
     });

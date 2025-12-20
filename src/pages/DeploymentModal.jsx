@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu, ListTodo, Edit2 } from 'lucide-react';
 import { useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { db, appId, serverTimestamp, doc, updateDoc, deleteDoc } from '../utils/firebase';
@@ -14,6 +14,16 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const { addToast } = useToast();
   const { docTypes } = useConfig();
   const [confirmModal, setConfirmModal] = useState(null);
+  const [isEditingReleaseItems, setIsEditingReleaseItems] = useState(false);
+  const [localReleaseItems, setLocalReleaseItems] = useState('');
+
+  // Sync local release items state when editing changes
+  useEffect(() => {
+    if (editing) {
+      setLocalReleaseItems(editing.releaseItems || '');
+      setIsEditingReleaseItems(false);
+    }
+  }, [editing?.id]);
 
   if (!editing) return null;
 
@@ -146,6 +156,28 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
     } catch(e) { addToast("Failed to update service status", "error"); }
   };
 
+  const handleEnvironmentChange = async (newEnvironment) => {
+    try {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
+        environment: newEnvironment,
+        updatedAt: serverTimestamp()
+      });
+      setEditing({ ...editing, environment: newEnvironment });
+      addToast("Environment updated", "success");
+    } catch(e) { addToast("Failed to update environment", "error"); }
+  };
+
+  const handleReleaseItemsChange = async (releaseItems) => {
+    try {
+      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
+        releaseItems: releaseItems.trim() || null,
+        updatedAt: serverTimestamp()
+      });
+      setEditing({ ...editing, releaseItems });
+      addToast("Release items updated", "success");
+    } catch(e) { addToast("Failed to update release items", "error"); }
+  };
+
   // Check if this deployment has any service statuses (for adapter products)
   const hasServiceStatuses = editing.equipmentSAStatus !== undefined || editing.equipmentSEStatus !== undefined || editing.mappingStatus !== undefined || editing.constructionStatus !== undefined;
 
@@ -211,6 +243,26 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
                   className="text-sm border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-900 dark:text-white"
                 />
               </div>
+            </div>
+
+            {/* Environment Selector */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-2">Environment:</span>
+              {DEPLOYMENT_ENVIRONMENTS.map(env => (
+                <button
+                  key={env.key}
+                  onClick={() => handleEnvironmentChange(env.key)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    (editing.environment || 'production') === env.key
+                      ? env.color === 'amber' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        : env.color === 'blue' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {env.label}
+                </button>
+              ))}
             </div>
 
             <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
@@ -343,6 +395,53 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
             {editing.status === 'Blocked' && (
               <BlockedCommentsPanel deployment={editing} onAddComment={handleAddComment} />
             )}
+
+            {/* Release Items */}
+            <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <ListTodo size={16} /> Release Items
+                </h4>
+                {!isEditingReleaseItems && (
+                  <button
+                    onClick={() => setIsEditingReleaseItems(true)}
+                    className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+                  >
+                    <Edit2 size={12} />
+                    Edit
+                  </button>
+                )}
+              </div>
+              {isEditingReleaseItems ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={localReleaseItems}
+                    onChange={(e) => setLocalReleaseItems(e.target.value)}
+                    placeholder="List the features, fixes, or changes included in this release..."
+                    rows={4}
+                    className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                  />
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => { setLocalReleaseItems(editing.releaseItems || ''); setIsEditingReleaseItems(false); }}
+                      className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => { handleReleaseItemsChange(localReleaseItems); setIsEditingReleaseItems(false); }}
+                      className="px-3 py-1.5 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                  {editing.releaseItems || <span className="text-slate-400 italic">No release items specified. Click edit to add.</span>}
+                </div>
+              )}
+            </div>
 
             {/* Notes & Activity */}
             <NotesPanel

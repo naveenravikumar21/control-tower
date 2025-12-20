@@ -44,6 +44,8 @@ export const Deployments = () => {
   const [equipmentSEStatus, setEquipmentSEStatus] = useState('not_started');
   const [mappingStatus, setMappingStatus] = useState('not_started');
   const [constructionStatus, setConstructionStatus] = useState('not_started');
+  // Release items - what's included in this release
+  const [releaseItems, setReleaseItems] = useState('');
 
   // Get selected product to check if it's an adapter
   const selectedProduct = useMemo(() =>
@@ -109,6 +111,7 @@ export const Deployments = () => {
         deploymentType,
         environment: newEnvironment,
         featureName: deploymentType === 'feature-release' ? newFeatureName : null,
+        releaseItems: releaseItems.trim() || null,
         blockedComments: [],
         ...serviceStatuses,
         createdAt: serverTimestamp(),
@@ -127,6 +130,7 @@ export const Deployments = () => {
       setEquipmentSEStatus('not_started');
       setMappingStatus('not_started');
       setConstructionStatus('not_started');
+      setReleaseItems('');
     } catch(e) { addToast("Failed to create", "error"); }
   };
 
@@ -333,8 +337,26 @@ export const Deployments = () => {
               )}
 
               <Input label="Target Date" name="nextDeliveryDate" type="date" required />
+
+              {/* Release Items - What's included in this release */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-2">
+                  Release Items
+                  <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  value={releaseItems}
+                  onChange={(e) => setReleaseItems(e.target.value)}
+                  placeholder="List the features, fixes, or changes included in this release...&#10;&#10;Example:&#10;- New login feature&#10;- Bug fix for checkout flow&#10;- Performance improvements"
+                  required
+                  rows={4}
+                  className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all resize-none"
+                />
+                <p className="text-xs text-slate-400">This information will be used for release notes. Please be specific.</p>
+              </div>
+
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6">
-                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('feature-release'); setNewEnvironment('production'); setNewFeatureName(''); setSelectedProductId(''); setEquipmentSAStatus('not_started'); setEquipmentSEStatus('not_started'); setMappingStatus('not_started'); setConstructionStatus('not_started'); }} type="button">Cancel</Button>
+                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('feature-release'); setNewEnvironment('production'); setNewFeatureName(''); setSelectedProductId(''); setEquipmentSAStatus('not_started'); setEquipmentSEStatus('not_started'); setMappingStatus('not_started'); setConstructionStatus('not_started'); setReleaseItems(''); }} type="button">Cancel</Button>
                 <Button type="submit">Initialize</Button>
               </div>
             </form>

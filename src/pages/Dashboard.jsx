@@ -213,13 +213,11 @@ export const Dashboard = () => {
         </div>
       </header>
 
-      <div className="space-y-3 overflow-hidden max-w-full">
+      <div className="space-y-3">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <Calendar size={12}/> Delivery Timeline
         </h3>
-        <div className="overflow-x-auto max-w-full">
-          <TimelineStrip items={metrics.timeline} onSelect={(item) => navigate('deployments', { filter: { id: item.id } })} />
-        </div>
+        <TimelineStrip items={metrics.timeline} onSelect={(item) => navigate('deployments', { filter: { id: item.id } })} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
@@ -306,8 +304,8 @@ export const Dashboard = () => {
                   <div className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-2 flex items-center gap-1">
                     <div className="w-2 h-2 rounded-full bg-blue-500" /> This Month ({metrics.forecast.thisMonth.length})
                   </div>
-                  <div className="space-y-1.5">
-                    {metrics.forecast.thisMonth.slice(0, 3).map(item => (
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                    {metrics.forecast.thisMonth.map(item => (
                       <div
                         key={item.id}
                         onClick={() => navigate('product-detail', { productId: item.id })}
@@ -328,14 +326,6 @@ export const Dashboard = () => {
                         </div>
                       </div>
                     ))}
-                    {metrics.forecast.thisMonth.length > 3 && (
-                      <button
-                        onClick={() => navigate('products', { filter: 'upcoming' })}
-                        className="w-full text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 py-1"
-                      >
-                        +{metrics.forecast.thisMonth.length - 3} more...
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
