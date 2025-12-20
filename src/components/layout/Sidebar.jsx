@@ -59,7 +59,7 @@ export const Sidebar = () => {
             {isDark ? <Sun size={14}/> : <Moon size={14}/>}
           </button>
         </div>
-        <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.0</div>
+        <div className="mt-3 text-center text-[10px] text-slate-400">v1.0.3</div>
       </div>
     </aside>
   );
