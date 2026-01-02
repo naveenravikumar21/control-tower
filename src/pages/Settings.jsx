@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Download, Upload, Package, Rocket, Users, RefreshCw, Loader2, ArrowUp, ArrowDown, CheckCircle2, AlertCircle, FileText, Plus, Trash2, Pencil, X, Save } from 'lucide-react';
+import { Download, Upload, Package, Rocket, Users, RefreshCw, Loader2, ArrowUp, ArrowDown, CheckCircle2, AlertCircle, FileText, Plus, Trash2, Pencil, X, Save, Link } from 'lucide-react';
 import { useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { formatDate, exportToCSV, calculateChecklistProgress } from '../utils';
@@ -9,7 +9,7 @@ import { SheetsSync } from '../utils/sheetsSync';
 
 export const SettingsPage = () => {
   const { addToast } = useToast();
-  const { docTypes, saveDocTypes } = useConfig();
+  const { docTypes, saveDocTypes, deploymentDocTypes, saveDeploymentDocTypes } = useConfig();
   const { data: products } = useCollection('products');
   const { data: deployments } = useCollection('deployments');
   const { data: clients } = useCollection('clients');
@@ -21,7 +21,7 @@ export const SettingsPage = () => {
   const [syncStatus, setSyncStatus] = useState('idle');
   const [lastSyncTime, setLastSyncTime] = useState(null);
 
-  // Documentation types state
+  // Product Documentation types state
   const [editingDocTypes, setEditingDocTypes] = useState([]);
   const [newDocKey, setNewDocKey] = useState('');
   const [newDocLabel, setNewDocLabel] = useState('');
@@ -29,9 +29,21 @@ export const SettingsPage = () => {
   const [editLabel, setEditLabel] = useState('');
   const [docTypeSaving, setDocTypeSaving] = useState(false);
 
+  // Deployment Documentation types state
+  const [editingDeploymentDocTypes, setEditingDeploymentDocTypes] = useState([]);
+  const [newDeployDocKey, setNewDeployDocKey] = useState('');
+  const [newDeployDocLabel, setNewDeployDocLabel] = useState('');
+  const [editingDeployId, setEditingDeployId] = useState(null);
+  const [editDeployLabel, setEditDeployLabel] = useState('');
+  const [deployDocTypeSaving, setDeployDocTypeSaving] = useState(false);
+
   useEffect(() => {
     setEditingDocTypes(docTypes);
   }, [docTypes]);
+
+  useEffect(() => {
+    setEditingDeploymentDocTypes(deploymentDocTypes);
+  }, [deploymentDocTypes]);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem('controlTowerSettings');
@@ -225,6 +237,63 @@ export const SettingsPage = () => {
     const newTypes = [...editingDocTypes];
     [newTypes[index], newTypes[newIndex]] = [newTypes[newIndex], newTypes[index]];
     setEditingDocTypes(newTypes);
+  };
+
+  // Deployment Documentation types handlers
+  const handleAddDeploymentDocType = () => {
+    if (!newDeployDocKey.trim() || !newDeployDocLabel.trim()) {
+      addToast("Please enter both key and label", "error");
+      return;
+    }
+    const key = newDeployDocKey.trim().replace(/\s+/g, '');
+    if (editingDeploymentDocTypes.some(t => t.key === key)) {
+      addToast("A documentation type with this key already exists", "error");
+      return;
+    }
+    setEditingDeploymentDocTypes([...editingDeploymentDocTypes, { key, label: newDeployDocLabel.trim() }]);
+    setNewDeployDocKey('');
+    setNewDeployDocLabel('');
+  };
+
+  const handleRemoveDeploymentDocType = (key) => {
+    setEditingDeploymentDocTypes(editingDeploymentDocTypes.filter(t => t.key !== key));
+  };
+
+  const handleStartDeploymentEdit = (docType) => {
+    setEditingDeployId(docType.key);
+    setEditDeployLabel(docType.label);
+  };
+
+  const handleSaveDeploymentEdit = () => {
+    setEditingDeploymentDocTypes(editingDeploymentDocTypes.map(t =>
+      t.key === editingDeployId ? { ...t, label: editDeployLabel } : t
+    ));
+    setEditingDeployId(null);
+    setEditDeployLabel('');
+  };
+
+  const handleCancelDeploymentEdit = () => {
+    setEditingDeployId(null);
+    setEditDeployLabel('');
+  };
+
+  const handleSaveDeploymentDocTypes = () => {
+    setDeployDocTypeSaving(true);
+    try {
+      saveDeploymentDocTypes(editingDeploymentDocTypes);
+      addToast("Deployment documentation types saved successfully", "success");
+    } catch (e) {
+      addToast("Failed to save deployment documentation types", "error");
+    }
+    setDeployDocTypeSaving(false);
+  };
+
+  const handleMoveDeploymentDocType = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= editingDeploymentDocTypes.length) return;
+    const newTypes = [...editingDeploymentDocTypes];
+    [newTypes[index], newTypes[newIndex]] = [newTypes[newIndex], newTypes[index]];
+    setEditingDeploymentDocTypes(newTypes);
   };
 
   return (
@@ -451,6 +520,127 @@ export const SettingsPage = () => {
             )}
           </Button>
           {JSON.stringify(editingDocTypes) !== JSON.stringify(docTypes) && (
+            <span className="ml-3 text-sm text-amber-600">Unsaved changes</span>
+          )}
+        </div>
+      </Card>
+
+      {/* Deployment Documentation Types Management */}
+      <Card className="p-6">
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <Link size={20} /> Deployment Documentation Types
+        </h3>
+        <p className="text-sm text-slate-500 mb-4">
+          Manage the documentation types available for deployments. These appear when creating or editing a deployment.
+        </p>
+
+        {/* Current deployment doc types list */}
+        <div className="space-y-2 mb-4">
+          {editingDeploymentDocTypes.map((docType, index) => (
+            <div
+              key={docType.key}
+              className="flex items-center gap-2 p-3 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg group"
+            >
+              {/* Reorder buttons */}
+              <div className="flex flex-col gap-0.5">
+                <button
+                  onClick={() => handleMoveDeploymentDocType(index, -1)}
+                  disabled={index === 0}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowUp size={12} />
+                </button>
+                <button
+                  onClick={() => handleMoveDeploymentDocType(index, 1)}
+                  disabled={index === editingDeploymentDocTypes.length - 1}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <ArrowDown size={12} />
+                </button>
+              </div>
+
+              {editingDeployId === docType.key ? (
+                /* Edit mode */
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editDeployLabel}
+                    onChange={(e) => setEditDeployLabel(e.target.value)}
+                    className="flex-1 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveDeploymentEdit}
+                    className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded"
+                  >
+                    <Save size={14} />
+                  </button>
+                  <button
+                    onClick={handleCancelDeploymentEdit}
+                    className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                /* Display mode */
+                <>
+                  <div className="flex-1">
+                    <span className="font-medium text-slate-900 dark:text-white">{docType.label}</span>
+                    <span className="ml-2 text-xs text-slate-400">({docType.key})</span>
+                  </div>
+                  <button
+                    onClick={() => handleStartDeploymentEdit(docType)}
+                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleRemoveDeploymentDocType(docType.key)}
+                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Add new deployment doc type */}
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+          <div className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Add New Type</div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newDeployDocKey}
+              onChange={(e) => setNewDeployDocKey(e.target.value)}
+              placeholder="Key (e.g., rollbackPlan)"
+              className="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+            />
+            <input
+              type="text"
+              value={newDeployDocLabel}
+              onChange={(e) => setNewDeployDocLabel(e.target.value)}
+              placeholder="Label (e.g., Rollback Plan)"
+              className="flex-1 px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+            />
+            <Button variant="secondary" onClick={handleAddDeploymentDocType}>
+              <Plus size={16} className="mr-1" /> Add
+            </Button>
+          </div>
+        </div>
+
+        {/* Save button */}
+        <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
+          <Button onClick={handleSaveDeploymentDocTypes} disabled={deployDocTypeSaving}>
+            {deployDocTypeSaving ? (
+              <><Loader2 size={16} className="mr-2 animate-spin" /> Saving...</>
+            ) : (
+              <><Save size={16} className="mr-2" /> Save Deployment Doc Types</>
+            )}
+          </Button>
+          {JSON.stringify(editingDeploymentDocTypes) !== JSON.stringify(deploymentDocTypes) && (
             <span className="ml-3 text-sm text-amber-600">Unsaved changes</span>
           )}
         </div>
