@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   FileText, Plus, Edit2, Trash2, Copy, Download, Eye, X, Check,
   Sparkles, TrendingUp, Bug, Shield, Zap, AlertTriangle, Clock,
@@ -7,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
-import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
+import { addDocument, updateDocument, deleteDocument } from '../utils/api';
 import { formatDate, toInputDate } from '../utils';
 import { RELEASE_NOTE_TYPES } from '../constants';
 import { Button, Input, Card, Badge, SearchInput, ConfirmationModal, EmptyState } from '../components/ui/index.jsx';
@@ -28,16 +29,26 @@ export const ReleaseNotes = () => {
   const { data: products } = useCollection('products');
   const { addToast } = useToast();
   const { navigate } = useNav();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [isPreviewOpen, setPreviewOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState('');
+  // Initialize from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedProduct, setSelectedProduct] = useState(searchParams.get('product') || '');
   const [exportVisibility, setExportVisibility] = useState('all'); // 'all', 'public', 'internal'
   const [openDropdown, setOpenDropdown] = useState(null); // 'copy-{noteId}' or 'pdf-{noteId}'
+
+  // Sync state to URL params
+  useEffect(() => {
+    const newParams = new URLSearchParams();
+    if (searchQuery) newParams.set('search', searchQuery);
+    if (selectedProduct) newParams.set('product', selectedProduct);
+    setSearchParams(newParams, { replace: true });
+  }, [searchQuery, selectedProduct, setSearchParams]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -187,18 +198,16 @@ export const ReleaseNotes = () => {
 
         const payload = {
           ...formData,
-          history: [...existingHistory, historyEntry],
-          updatedAt: serverTimestamp()
+          history: [...existingHistory, historyEntry]
         };
 
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'releaseNotes', editing.id), payload);
+        await updateDocument('release-notes', editing.id, payload);
         addToast("Release note updated", "success");
       } else {
         const historyEntry = createHistoryEntry('created');
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'releaseNotes'), {
+        await addDocument('release-notes', {
           ...formData,
-          history: [historyEntry],
-          createdAt: serverTimestamp()
+          history: [historyEntry]
         });
         addToast("Release note created", "success");
       }
@@ -218,7 +227,7 @@ export const ReleaseNotes = () => {
       onCancel: () => setConfirmModal(null),
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'releaseNotes', note.id));
+          await deleteDocument('release-notes', note.id);
           addToast("Release note deleted", "success");
         } catch (e) {
           addToast("Deletion failed", "error");

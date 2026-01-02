@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Filter } from 'lucide-react';
-import { useNav, useToast } from '../contexts';
+import { useSearchParams } from 'react-router-dom';
+import { Plus, Filter, FileText, ExternalLink } from 'lucide-react';
+import { useNav, useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
-import { db, appId, serverTimestamp, collection, addDoc } from '../utils/firebase';
+import { addDocument } from '../utils/api';
 import { getDaysDiff, calculateChecklistProgress } from '../utils';
 import { STANDARD_CHECKLIST, DEPLOYMENT_TYPES, DEPLOYMENT_ENVIRONMENTS, ADAPTOR_STATUSES } from '../constants';
 import { Button, Input, Card, SearchInput, ViewToggle, FilterTag } from '../components/ui/index.jsx';
@@ -16,6 +17,8 @@ export const Deployments = () => {
   const { data: checklists } = useCollection('checklists');
   const { params, navigate } = useNav();
   const { addToast } = useToast();
+  const { deploymentDocTypes } = useConfig();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Organize products into parent/sub-project hierarchy
   const productHierarchy = useMemo(() => {
@@ -32,9 +35,22 @@ export const Deployments = () => {
 
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid');
-  const [activeFilters, setActiveFilters] = useState(params.filter || {});
+  // Initialize state from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [viewMode, setViewMode] = useState(searchParams.get('view') || 'grid');
+  const [activeFilters, setActiveFilters] = useState(() => {
+    const filters = {};
+    if (searchParams.get('status')) filters.status = searchParams.get('status');
+    if (searchParams.get('environment')) filters.environment = searchParams.get('environment');
+    if (searchParams.get('id')) filters.id = searchParams.get('id');
+    if (searchParams.get('urgent') === 'true') filters.urgent = true;
+    if (searchParams.get('overdue') === 'true') filters.overdue = true;
+    if (searchParams.get('upcoming') === 'true') filters.upcoming = true;
+    if (searchParams.get('stalled') === 'true') filters.stalled = true;
+    // Also check params from NavigationContext for backward compatibility
+    if (params.filter) return { ...filters, ...params.filter };
+    return filters;
+  });
   const [newDeploymentType, setNewDeploymentType] = useState('feature-release');
   const [newEnvironment, setNewEnvironment] = useState('production');
   const [newFeatureName, setNewFeatureName] = useState('');
@@ -46,15 +62,39 @@ export const Deployments = () => {
   const [constructionStatus, setConstructionStatus] = useState('not_started');
   // Release items - what's included in this release
   const [releaseItems, setReleaseItems] = useState('');
+  // Deployment documentation
+  const [documentation, setDocumentation] = useState({});
+  const [relevantDocs, setRelevantDocs] = useState([]);
 
   // Get selected product to check if it's an adapter
   const selectedProduct = useMemo(() =>
     products.find(p => p.id === selectedProductId), [products, selectedProductId]);
 
+  // Sync state to URL params
   useEffect(() => {
-    if (params.filter) setActiveFilters(params.filter);
-    if (params.action === 'new') setModalOpen(true);
-  }, [params]);
+    const newParams = new URLSearchParams();
+    if (searchQuery) newParams.set('search', searchQuery);
+    if (viewMode !== 'grid') newParams.set('view', viewMode);
+    Object.entries(activeFilters).forEach(([key, value]) => {
+      if (value && value !== 'All') {
+        newParams.set(key, String(value));
+      }
+    });
+    setSearchParams(newParams, { replace: true });
+  }, [activeFilters, searchQuery, viewMode, setSearchParams]);
+
+  // Handle action params (e.g., open modal)
+  useEffect(() => {
+    if (params.action === 'new' || searchParams.get('action') === 'new') {
+      setModalOpen(true);
+      // Remove action from URL after opening modal
+      if (searchParams.get('action')) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('action');
+        setSearchParams(newParams, { replace: true });
+      }
+    }
+  }, [params.action, searchParams, setSearchParams]);
 
   const removeFilter = (key) => setActiveFilters(prev => { const n = {...prev}; delete n[key]; return n; });
 
@@ -103,7 +143,8 @@ export const Deployments = () => {
     } : {};
 
     try {
-      const ref = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'deployments'), {
+      // The backend automatically creates checklists when creating a deployment
+      await addDocument('deployments', {
         clientId,
         productId,
         status: 'Not Started',
@@ -113,13 +154,10 @@ export const Deployments = () => {
         featureName: deploymentType === 'feature-release' ? newFeatureName : null,
         releaseItems: releaseItems.trim() || null,
         blockedComments: [],
-        ...serviceStatuses,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
+        documentation,
+        relevantDocs,
+        ...serviceStatuses
       });
-      STANDARD_CHECKLIST.forEach(item => addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'checklists'), {
-        deploymentId: ref.id, item, isCompleted: false
-      }));
       addToast("Deployment initialized", "success");
       setModalOpen(false);
       setNewDeploymentType('feature-release');
@@ -131,6 +169,8 @@ export const Deployments = () => {
       setMappingStatus('not_started');
       setConstructionStatus('not_started');
       setReleaseItems('');
+      setDocumentation({});
+      setRelevantDocs([]);
     } catch(e) { addToast("Failed to create", "error"); }
   };
 
@@ -355,8 +395,56 @@ export const Deployments = () => {
                 <p className="text-xs text-slate-400">This information will be used for release notes. Please be specific.</p>
               </div>
 
+              {/* Deployment Documentation */}
+              {deploymentDocTypes && deploymentDocTypes.length > 0 && (
+                <div className="space-y-3 p-4 bg-cyan-50/50 dark:bg-cyan-900/10 rounded-lg border border-cyan-100 dark:border-cyan-900/30">
+                  <div className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wide flex items-center gap-2">
+                    <FileText size={14} /> Deployment Documentation
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Select relevant doc types and provide URLs</p>
+                  <div className="space-y-3">
+                    {deploymentDocTypes.map(docType => (
+                      <div key={docType.key} className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={relevantDocs.includes(docType.key)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setRelevantDocs([...relevantDocs, docType.key]);
+                              } else {
+                                setRelevantDocs(relevantDocs.filter(k => k !== docType.key));
+                                setDocumentation(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[docType.key];
+                                  return updated;
+                                });
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+                          />
+                          {docType.label}
+                        </label>
+                        {relevantDocs.includes(docType.key) && (
+                          <input
+                            type="url"
+                            value={documentation[docType.key] || ''}
+                            onChange={(e) => setDocumentation(prev => ({
+                              ...prev,
+                              [docType.key]: e.target.value
+                            }))}
+                            placeholder={`Enter ${docType.label} URL...`}
+                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-6">
-                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('feature-release'); setNewEnvironment('production'); setNewFeatureName(''); setSelectedProductId(''); setEquipmentSAStatus('not_started'); setEquipmentSEStatus('not_started'); setMappingStatus('not_started'); setConstructionStatus('not_started'); setReleaseItems(''); }} type="button">Cancel</Button>
+                <Button variant="secondary" onClick={() => { setModalOpen(false); setNewDeploymentType('feature-release'); setNewEnvironment('production'); setNewFeatureName(''); setSelectedProductId(''); setEquipmentSAStatus('not_started'); setEquipmentSEStatus('not_started'); setMappingStatus('not_started'); setConstructionStatus('not_started'); setReleaseItems(''); setDocumentation({}); setRelevantDocs([]); }} type="button">Cancel</Button>
                 <Button type="submit">Initialize</Button>
               </div>
             </form>

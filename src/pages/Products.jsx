@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Package, Trash2, Edit2, X, Clock, FileText, Rocket, Plus, ChevronDown, ChevronRight, FolderPlus, Tag, Sparkles, Plug, Cpu, Bell, Mail } from 'lucide-react';
 import { useNav, useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
-import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
+import { addDocument, updateDocument, deleteDocument } from '../utils/api';
 import { formatDate, toInputDate, getDaysDiff, getDeadlineStatus } from '../utils';
 import { Button, Input, Card, Badge, CustomTooltip, SearchInput, ConfirmationModal, EmptyState } from '../components/ui/index.jsx';
 
@@ -13,10 +14,22 @@ export const Products = () => {
   const { data: releaseNotes } = useCollection('releaseNotes');
   const { data: clients } = useCollection('clients');
   const { params, navigate } = useNav();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [editing, setEditing] = useState(null);
   const [isModalOpen, setModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Initialize from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [activeFilter, setActiveFilter] = useState(searchParams.get('filter') || params.filter || '');
+
+  // Sync state to URL params
+  useEffect(() => {
+    const newParams = new URLSearchParams();
+    if (searchQuery) newParams.set('search', searchQuery);
+    if (activeFilter) newParams.set('filter', activeFilter);
+    setSearchParams(newParams, { replace: true });
+  }, [searchQuery, activeFilter, setSearchParams]);
+
   const [expandedProducts, setExpandedProducts] = useState({});
   const [selectedParentId, setSelectedParentId] = useState('');
   const [eapEnabled, setEapEnabled] = useState(false);
@@ -181,16 +194,15 @@ export const Products = () => {
       hasEquipmentSA: isAdapter ? hasEquipmentSA : false,
       hasEquipmentSE: isAdapter ? hasEquipmentSE : false,
       hasMappingService: isAdapter ? hasMappingService : false,
-      hasConstructionService: isAdapter ? hasConstructionService : false,
-      updatedAt: serverTimestamp()
+      hasConstructionService: isAdapter ? hasConstructionService : false
     };
 
     try {
       if (editing) {
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', editing.id), payload);
+        await updateDocument('products', editing.id, payload);
         addToast("Product updated", "success");
       } else {
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), { ...payload, createdAt: serverTimestamp() });
+        await addDocument('products', payload);
         addToast("Product created", "success");
       }
       handleCloseModal();
@@ -214,7 +226,7 @@ export const Products = () => {
       onCancel: () => setConfirmModal(null),
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', product.id));
+          await deleteDocument('products', product.id);
           addToast("Product deleted", "success");
         } catch(e) { addToast("Deletion failed", "error"); }
         setConfirmModal(null);
@@ -241,15 +253,15 @@ export const Products = () => {
       });
     }
 
-    if (params.filter === 'missingDocs') {
+    if (activeFilter === 'missingDocs') {
       res = res.filter(p => {
         // Only check relevant docs for missing status
         const relevantTypes = docTypes.filter(t => p.relevantDocs?.[t.key] !== false);
         return relevantTypes.some(t => !p.documentation?.[t.key] || p.documentation[t.key] === "");
       });
-    } else if (params.filter === 'noDeploys') {
+    } else if (activeFilter === 'noDeploys') {
       res = res.filter(p => !deploys.some(d => d.productId === p.id));
-    } else if (params.filter === 'upcoming') {
+    } else if (activeFilter === 'upcoming') {
       res = res.filter(p => {
         const hasUpcomingRelease = (product) => {
           if (!product.nextReleaseDate) return false;
@@ -260,11 +272,11 @@ export const Products = () => {
         const subProjects = subProjectsByParent[p.id] || [];
         return subProjects.some(sp => hasUpcomingRelease(sp));
       }).sort((a, b) => new Date(a.nextReleaseDate || '9999-12-31') - new Date(b.nextReleaseDate || '9999-12-31'));
-    } else if (params.filter === 'subprojects') {
+    } else if (activeFilter === 'subprojects') {
       res = res.filter(p => subProjectsByParent[p.id]?.length > 0);
     }
     return res;
-  }, [parentProducts, subProjectsByParent, deploys, params.filter, searchQuery]);
+  }, [parentProducts, subProjectsByParent, deploys, activeFilter, searchQuery, docTypes]);
 
   const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-fuchsia-500', 'bg-pink-500', 'bg-cyan-500', 'bg-teal-500', 'bg-emerald-500'];
 
@@ -274,7 +286,7 @@ export const Products = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Product Catalog</h1>
           <p className="text-slate-500 mt-1">Manage products and documentation</p>
-          {params.filter && <Badge color="blue" className="mt-2">Filtered: {params.filter}</Badge>}
+          {activeFilter && <Badge color="blue" className="mt-2">Filtered: {activeFilter}</Badge>}
         </div>
         <div className="flex flex-wrap gap-3 items-center">
           <SearchInput

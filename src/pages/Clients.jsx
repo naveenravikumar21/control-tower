@@ -1,20 +1,37 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Users, Trash2, Edit2, Plus, Rocket } from 'lucide-react';
 import { useNav, useToast } from '../contexts';
 import { useCollection } from '../hooks';
-import { db, appId, serverTimestamp, collection, doc, addDoc, updateDoc, deleteDoc } from '../utils/firebase';
+import { addDocument, updateDocument, deleteDocument } from '../utils/api';
 import { AVATAR_COLORS } from '../constants';
 import { Button, Input, Card, Badge, CustomTooltip, SearchInput, ConfirmationModal, EmptyState } from '../components/ui/index.jsx';
 
 export const Clients = () => {
   const { data: clients } = useCollection('clients');
   const { data: deploys } = useCollection('deployments');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [editing, setEditing] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Initialize from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || '');
   const { addToast } = useToast();
   const { navigate, params } = useNav();
+
+  // Sync state to URL params
+  useEffect(() => {
+    const newParams = new URLSearchParams();
+    if (searchQuery) newParams.set('search', searchQuery);
+    if (sortBy) newParams.set('sort', sortBy);
+    setSearchParams(newParams, { replace: true });
+  }, [searchQuery, sortBy, setSearchParams]);
+
+  // Initialize from params if coming from navigation
+  useEffect(() => {
+    if (params.sort && !sortBy) setSortBy(params.sort);
+  }, [params.sort]);
 
   const sortedClients = useMemo(() => {
     let res = [...clients];
@@ -27,7 +44,7 @@ export const Clients = () => {
       );
     }
 
-    if (params.sort === 'deployments') {
+    if (sortBy === 'deployments') {
       res = res.sort((a,b) => {
         const countA = deploys.filter(d => d.clientId === a.id).length;
         const countB = deploys.filter(d => d.clientId === b.id).length;
@@ -35,15 +52,15 @@ export const Clients = () => {
       });
     }
     return res;
-  }, [clients, deploys, params.sort, searchQuery]);
+  }, [clients, deploys, sortBy, searchQuery]);
 
   const handleSave = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const data = { name: fd.get('name'), comments: fd.get('comments'), updatedAt: serverTimestamp() };
+    const data = { name: fd.get('name'), comments: fd.get('comments') };
     try {
-      if (editing) await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', editing.id), data);
-      else await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'clients'), { ...data, createdAt: serverTimestamp() });
+      if (editing) await updateDocument('clients', editing.id, data);
+      else await addDocument('clients', data);
       addToast("Client saved", "success"); setModalOpen(false); setEditing(null);
     } catch(e) { addToast("Error saving", "error"); }
   };
@@ -60,7 +77,7 @@ export const Clients = () => {
       onCancel: () => setConfirmModal(null),
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', client.id));
+          await deleteDocument('clients', client.id);
           addToast("Client deleted", "success");
         } catch(e) { addToast("Deletion failed", "error"); }
         setConfirmModal(null);
@@ -74,7 +91,7 @@ export const Clients = () => {
         <div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Client Portfolio</h1>
           <p className="text-slate-500 mt-1">Manage clients and their deployments</p>
-          {params.sort && <Badge color="blue">Sorted by Volume</Badge>}
+          {sortBy && <Badge color="blue">Sorted by Volume</Badge>}
         </div>
         <div className="flex flex-wrap gap-3 items-center">
           <SearchInput

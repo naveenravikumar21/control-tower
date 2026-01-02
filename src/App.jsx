@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Users, Rocket, CheckCircle2,
-  History, Sun, Moon, Keyboard, List, X, Settings, FileText, Sparkles
+  History, Sun, Moon, Keyboard, List, X, Settings, FileText, Sparkles, LogOut, Shield
 } from 'lucide-react';
 
 // Import from extracted modules
 import {
-  AuthProvider,
+  AuthProvider, useAuth,
   ToastProvider,
   NavigationProvider, useNav,
   ThemeProvider, useTheme,
@@ -14,18 +15,8 @@ import {
   ConfigProvider
 } from './contexts';
 import { CommandPalette, NotificationCenter } from './components/features';
-import {
-  Dashboard,
-  Products,
-  ProductDetail,
-  Deployments,
-  Clients,
-  ClientDetail,
-  Onboarding,
-  SettingsPage,
-  ReleaseNotes,
-  EAPDashboard
-} from './pages';
+import { AppRoutes } from './routes';
+import { Login } from './pages';
 
 // ==========================================
 // LAYOUT
@@ -44,6 +35,7 @@ const NavItem = ({ id, icon: Icon, label, active, onClick }) => (
 const Sidebar = () => {
   const { page, navigate, history } = useNav();
   const { isDark, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
 
   return (
     <aside className="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen z-40 hidden md:flex transition-colors">
@@ -64,6 +56,7 @@ const Sidebar = () => {
           <NavItem id="release-notes" icon={FileText} label="Release Notes" active={page === 'release-notes'} onClick={() => navigate('release-notes')} />
           <NavItem id="eap-dashboard" icon={Sparkles} label="EAP Dashboard" active={page === 'eap-dashboard'} onClick={() => navigate('eap-dashboard')} />
           <div className="pt-6 pb-2 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">System</div>
+          <NavItem id="users" icon={Shield} label="Users" active={page === 'users'} onClick={() => navigate('users')} />
           <NavItem id="settings" icon={Settings} label="Settings" active={page === 'settings'} onClick={() => navigate('settings')} />
         </nav>
 
@@ -95,13 +88,25 @@ const Sidebar = () => {
         </div>
         <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-white text-[10px] font-bold">AD</div>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Admin</span>
+            <div className={`h-6 w-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${user?.role === 'admin' ? 'bg-gradient-to-tr from-purple-500 to-pink-500' : 'bg-gradient-to-tr from-blue-500 to-emerald-500'}`}>
+              {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+                {user?.name || user?.email?.split('@')[0] || 'User'}
+              </span>
+              {user?.role && (
+                <span className="text-[10px] text-slate-500 capitalize">{user.role}</span>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <NotificationCenter />
             <button onClick={toggleTheme} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
               {isDark ? <Sun size={14}/> : <Moon size={14}/>}
+            </button>
+            <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Logout">
+              <LogOut size={14}/>
             </button>
           </div>
         </div>
@@ -114,6 +119,7 @@ const Sidebar = () => {
 const MobileHeader = () => {
   const { page, navigate } = useNav();
   const { isDark, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navItems = [
@@ -123,6 +129,7 @@ const MobileHeader = () => {
     { id: 'deployments', icon: Rocket, label: 'Deployments' },
     { id: 'onboarding', icon: CheckCircle2, label: 'Onboarding' },
     { id: 'release-notes', icon: FileText, label: 'Release Notes' },
+    { id: 'users', icon: Shield, label: 'Users' },
     { id: 'settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -171,12 +178,19 @@ const MobileHeader = () => {
               ))}
             </nav>
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-blue-500 to-emerald-500 flex items-center justify-center text-white text-xs font-bold">AD</div>
-                <div>
-                  <div className="text-sm font-medium text-slate-900 dark:text-white">Admin</div>
-                  <div className="text-xs text-slate-500">Administrator</div>
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${user?.role === 'admin' ? 'bg-gradient-to-tr from-purple-500 to-pink-500' : 'bg-gradient-to-tr from-blue-500 to-emerald-500'}`}>
+                    {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-slate-900 dark:text-white">{user?.name || user?.email?.split('@')[0] || 'User'}</div>
+                    <div className="text-xs text-slate-500 capitalize">{user?.role || 'User'}</div>
+                  </div>
                 </div>
+                <button onClick={() => { logout(); setMenuOpen(false); }} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Logout">
+                  <LogOut size={18}/>
+                </button>
               </div>
               <div className="mt-3 text-center text-[10px] text-slate-400">v{__APP_VERSION__}</div>
             </div>
@@ -188,24 +202,50 @@ const MobileHeader = () => {
 };
 
 const MainContent = () => {
-  const { page, params } = useNav();
   return (
     <main className="flex-1 bg-slate-50/50 dark:bg-slate-950 h-screen overflow-y-auto transition-colors overflow-x-hidden min-w-0">
       <MobileHeader />
       <div className="w-full max-w-full p-4 md:p-6 lg:p-8 overflow-x-hidden">
         <CommandPalette />
-        {page === 'dashboard' && <Dashboard />}
-        {page === 'products' && <Products />}
-        {page === 'product-detail' && <ProductDetail productId={params.productId} />}
-        {page === 'clients' && <Clients />}
-        {page === 'client-detail' && <ClientDetail clientId={params.clientId} />}
-        {page === 'deployments' && <Deployments />}
-        {page === 'onboarding' && <Onboarding />}
-        {page === 'release-notes' && <ReleaseNotes />}
-        {page === 'eap-dashboard' && <EAPDashboard />}
-        {page === 'settings' && <SettingsPage />}
+        <AppRoutes />
       </div>
     </main>
+  );
+};
+
+// ==========================================
+// APP CONTENT (WITH AUTH CHECK)
+// ==========================================
+
+const AppContent = () => {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Allow access to login page without auth
+  if (location.pathname === '/login') {
+    return user ? <Navigate to="/dashboard" replace /> : <Login />;
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Show main app
+  return (
+    <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 w-full max-w-full overflow-x-hidden h-screen">
+      <Sidebar />
+      <MainContent />
+    </div>
   );
 };
 
@@ -221,10 +261,7 @@ export default function App() {
           <NavigationProvider>
             <ToastProvider>
               <NotificationProvider>
-                <div className="flex font-sans text-slate-900 dark:text-slate-100 selection:bg-blue-100 selection:text-blue-900 w-full max-w-full overflow-x-hidden h-screen">
-                  <Sidebar />
-                  <MainContent />
-                </div>
+                <AppContent />
               </NotificationProvider>
             </ToastProvider>
           </NavigationProvider>

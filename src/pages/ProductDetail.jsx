@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { ChevronLeft, Rocket, Package, Calendar, Clock, FileText, ExternalLink, Copy, Edit2, Trash2, FolderPlus, Users, Plus, Mail, X, Bell, Tag, Eye, Download, Globe, Lock, Sparkles, Cpu } from 'lucide-react';
 import { useNav, useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { getDaysDiff, calculateChecklistProgress, getDeadlineStatus, formatDate, toInputDate } from '../utils';
-import { db, appId, serverTimestamp, doc, addDoc, updateDoc, deleteDoc, collection } from '../utils/firebase';
+import { addDocument, updateDocument, deleteDocument } from '../utils/api';
 import { PRODUCT_AVATAR_COLORS, RELEASE_NOTE_TYPES } from '../constants';
 import { Card, Badge, ProgressBar, EmptyState, Button, Input, CustomTooltip, ConfirmationModal } from '../components/ui/index.jsx';
 import { TimelineStrip, NotesPanel } from '../components/features';
 
-export const ProductDetail = ({ productId }) => {
+export const ProductDetail = () => {
+  const { productId } = useParams();
   const { navigate, addToHistory } = useNav();
   const { addToast } = useToast();
   const { docTypes } = useConfig();
@@ -175,13 +177,12 @@ export const ProductDetail = ({ productId }) => {
       hasEquipmentSA: isAdapter ? hasEquipmentSA : false,
       hasEquipmentSE: isAdapter ? hasEquipmentSE : false,
       hasMappingService: isAdapter ? hasMappingService : false,
-      hasConstructionService: isAdapter ? hasConstructionService : false,
-      updatedAt: serverTimestamp()
+      hasConstructionService: isAdapter ? hasConstructionService : false
     };
 
     try {
       if (editing) {
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', editing.id), payload);
+        await updateDocument('products', editing.id, payload);
         addToast("Product updated", "success");
         // If parent changed, navigate to new parent or products list
         if (editing.parentId !== parentId && parentId !== productId) {
@@ -192,7 +193,7 @@ export const ProductDetail = ({ productId }) => {
           }
         }
       } else {
-        await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'products'), { ...payload, createdAt: serverTimestamp() });
+        await addDocument('products', payload);
         addToast(isSubProject ? "Sub-project created" : "Product updated", "success");
       }
       setModalOpen(false);
@@ -281,7 +282,7 @@ export const ProductDetail = ({ productId }) => {
       onCancel: () => setConfirmModal(null),
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', item.id));
+          await deleteDocument('products', item.id);
           addToast("Deleted successfully", "success");
           if (item.id === productId) {
             navigate('products');
@@ -297,9 +298,8 @@ export const ProductDetail = ({ productId }) => {
   const handleAddNote = async (note) => {
     try {
       const notes = [...(product.notes || []), note];
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'products', productId), {
-        notes,
-        updatedAt: serverTimestamp()
+      await updateDocument('products', productId, {
+        notes
       });
       addToast("Note added", "success");
     } catch(e) { addToast("Failed to add note", "error"); }

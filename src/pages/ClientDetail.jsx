@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { ChevronLeft, Rocket, Package, Calendar } from 'lucide-react';
 import { useNav } from '../contexts';
 import { useCollection } from '../hooks';
@@ -6,7 +7,8 @@ import { getDaysDiff, calculateChecklistProgress, getDeadlineStatus } from '../u
 import { Card, Badge, ProgressBar, EmptyState } from '../components/ui/index.jsx';
 import { TimelineStrip } from '../components/features';
 
-export const ClientDetail = ({ clientId }) => {
+export const ClientDetail = () => {
+  const { clientId } = useParams();
   const { navigate, addToHistory } = useNav();
   const { data: clients } = useCollection('clients');
   const { data: deploys } = useCollection('deployments');
