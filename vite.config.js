@@ -9,5 +9,13 @@ export default defineConfig({
   base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(packageJson.version)
+  },
+  server: {
+    host: true,
+    allowedHosts: 'all'
+  },
+  preview: {
+    host: true,
+    allowedHosts: 'all'
   }
 })
