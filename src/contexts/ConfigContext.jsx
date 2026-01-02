@@ -1,52 +1,68 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { api } from '../utils/api';
+import { useAuth } from './AuthContext';
 import { DOC_TYPES, DEPLOYMENT_DOC_TYPES } from '../constants';
 
 const ConfigContext = createContext(null);
 
 export const useConfig = () => useContext(ConfigContext);
 
-const STORAGE_KEY_DOC_TYPES = 'controlTower_docTypes';
-const STORAGE_KEY_DEPLOYMENT_DOC_TYPES = 'controlTower_deploymentDocTypes';
-
 export const ConfigProvider = ({ children }) => {
+    const { user } = useAuth();
     const [docTypes, setDocTypes] = useState(DOC_TYPES);
     const [deploymentDocTypes, setDeploymentDocTypes] = useState(DEPLOYMENT_DOC_TYPES);
     const [loading, setLoading] = useState(true);
 
-    // Load config from localStorage on mount
-    const loadConfig = useCallback(() => {
+    // Fetch config from API on mount
+    const fetchConfig = useCallback(async () => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            const savedDocTypes = localStorage.getItem(STORAGE_KEY_DOC_TYPES);
-            if (savedDocTypes) {
-                const parsed = JSON.parse(savedDocTypes);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setDocTypes(parsed);
-                }
+            const [docTypesConfig, deploymentDocTypesConfig] = await Promise.all([
+                api.getConfig('docTypes').catch(() => null),
+                api.getConfig('deploymentDocTypes').catch(() => null)
+            ]);
+
+            if (docTypesConfig?.value?.types?.length > 0) {
+                const sortedTypes = [...docTypesConfig.value.types].sort((a, b) =>
+                    (a.order || 0) - (b.order || 0)
+                );
+                setDocTypes(sortedTypes);
+            } else {
+                setDocTypes(DOC_TYPES);
             }
 
-            const savedDeploymentDocTypes = localStorage.getItem(STORAGE_KEY_DEPLOYMENT_DOC_TYPES);
-            if (savedDeploymentDocTypes) {
-                const parsed = JSON.parse(savedDeploymentDocTypes);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    setDeploymentDocTypes(parsed);
-                }
+            if (deploymentDocTypesConfig?.value?.types?.length > 0) {
+                const sortedTypes = [...deploymentDocTypesConfig.value.types].sort((a, b) =>
+                    (a.order || 0) - (b.order || 0)
+                );
+                setDeploymentDocTypes(sortedTypes);
+            } else {
+                setDeploymentDocTypes(DEPLOYMENT_DOC_TYPES);
             }
         } catch (err) {
-            console.error('Error loading config from localStorage:', err);
+            console.error('Error fetching config:', err);
+            setDocTypes(DOC_TYPES);
+            setDeploymentDocTypes(DEPLOYMENT_DOC_TYPES);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user]);
 
     useEffect(() => {
-        loadConfig();
-    }, [loadConfig]);
+        fetchConfig();
+    }, [fetchConfig]);
 
     // Product doc types CRUD
-    const saveDocTypes = (types) => {
+    const saveDocTypes = async (types) => {
+        if (!user) return;
+
         try {
             const typesWithOrder = types.map((t, index) => ({ ...t, order: index }));
-            localStorage.setItem(STORAGE_KEY_DOC_TYPES, JSON.stringify(typesWithOrder));
+            await api.setConfig('docTypes', { types: typesWithOrder });
             setDocTypes(typesWithOrder);
             return true;
         } catch (err) {
@@ -55,29 +71,31 @@ export const ConfigProvider = ({ children }) => {
         }
     };
 
-    const addDocType = (key, label) => {
+    const addDocType = async (key, label) => {
         const newType = { key, label, order: docTypes.length };
         const updatedTypes = [...docTypes, newType];
-        saveDocTypes(updatedTypes);
+        await saveDocTypes(updatedTypes);
     };
 
-    const removeDocType = (key) => {
+    const removeDocType = async (key) => {
         const updatedTypes = docTypes.filter(t => t.key !== key);
-        saveDocTypes(updatedTypes);
+        await saveDocTypes(updatedTypes);
     };
 
-    const updateDocType = (key, newLabel) => {
+    const updateDocType = async (key, newLabel) => {
         const updatedTypes = docTypes.map(t =>
             t.key === key ? { ...t, label: newLabel } : t
         );
-        saveDocTypes(updatedTypes);
+        await saveDocTypes(updatedTypes);
     };
 
     // Deployment doc types CRUD
-    const saveDeploymentDocTypes = (types) => {
+    const saveDeploymentDocTypes = async (types) => {
+        if (!user) return;
+
         try {
             const typesWithOrder = types.map((t, index) => ({ ...t, order: index }));
-            localStorage.setItem(STORAGE_KEY_DEPLOYMENT_DOC_TYPES, JSON.stringify(typesWithOrder));
+            await api.setConfig('deploymentDocTypes', { types: typesWithOrder });
             setDeploymentDocTypes(typesWithOrder);
             return true;
         } catch (err) {
@@ -86,22 +104,22 @@ export const ConfigProvider = ({ children }) => {
         }
     };
 
-    const addDeploymentDocType = (key, label) => {
+    const addDeploymentDocType = async (key, label) => {
         const newType = { key, label, order: deploymentDocTypes.length };
         const updatedTypes = [...deploymentDocTypes, newType];
-        saveDeploymentDocTypes(updatedTypes);
+        await saveDeploymentDocTypes(updatedTypes);
     };
 
-    const removeDeploymentDocType = (key) => {
+    const removeDeploymentDocType = async (key) => {
         const updatedTypes = deploymentDocTypes.filter(t => t.key !== key);
-        saveDeploymentDocTypes(updatedTypes);
+        await saveDeploymentDocTypes(updatedTypes);
     };
 
-    const updateDeploymentDocType = (key, newLabel) => {
+    const updateDeploymentDocType = async (key, newLabel) => {
         const updatedTypes = deploymentDocTypes.map(t =>
             t.key === key ? { ...t, label: newLabel } : t
         );
-        saveDeploymentDocTypes(updatedTypes);
+        await saveDeploymentDocTypes(updatedTypes);
     };
 
     return (
@@ -117,7 +135,7 @@ export const ConfigProvider = ({ children }) => {
             addDeploymentDocType,
             removeDeploymentDocType,
             updateDeploymentDocType,
-            refetch: loadConfig
+            refetch: fetchConfig
         }}>
             {children}
         </ConfigContext.Provider>

@@ -226,9 +226,11 @@ export const SettingsPage = () => {
       await saveDocTypes(editingDocTypes);
       addToast("Documentation types saved successfully", "success");
     } catch (e) {
+      console.error('Error saving doc types:', e);
       addToast("Failed to save documentation types", "error");
+    } finally {
+      setDocTypeSaving(false);
     }
-    setDocTypeSaving(false);
   };
 
   const handleMoveDocType = (index, direction) => {
@@ -277,15 +279,17 @@ export const SettingsPage = () => {
     setEditDeployLabel('');
   };
 
-  const handleSaveDeploymentDocTypes = () => {
+  const handleSaveDeploymentDocTypes = async () => {
     setDeployDocTypeSaving(true);
     try {
-      saveDeploymentDocTypes(editingDeploymentDocTypes);
+      await saveDeploymentDocTypes(editingDeploymentDocTypes);
       addToast("Deployment documentation types saved successfully", "success");
     } catch (e) {
+      console.error('Error saving deployment doc types:', e);
       addToast("Failed to save deployment documentation types", "error");
+    } finally {
+      setDeployDocTypeSaving(false);
     }
-    setDeployDocTypeSaving(false);
   };
 
   const handleMoveDeploymentDocType = (index, direction) => {
