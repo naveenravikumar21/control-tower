@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu, ListTodo, Edit2 } from 'lucide-react';
+import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu, ListTodo, Edit2, Link } from 'lucide-react';
 import { useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
-import { db, appId, serverTimestamp, doc, updateDoc, deleteDoc } from '../utils/firebase';
+import { updateDocument, deleteDocument, api } from '../utils/api';
 import { toInputDate, getDeadlineStatus } from '../utils';
 import { DEPLOYMENT_ENVIRONMENTS, ADAPTOR_STATUSES } from '../constants';
 import { Button, Card, Badge, ConfirmationModal } from '../components/ui/index.jsx';
@@ -12,16 +12,23 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const { data: products } = useCollection('products');
   const { data: checklists } = useCollection('checklists');
   const { addToast } = useToast();
-  const { docTypes } = useConfig();
+  const { docTypes, deploymentDocTypes } = useConfig();
   const [confirmModal, setConfirmModal] = useState(null);
   const [isEditingReleaseItems, setIsEditingReleaseItems] = useState(false);
   const [localReleaseItems, setLocalReleaseItems] = useState('');
+  // Deployment documentation state
+  const [isEditingDocs, setIsEditingDocs] = useState(false);
+  const [localDocumentation, setLocalDocumentation] = useState({});
+  const [localRelevantDocs, setLocalRelevantDocs] = useState([]);
 
-  // Sync local release items state when editing changes
+  // Sync local release items and documentation state when editing changes
   useEffect(() => {
     if (editing) {
       setLocalReleaseItems(editing.releaseItems || '');
       setIsEditingReleaseItems(false);
+      setLocalDocumentation(editing.documentation || {});
+      setLocalRelevantDocs(editing.relevantDocs || []);
+      setIsEditingDocs(false);
     }
   }, [editing?.id]);
 
@@ -48,10 +55,9 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
       };
       const statusHistory = [...(editing.statusHistory || []), statusChange];
 
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
+      await updateDocument('deployments', editing.id, {
         status: newStatus,
-        statusHistory,
-        updatedAt: serverTimestamp()
+        statusHistory
       });
       setEditing({ ...editing, status: newStatus, statusHistory });
       addToast(`Status updated to ${newStatus}`, "success");
@@ -60,41 +66,28 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
 
   const handleChecklistToggle = async (item) => {
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id), {
-        isCompleted: !item.isCompleted
-      });
+      await api.toggleChecklist(item.id);
     } catch(e) { addToast("Failed to update checklist", "error"); }
   };
 
   const handleMarkAllComplete = async () => {
     try {
-      const incomplete = deploymentChecklist.filter(c => !c.isCompleted);
-      await Promise.all(incomplete.map(item =>
-        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id), {
-          isCompleted: true
-        })
-      ));
-      addToast(`Marked ${incomplete.length} items complete`, "success");
+      await api.markAllChecklistsComplete(editing.id);
+      addToast("All items marked complete", "success");
     } catch(e) { addToast("Failed to update checklist", "error"); }
   };
 
   const handleResetChecklist = async () => {
     try {
-      const completed = deploymentChecklist.filter(c => c.isCompleted);
-      await Promise.all(completed.map(item =>
-        updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id), {
-          isCompleted: false
-        })
-      ));
-      addToast(`Reset ${completed.length} items`, "success");
+      await api.resetAllChecklists(editing.id);
+      addToast("Checklist reset", "success");
     } catch(e) { addToast("Failed to reset checklist", "error"); }
   };
 
   const handleDateChange = async (e) => {
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
-        nextDeliveryDate: e.target.value,
-        updatedAt: serverTimestamp()
+      await updateDocument('deployments', editing.id, {
+        nextDeliveryDate: e.target.value
       });
       setEditing({ ...editing, nextDeliveryDate: e.target.value });
       addToast("Date updated", "success");
@@ -109,10 +102,8 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
       onCancel: () => setConfirmModal(null),
       onConfirm: async () => {
         try {
-          await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id));
-          for (const item of deploymentChecklist) {
-            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'checklists', item.id));
-          }
+          // Backend handles cascade deletion of checklists
+          await deleteDocument('deployments', editing.id);
           addToast("Deployment deleted", "success");
           onClose();
         } catch(e) { addToast("Failed to delete", "error"); }
@@ -124,9 +115,8 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const handleAddComment = async (comment) => {
     try {
       const comments = [...(editing.blockedComments || []), comment];
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
-        blockedComments: comments,
-        updatedAt: serverTimestamp()
+      await updateDocument('deployments', editing.id, {
+        blockedComments: comments
       });
       setEditing({ ...editing, blockedComments: comments });
       addToast("Comment added", "success");
@@ -136,9 +126,8 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const handleAddNote = async (note) => {
     try {
       const notes = [...(editing.notes || []), note];
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
-        notes,
-        updatedAt: serverTimestamp()
+      await updateDocument('deployments', editing.id, {
+        notes
       });
       setEditing({ ...editing, notes });
       addToast("Note added", "success");
@@ -147,9 +136,8 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
 
   const handleServiceStatusChange = async (field, value) => {
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
-        [field]: value,
-        updatedAt: serverTimestamp()
+      await updateDocument('deployments', editing.id, {
+        [field]: value
       });
       setEditing({ ...editing, [field]: value });
       addToast("Service status updated", "success");
@@ -158,9 +146,8 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
 
   const handleEnvironmentChange = async (newEnvironment) => {
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
-        environment: newEnvironment,
-        updatedAt: serverTimestamp()
+      await updateDocument('deployments', editing.id, {
+        environment: newEnvironment
       });
       setEditing({ ...editing, environment: newEnvironment });
       addToast("Environment updated", "success");
@@ -169,13 +156,23 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
 
   const handleReleaseItemsChange = async (releaseItems) => {
     try {
-      await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'deployments', editing.id), {
-        releaseItems: releaseItems.trim() || null,
-        updatedAt: serverTimestamp()
+      await updateDocument('deployments', editing.id, {
+        releaseItems: releaseItems.trim() || null
       });
       setEditing({ ...editing, releaseItems });
       addToast("Release items updated", "success");
     } catch(e) { addToast("Failed to update release items", "error"); }
+  };
+
+  const handleDocumentationChange = async () => {
+    try {
+      await updateDocument('deployments', editing.id, {
+        documentation: localDocumentation,
+        relevantDocs: localRelevantDocs
+      });
+      setEditing({ ...editing, documentation: localDocumentation, relevantDocs: localRelevantDocs });
+      addToast("Documentation updated", "success");
+    } catch(e) { addToast("Failed to update documentation", "error"); }
   };
 
   // Check if this deployment has any service statuses (for adapter products)
@@ -442,6 +439,115 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
                 </div>
               )}
             </div>
+
+            {/* Deployment Documentation */}
+            {deploymentDocTypes && deploymentDocTypes.length > 0 && (
+              <div className="p-4 bg-cyan-50/50 dark:bg-cyan-900/10 rounded-xl border border-cyan-100 dark:border-cyan-900/30">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold text-cyan-700 dark:text-cyan-300 flex items-center gap-2">
+                    <Link size={16} /> Deployment Documentation
+                  </h4>
+                  {!isEditingDocs && (
+                    <button
+                      onClick={() => setIsEditingDocs(true)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-cyan-600 hover:bg-cyan-100 dark:hover:bg-cyan-900/30 rounded-md transition-colors"
+                    >
+                      <Edit2 size={12} />
+                      Edit
+                    </button>
+                  )}
+                </div>
+                {isEditingDocs ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Select relevant doc types and provide URLs</p>
+                    {deploymentDocTypes.map(docType => (
+                      <div key={docType.key} className="space-y-1.5">
+                        <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={localRelevantDocs.includes(docType.key)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setLocalRelevantDocs([...localRelevantDocs, docType.key]);
+                              } else {
+                                setLocalRelevantDocs(localRelevantDocs.filter(k => k !== docType.key));
+                                setLocalDocumentation(prev => {
+                                  const updated = { ...prev };
+                                  delete updated[docType.key];
+                                  return updated;
+                                });
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
+                          />
+                          {docType.label}
+                        </label>
+                        {localRelevantDocs.includes(docType.key) && (
+                          <input
+                            type="url"
+                            value={localDocumentation[docType.key] || ''}
+                            onChange={(e) => setLocalDocumentation(prev => ({
+                              ...prev,
+                              [docType.key]: e.target.value
+                            }))}
+                            placeholder={`Enter ${docType.label} URL...`}
+                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 outline-none transition-all"
+                          />
+                        )}
+                      </div>
+                    ))}
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        onClick={() => {
+                          setLocalDocumentation(editing.documentation || {});
+                          setLocalRelevantDocs(editing.relevantDocs || []);
+                          setIsEditingDocs(false);
+                        }}
+                        className="px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => { handleDocumentationChange(); setIsEditingDocs(false); }}
+                        className="px-3 py-1.5 text-sm font-medium bg-cyan-600 text-white hover:bg-cyan-700 rounded-lg transition-colors"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {(editing.relevantDocs || []).length === 0 ? (
+                      <span className="text-sm text-slate-400 italic">No documentation links. Click edit to add.</span>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {deploymentDocTypes.filter(t => (editing.relevantDocs || []).includes(t.key)).map(docType => {
+                          const url = editing.documentation?.[docType.key];
+                          return (
+                            <div key={docType.key} className="flex items-center gap-2 p-2 bg-white dark:bg-slate-800 rounded-lg text-sm">
+                              <FileText size={14} className="text-cyan-500 shrink-0" />
+                              <span className="text-slate-700 dark:text-slate-300 truncate">{docType.label}</span>
+                              {url ? (
+                                <a
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-auto text-cyan-600 hover:text-cyan-700 dark:text-cyan-400"
+                                >
+                                  <ExternalLink size={14} />
+                                </a>
+                              ) : (
+                                <span className="ml-auto text-xs text-slate-400 italic">No URL</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Notes & Activity */}
             <NotesPanel

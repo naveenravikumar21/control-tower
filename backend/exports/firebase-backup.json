@@ -1,0 +1,2970 @@
+{
+  "exportedAt": "2026-01-01T14:57:18.653Z",
+  "appId": "default-app-id",
+  "collections": {
+    "clients": [
+      {
+        "id": "3YGiHt2XPQ76uaLNyD0H",
+        "comments": "",
+        "name": "Interbel",
+        "createdAt": "2025-12-19T12:19:46.763Z",
+        "updatedAt": "2025-12-19T12:19:46.763Z"
+      },
+      {
+        "id": "4hh5EBSGht4RuF4JDb1A",
+        "createdAt": "2025-12-19T12:19:26.504Z",
+        "name": "Sacred Wind",
+        "updatedAt": "2025-12-19T12:19:26.504Z",
+        "comments": ""
+      },
+      {
+        "id": "6Cj9GuT8kYGjyE5o4Eje",
+        "createdAt": "2025-12-19T12:18:35.954Z",
+        "name": "Commnet",
+        "comments": "",
+        "updatedAt": "2025-12-19T12:18:35.954Z"
+      },
+      {
+        "id": "6g1MVJt4H0mZ5SbOKjDd",
+        "name": "Alhambra",
+        "createdAt": "2025-12-19T13:48:26.314Z",
+        "updatedAt": "2025-12-19T13:48:26.314Z",
+        "comments": ""
+      },
+      {
+        "id": "73YdY2VCiMmSqdwxfDTZ",
+        "comments": "",
+        "name": "VTX 1",
+        "updatedAt": "2025-12-19T12:19:15.406Z",
+        "createdAt": "2025-12-19T12:19:15.406Z"
+      },
+      {
+        "id": "8gpjOfOscdFewK5Viik5",
+        "createdAt": "2025-12-19T13:48:03.601Z",
+        "name": "GigaBeam",
+        "updatedAt": "2025-12-19T13:48:03.601Z",
+        "comments": ""
+      },
+      {
+        "id": "9ybszWGxVKRmZM2OXIo6",
+        "updatedAt": "2025-12-16T04:46:10.820Z",
+        "name": "PRTC",
+        "createdAt": "2025-12-16T04:46:10.820Z",
+        "comments": ""
+      },
+      {
+        "id": "BF8qSfWG4KsYCCz1lJ8N",
+        "updatedAt": "2025-12-19T12:18:16.499Z",
+        "name": "Hardy",
+        "createdAt": "2025-12-19T12:18:16.499Z",
+        "comments": ""
+      },
+      {
+        "id": "CINfGKjckJpk5yt7C0rV",
+        "name": "Thacker",
+        "comments": "",
+        "updatedAt": "2025-12-19T12:18:46.482Z",
+        "createdAt": "2025-12-19T12:18:46.482Z"
+      },
+      {
+        "id": "D5ixn7XokpfW3wUe9rTG",
+        "name": "Citizen's ",
+        "comments": "",
+        "createdAt": "2025-12-19T13:49:02.329Z",
+        "updatedAt": "2025-12-19T13:49:02.329Z"
+      },
+      {
+        "id": "FnFAecb2J7WZUc2WV7cl",
+        "comments": "",
+        "name": "Duo ",
+        "createdAt": "2025-12-16T04:49:42.961Z",
+        "updatedAt": "2025-12-16T04:49:42.961Z"
+      },
+      {
+        "id": "GHedAE4Rd6L5vX2qTw36",
+        "comments": "",
+        "name": "Eastex Telephone Cooperative",
+        "updatedAt": "2025-12-19T12:20:09.674Z",
+        "createdAt": "2025-12-19T12:20:09.674Z"
+      },
+      {
+        "id": "GRYLXbUpkMFSJ34lsU0Z",
+        "updatedAt": "2025-12-19T12:20:45.941Z",
+        "comments": "",
+        "name": "California Brodband Cooperative INC",
+        "createdAt": "2025-12-19T12:20:45.941Z"
+      },
+      {
+        "id": "ImonrHivfRMJQf9vHREb",
+        "createdAt": "2025-12-19T12:18:55.506Z",
+        "updatedAt": "2025-12-19T12:18:55.506Z",
+        "comments": "",
+        "name": "Smartcom"
+      },
+      {
+        "id": "MM0zrwKXbMTwxXkbJmFC",
+        "comments": "",
+        "updatedAt": "2025-12-19T12:17:58.373Z",
+        "name": "FireFly",
+        "createdAt": "2025-12-19T12:17:58.373Z"
+      },
+      {
+        "id": "MPp9IzivDkESFgwdZ2lv",
+        "name": "Gearheart Telephone Company",
+        "createdAt": "2025-12-19T12:20:34.048Z",
+        "updatedAt": "2025-12-19T12:20:34.048Z",
+        "comments": ""
+      },
+      {
+        "id": "NoaPzMARh6ADnX80jGW1",
+        "updatedAt": "2025-12-19T12:19:37.498Z",
+        "createdAt": "2025-12-19T12:19:37.498Z",
+        "comments": "",
+        "name": "GTe"
+      },
+      {
+        "id": "OCB1CDMWK2fblLbujhDy",
+        "name": "CWF",
+        "updatedAt": "2025-12-16T04:49:25.294Z",
+        "comments": "",
+        "createdAt": "2025-12-16T04:49:25.294Z"
+      },
+      {
+        "id": "QbIZALjBv3WiKYWsYZ5c",
+        "createdAt": "2025-12-19T12:20:20.418Z",
+        "updatedAt": "2025-12-19T13:48:41.753Z",
+        "comments": "",
+        "name": "Onward"
+      },
+      {
+        "id": "YRRLtyJyf1liMHQePXWM",
+        "name": "FTC",
+        "comments": "POS 2.0, Capital Credits 2.0 ",
+        "updatedAt": "2025-12-17T14:27:37.713Z",
+        "createdAt": "2025-12-17T14:27:37.713Z"
+      },
+      {
+        "id": "acw7VvxzC9fW1DWpXyzO",
+        "createdAt": "2025-12-19T12:17:45.046Z",
+        "comments": "",
+        "name": "Home Telecom",
+        "updatedAt": "2025-12-19T12:17:45.046Z"
+      },
+      {
+        "id": "bNiEddCIJS5CT41gyXca",
+        "comments": "",
+        "createdAt": "2025-12-19T12:19:57.211Z",
+        "updatedAt": "2025-12-19T12:19:57.211Z",
+        "name": "Pavlov Media"
+      },
+      {
+        "id": "cv3Z5sBzCWAu24EJSB3d",
+        "createdAt": "2025-12-19T12:19:05.361Z",
+        "name": "Conterra",
+        "updatedAt": "2025-12-19T12:19:05.361Z",
+        "comments": ""
+      },
+      {
+        "id": "gDuELhYbHETGzsvZph7j",
+        "createdAt": "2025-12-19T13:48:50.154Z",
+        "updatedAt": "2025-12-19T13:48:50.154Z",
+        "comments": "",
+        "name": "Adamswells"
+      },
+      {
+        "id": "jAmEFiWRLJvitV1T9Z3N",
+        "createdAt": "2025-12-16T04:50:42.535Z",
+        "name": "ArchTop",
+        "updatedAt": "2025-12-16T04:50:42.535Z",
+        "comments": ""
+      },
+      {
+        "id": "m2RRoFQBlSL55YeRv3oT",
+        "updatedAt": "2025-12-19T12:18:26.393Z",
+        "name": "Gearheart",
+        "createdAt": "2025-12-19T12:18:26.393Z",
+        "comments": ""
+      },
+      {
+        "id": "rjQkuaZfczwpQDJN2CBh",
+        "comments": "",
+        "createdAt": "2025-12-16T04:50:50.463Z",
+        "name": "IdeaTek",
+        "updatedAt": "2025-12-16T04:50:50.463Z"
+      },
+      {
+        "id": "sEaxo3aij4adHjfHnxDc",
+        "updatedAt": "2025-12-18T11:03:25.682Z",
+        "name": "ACS",
+        "comments": "NEM, SH, SC",
+        "createdAt": "2025-12-18T11:03:25.682Z"
+      },
+      {
+        "id": "sGawlD55KlVyhgUUcj8L",
+        "comments": "",
+        "createdAt": "2025-12-16T04:49:34.348Z",
+        "name": "RapidFiber",
+        "updatedAt": "2025-12-16T04:49:34.348Z"
+      },
+      {
+        "id": "tRpUPGIaU5BR3ORlpNwb",
+        "name": "MSF",
+        "updatedAt": "2025-12-19T12:18:08.056Z",
+        "comments": "",
+        "createdAt": "2025-12-19T12:18:08.056Z"
+      }
+    ],
+    "products": [
+      {
+        "id": "0sbzasIlCDnt34ZHpkew",
+        "hasMappingService": false,
+        "name": "Email Bounce Management",
+        "documentation.testCases": "",
+        "documentation.releaseNotes": "",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "documentation.productGuide": "",
+        "nextReleaseDate": "",
+        "engineeringOwner": "Mona",
+        "createdAt": "2025-12-17T14:30:08.972Z",
+        "hasEquipmentSA": false,
+        "productOwner": "Naveen",
+        "description": "The Email Bounce Management System is a specialized module within the CDG Elements Platform designed to centralize, analyze, and resolve undelivered email communications. ",
+        "relevantDocs.testCases": false,
+        "relevantDocs.productGuide": true,
+        "relevantDocs.releaseNotes": true,
+        "relevantDocs.demoScript": true,
+        "relevantDocs.productionChecklist": false,
+        "hasEquipmentSE": false,
+        "eap": "",
+        "parentId": "",
+        "hasConstructionService": false,
+        "isAdapter": false,
+        "updatedAt": "2025-12-19T04:40:28.196Z"
+      },
+      {
+        "id": "1YkP7aG8xgS9DGwcNOLr",
+        "parentId": "",
+        "hasMappingService": false,
+        "name": "Subscriber Hub",
+        "productOwner": "Michael Hubbard",
+        "hasConstructionService": false,
+        "nextReleaseDate": "",
+        "hasEquipmentSA": false,
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "https://docs.google.com/document/d/1TbGs7GyHPV8017WXutnLiVcsl_KLUgE_VtzdlP30uaI/edit?tab=t.0#heading=h.ade5j6cw7zbn",
+        "documentation.productionChecklist": "https://docs.google.com/spreadsheets/d/1rdZK8VM1IFVlAH5IRAWIrA5rv-C_s-EBmgHNhjlKFjQ/edit?gid=1357153255#gid=1357153255",
+        "documentation.testCases": "",
+        "documentation.productGuide": "https://cdg4.sharepoint.com/:w:/r/sites/Elements2.0/_layouts/15/Doc.aspx?sourcedoc=%7B81407B87-8273-48B8-81F6-6F2C32F14DDE%7D&file=Subscriber%20Hub%20Product%20Manual%20for%20CWF%20v1.0.docx&action=default&mobileredirect=true",
+        "notificationEmails": "[]",
+        "eap.startDate": "2025-12-01",
+        "eap.jiraBoardUrl": "",
+        "eap.endDate": "2026-01-19",
+        "eap.clientIds": "[\"sGawlD55KlVyhgUUcj8L\",\"rjQkuaZfczwpQDJN2CBh\"]",
+        "eap.isActive": true,
+        "updatedAt": "2025-12-26T12:50:45.817Z",
+        "createdAt": "2025-12-16T04:33:19.162Z",
+        "relevantDocs.releaseNotes": true,
+        "relevantDocs.demoScript": true,
+        "relevantDocs.testCases": true,
+        "relevantDocs.productionChecklist": true,
+        "relevantDocs.productGuide": true,
+        "hasEquipmentSE": false,
+        "description": "An operational hub for customer care teams to view subscriber data, tickets, outages, usage, and digital twins in one place.",
+        "engineeringOwner": "Ganesh",
+        "isAdapter": false
+      },
+      {
+        "id": "2uAlYj4OtBCsYPi9FfFD",
+        "productOwner": "Sandeep ",
+        "updatedAt": "2025-12-18T06:48:21.789Z",
+        "description": "",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "notificationEmails": "[]",
+        "createdAt": "2025-12-17T14:41:53.757Z",
+        "engineeringOwner": "Febin",
+        "documentation.productGuide": "",
+        "documentation.testCases": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "nextReleaseDate": "2026-01-06",
+        "name": "Calix - SMX"
+      },
+      {
+        "id": "49UJ1VmZLdyrowLn2sCF",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "name": "Adtran AOE",
+        "nextReleaseDate": "2026-01-06",
+        "engineeringOwner": "Febin",
+        "updatedAt": "2025-12-17T18:57:01.937Z",
+        "description": "",
+        "productOwner": "",
+        "createdAt": "2025-12-17T18:57:01.937Z",
+        "documentation.testCases": "",
+        "documentation.productionChecklist": "",
+        "documentation.productGuide": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": ""
+      },
+      {
+        "id": "6kegR1LKLVzRc52aAb7V",
+        "description": "",
+        "createdAt": "2025-12-17T19:07:14.134Z",
+        "engineeringOwner": "Amrutha",
+        "name": "Capital Credits 2.0",
+        "updatedAt": "2025-12-17T19:07:52.335Z",
+        "productOwner": "Naveen",
+        "nextReleaseDate": "2026-03-27",
+        "documentation.testCases": "",
+        "documentation.demoScript": "",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "parentId": ""
+      },
+      {
+        "id": "8UdSVJi3cBZTQlHNaB45",
+        "engineeringOwner": "Shajahan",
+        "name": "Annual Meet",
+        "documentation.releaseNotes": "",
+        "documentation.productGuide": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "documentation.productionChecklist": "",
+        "updatedAt": "2025-12-16T04:37:59.711Z",
+        "createdAt": "2025-12-16T04:37:59.711Z",
+        "productOwner": "Naveen",
+        "description": "A simple meeting management software",
+        "nextReleaseDate": ""
+      },
+      {
+        "id": "BWYi0B2LFZ3LswSdUdkS",
+        "name": "Partner Integration Hub (PIH)",
+        "nextReleaseDate": "",
+        "createdAt": "2025-12-16T04:33:34.685Z",
+        "documentation.productGuide": "",
+        "documentation.testCases": "",
+        "documentation.demoScript": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "updatedAt": "2025-12-16T04:33:34.685Z",
+        "engineeringOwner": "Arun",
+        "productOwner": "Sandeep Prasad",
+        "description": "A centralized platform to configure, manage, and monitor integrations with third-party vendors, mapping providers, and equipment partners."
+      },
+      {
+        "id": "CfngN0Hz4lQl706qofv1",
+        "updatedAt": "2025-12-17T14:23:36.490Z",
+        "createdAt": "2025-12-17T14:23:36.490Z",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "nextReleaseDate": "2025-12-17",
+        "name": "Insights (Standard Tier)",
+        "parentId": "FJ7cx5VLb4ry4pa26DOD",
+        "description": "Apache Superset Dashboards, Quicksight Usage Dashboard",
+        "productOwner": "Kushagra",
+        "engineeringOwner": "Kushagra"
+      },
+      {
+        "id": "FJ7cx5VLb4ry4pa26DOD",
+        "productOwner": "Kushagra",
+        "description": "A data lakehouse is a hybrid architecture that combines the scalability and flexibility of a data lake with the reliability and performance of a data warehouse. It enables unified storage, processing, and analytics across structured and unstructured data.",
+        "parentId": "",
+        "updatedAt": "2025-12-17T14:22:31.269Z",
+        "name": "CDG Lakehouse ",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "createdAt": "2025-12-17T14:22:31.269Z",
+        "engineeringOwner": "Kushagra",
+        "nextReleaseDate": ""
+      },
+      {
+        "id": "FfeiU2sSck9vtiBopuq9",
+        "nextReleaseDate": "",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.demoScript": "",
+        "documentation.releaseNotes": "",
+        "createdAt": "2025-12-17T14:25:56.034Z",
+        "parentId": "FJ7cx5VLb4ry4pa26DOD",
+        "description": "",
+        "productOwner": "Kushagra",
+        "engineeringOwner": "",
+        "updatedAt": "2025-12-17T14:25:56.034Z",
+        "name": "MBS Lakehouse ( Enterprise )"
+      },
+      {
+        "id": "HVaEeJSZjqWtPGSBf9ur",
+        "createdAt": "2025-12-16T04:34:43.489Z",
+        "updatedAt": "2025-12-17T19:07:39.831Z",
+        "productOwner": "",
+        "name": "Network of Agents (Voice & Chat AI)",
+        "description": "A multi-agent AI system that autonomously handles collections, reminders, support, and network issue resolution via voice and chat.",
+        "documentation.productionChecklist": "",
+        "documentation.productGuide": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "engineeringOwner": "Vishal ",
+        "parentId": "",
+        "nextReleaseDate": ""
+      },
+      {
+        "id": "KBhi6IWIRSdChunaT0MF",
+        "engineeringOwner": "Naveen Reddy",
+        "name": "EAP - NEM",
+        "updatedAt": "2025-12-18T10:38:59.157Z",
+        "parentId": "Z4D8d2hoBVakZlcy0dBW",
+        "description": "",
+        "documentation.releaseNotes": "",
+        "documentation.productGuide": "",
+        "documentation.testCases": "",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "createdAt": "2025-12-18T10:38:59.157Z",
+        "productOwner": "Melissa",
+        "nextReleaseDate": "2026-01-12"
+      },
+      {
+        "id": "Mofaz68FVhlW8Z6H4B7p",
+        "engineeringOwner": "Melby",
+        "name": "AI Chatbot (Universal Bot)",
+        "updatedAt": "2025-12-17T19:07:29.853Z",
+        "parentId": "",
+        "description": "An AI-powered conversational interface that provides automated customer support, self-service, and guided resolution journeys.",
+        "documentation.releaseNotes": "",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "productOwner": "Michael",
+        "createdAt": "2025-12-16T04:34:18.959Z",
+        "nextReleaseDate": ""
+      },
+      {
+        "id": "NPtABuNHnFCesYyoJtpj",
+        "engineeringOwner": "Arul",
+        "documentation.demoScript": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "updatedAt": "2025-12-16T04:33:48.729Z",
+        "name": "Service Automation (SAM 2.0)",
+        "productOwner": "Melissa",
+        "description": "A cloud-native orchestration engine that automates service provisioning, task execution, and device configuration across networks.",
+        "nextReleaseDate": "",
+        "createdAt": "2025-12-16T04:33:48.729Z"
+      },
+      {
+        "id": "QpNPYO3EKIFo8l72QAhQ",
+        "createdAt": "2025-12-17T18:53:35.497Z",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "description": "",
+        "updatedAt": "2025-12-17T18:53:35.497Z",
+        "productOwner": "",
+        "name": "Radius SA",
+        "documentation.productGuide": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "engineeringOwner": "Febin",
+        "nextReleaseDate": ""
+      },
+      {
+        "id": "RDdl4atN4D5anmFFyRNb",
+        "productOwner": "",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "createdAt": "2025-12-17T18:54:25.328Z",
+        "description": "",
+        "nextReleaseDate": "2026-01-15",
+        "documentation.productGuide": "",
+        "documentation.testCases": "",
+        "documentation.demoScript": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "name": "NetSapiens",
+        "engineeringOwner": "Antony X",
+        "updatedAt": "2025-12-17T18:54:25.328Z"
+      },
+      {
+        "id": "W9KfPtlVus1P2Ka750gh",
+        "nextReleaseDate": "2026-01-06",
+        "description": "",
+        "engineeringOwner": "Reshma",
+        "productOwner": "Sandeep ",
+        "createdAt": "2025-12-17T14:58:32.211Z",
+        "documentation.productionChecklist": "",
+        "documentation.productGuide": "",
+        "documentation.demoScript": "",
+        "documentation.releaseNotes": "",
+        "documentation.testCases": "",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "name": "Calix - E7 Fiber",
+        "updatedAt": "2025-12-17T14:58:32.211Z"
+      },
+      {
+        "id": "Z4D8d2hoBVakZlcy0dBW",
+        "notificationEmails": "[]",
+        "name": "Network Elements Management (NEM 2.0)",
+        "updatedAt": "2025-12-18T10:39:21.696Z",
+        "parentId": "",
+        "engineeringOwner": "Naveen Reddy",
+        "documentation.releaseNotes": "",
+        "documentation.productGuide": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "documentation.productionChecklist": "",
+        "nextReleaseDate": "2026-02-27",
+        "description": "A TM Forum–compliant network inventory and modeling system for managing physical and logical network resources end-to-end.",
+        "productOwner": "Melissa",
+        "createdAt": "2025-12-16T04:34:04.260Z"
+      },
+      {
+        "id": "Zfppp78pdfaScHrypCOp",
+        "nextReleaseDate": "2026-01-16",
+        "name": "MBS Lakehouse ( Premium )",
+        "updatedAt": "2025-12-17T14:24:56.360Z",
+        "productOwner": "Kushagra",
+        "createdAt": "2025-12-17T14:24:56.360Z",
+        "parentId": "FJ7cx5VLb4ry4pa26DOD",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "documentation.releaseNotes": "",
+        "documentation.productGuide": "",
+        "description": "",
+        "engineeringOwner": ""
+      },
+      {
+        "id": "bWD9MhjfrmHak2u78r61",
+        "nextReleaseDate": "2026-01-06",
+        "description": "",
+        "createdAt": "2025-12-17T18:55:07.027Z",
+        "updatedAt": "2025-12-17T18:55:07.027Z",
+        "productOwner": "",
+        "documentation.productionChecklist": "",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "name": "Eero SA",
+        "engineeringOwner": "Antony X"
+      },
+      {
+        "id": "dMXHopu14Df3LvHttiVK",
+        "name": "POS",
+        "createdAt": "2025-12-16T04:45:45.895Z",
+        "updatedAt": "2025-12-16T04:45:45.895Z",
+        "engineeringOwner": "Melby",
+        "productOwner": "Melissa",
+        "description": " The POS platform is designed to support CSR activities, CSR Manager oversight, and Admin-level configuration, delivering a unified operational experience across stores, support desks.",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.releaseNotes": "",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "nextReleaseDate": ""
+      },
+      {
+        "id": "eKPRBAPsELM3Zd6fjZlv",
+        "updatedAt": "2025-12-17T18:56:03.711Z",
+        "engineeringOwner": "Navaf",
+        "name": "Tarana - SA",
+        "productOwner": "",
+        "createdAt": "2025-12-17T18:52:46.629Z",
+        "description": "",
+        "nextReleaseDate": "2026-01-06",
+        "documentation.demoScript": "",
+        "documentation.releaseNotes": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS"
+      },
+      {
+        "id": "fBCNl2BxQXgyyHMSw4ga",
+        "name": "CDG Elements Platform",
+        "nextReleaseDate": "",
+        "engineeringOwner": "Ganesh",
+        "updatedAt": "2025-12-16T04:32:27.927Z",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.demoScript": "",
+        "documentation.releaseNotes": "",
+        "createdAt": "2025-12-16T04:32:27.927Z",
+        "productOwner": "Michael Hubbard",
+        "description": "The foundational OSS/BSS platform that acts as the system of record and integration backbone for all CDG products."
+      },
+      {
+        "id": "jY9FXOMiZbSYsAm1L5Ev",
+        "name": "Outage Auto Ticket Creation Service",
+        "updatedAt": "2025-12-16T04:35:21.712Z",
+        "createdAt": "2025-12-16T04:35:21.712Z",
+        "nextReleaseDate": "",
+        "productOwner": "",
+        "description": "An automated outage detection and ticketing service that creates and closes tickets based on real-time network events.",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "documentation.releaseNotes": "",
+        "documentation.testCases": "",
+        "engineeringOwner": "Akhil"
+      },
+      {
+        "id": "lIWBfu8htqlhmyOVo9Tf",
+        "productOwner": "Michael Hubbard",
+        "documentation.demoScript": "https://cdg4.sharepoint.com/:w:/r/sites/Elements2.0/_layouts/15/Doc.aspx?sourcedoc=%7BE6743269-10B1-48D1-8B42-69DC6793826A%7D&file=Subscriber%20Connect%20Demo%20Script.docx&action=default&mobileredirect=true",
+        "documentation.testCases": "https://docs.google.com/spreadsheets/d/1Rnl3auDLhhYpJHUlJSsYGPwt0C61U-1Xii-sIvh5Ebg/edit?gid=0#gid=0",
+        "documentation.productGuide": "https://cdg4.sharepoint.com/:w:/r/sites/Elements2.0/_layouts/15/Doc.aspx?sourcedoc=%7B9E2E41BA-1ADB-4045-A4AE-04E2D0B68604%7D&file=CDG%20Elements%20Subscriber%20Connect%202025%20Product%20Guide.docx&action=default&mobileredirect=true",
+        "documentation.releaseNotes": "",
+        "documentation.productionChecklist": "https://docs.google.com/spreadsheets/d/1Y5SS-ZXu5-2F0lNwNIj1mDzV7pxN8AmIwcLkAP1tiqY/edit?gid=1014425093#gid=1014425093",
+        "isAdapter": false,
+        "parentId": "",
+        "updatedAt": "2025-12-26T12:42:44.028Z",
+        "eap": "",
+        "relevantDocs.releaseNotes": true,
+        "relevantDocs.demoScript": true,
+        "relevantDocs.productionChecklist": true,
+        "relevantDocs.productGuide": true,
+        "relevantDocs.testCases": true,
+        "description": "A unified digital experience for subscribers to manage accounts, billing, payments, support, and self-service interactions.",
+        "nextReleaseDate": "2026-01-05",
+        "hasEquipmentSA": false,
+        "name": "Subscriber Connect",
+        "notificationEmails": "[\"naveen.r@iinerds.com\"]",
+        "hasEquipmentSE": false,
+        "createdAt": "2025-12-16T04:32:56.948Z",
+        "engineeringOwner": "Amitha",
+        "hasConstructionService": false,
+        "hasMappingService": false
+      },
+      {
+        "id": "nUpjjBc9b9kS0JXzgbvl",
+        "createdAt": "2025-12-16T04:35:00.279Z",
+        "productOwner": "Naveen",
+        "documentation.demoScript": "",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "documentation.releaseNotes": "",
+        "name": "Public Wi-Fi Access System",
+        "description": "A secure public Wi-Fi solution enabling guest and subscriber access with OTP, payments, session control, and admin analytics.",
+        "nextReleaseDate": "",
+        "engineeringOwner": "Akshay",
+        "updatedAt": "2025-12-16T04:35:00.279Z"
+      },
+      {
+        "id": "wKGcp5BDJCuYRcrQHCWn",
+        "nextReleaseDate": "2026-01-06",
+        "documentation.demoScript": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.releaseNotes": "",
+        "documentation.productionChecklist": "",
+        "createdAt": "2025-12-17T18:51:56.208Z",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "description": "",
+        "productOwner": "",
+        "engineeringOwner": "Febin",
+        "updatedAt": "2025-12-17T18:51:56.208Z",
+        "name": "Nokia Altiplano"
+      },
+      {
+        "id": "xC0KyuhWQVGzWPJ5souy",
+        "description": "",
+        "documentation.testCases": "",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "documentation.demoScript": "",
+        "documentation.releaseNotes": "",
+        "updatedAt": "2025-12-17T14:59:26.923Z",
+        "engineeringOwner": "Navaf",
+        "nextReleaseDate": "2026-01-06",
+        "createdAt": "2025-12-17T14:59:26.923Z",
+        "name": "Adtran - MCP ",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "productOwner": ""
+      },
+      {
+        "id": "yEvRUWoUJroIisdjJgUQ",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "documentation.releaseNotes": "",
+        "documentation.productGuide": "",
+        "documentation.demoScript": "",
+        "nextReleaseDate": "2026-01-14",
+        "name": "AP Max",
+        "createdAt": "2025-12-17T18:55:42.981Z",
+        "productOwner": "",
+        "description": "",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "engineeringOwner": "Navaf",
+        "updatedAt": "2025-12-17T18:55:42.981Z"
+      },
+      {
+        "id": "zcoMIxT9p46vmV15sSlR",
+        "parentId": "BWYi0B2LFZ3LswSdUdkS",
+        "documentation.releaseNotes": "",
+        "documentation.demoScript": "",
+        "documentation.productGuide": "",
+        "documentation.productionChecklist": "",
+        "documentation.testCases": "",
+        "description": "",
+        "createdAt": "2025-12-17T18:51:04.745Z",
+        "productOwner": "",
+        "nextReleaseDate": "2026-01-06",
+        "name": "Adtran - DM ",
+        "engineeringOwner": "Navaf",
+        "updatedAt": "2025-12-17T18:52:10.466Z"
+      }
+    ],
+    "deployments": [
+      {
+        "id": "2g9axrPgFfYNzbZkPOjY",
+        "clientId": "",
+        "environment": "production",
+        "updatedAt": "2025-12-19T13:55:02.892Z",
+        "blockedComments": "[]",
+        "nextDeliveryDate": "2026-01-06",
+        "statusHistory": "[{\"id\":\"dde6bac2-417b-4a63-bda5-3b336d9e3834\",\"author\":\"System\",\"fromStatus\":\"Not Started\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"In Progress\\\"\",\"type\":\"status_change\",\"toStatus\":\"In Progress\",\"timestamp\":\"2025-12-19T13:55:02.676Z\"}]",
+        "deploymentType": "ga",
+        "createdAt": "2025-12-19T13:54:53.940Z",
+        "status": "In Progress",
+        "featureName": "",
+        "productId": "zcoMIxT9p46vmV15sSlR"
+      },
+      {
+        "id": "4Voyc5SJ33N7cWsaAIRt",
+        "updatedAt": "2025-12-19T13:27:55.618Z",
+        "nextDeliveryDate": "2025-12-19",
+        "deploymentType": "client-specific",
+        "clientId": "rjQkuaZfczwpQDJN2CBh",
+        "statusHistory": "[{\"fromStatus\":\"Not Started\",\"type\":\"status_change\",\"id\":\"55336d80-46df-4b24-9f03-5e27e7cf58c6\",\"timestamp\":\"2025-12-19T13:27:55.420Z\",\"author\":\"System\",\"toStatus\":\"Released\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\"}]",
+        "environment": "sandbox",
+        "createdAt": "2025-12-19T13:27:52.126Z",
+        "blockedComments": "[]",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "featureName": "",
+        "status": "Released"
+      },
+      {
+        "id": "5InRa5E17O3boxlLRxZQ",
+        "updatedAt": "2025-12-19T13:27:47.238Z",
+        "nextDeliveryDate": "2026-02-27",
+        "statusHistory": "[{\"type\":\"status_change\",\"id\":\"509f1da0-8a7c-4120-b1a7-09d7415dbaf7\",\"toStatus\":\"Released\",\"fromStatus\":\"In Progress\",\"timestamp\":\"2025-12-19T13:27:47.045Z\",\"text\":\"Status changed from \\\"In Progress\\\" to \\\"Released\\\"\",\"author\":\"System\"}]",
+        "clientId": "",
+        "blockedComments": "[]",
+        "status": "Released",
+        "deploymentType": "generic",
+        "createdAt": "2025-12-17T14:16:57.933Z",
+        "productId": "Z4D8d2hoBVakZlcy0dBW"
+      },
+      {
+        "id": "5n2A9b7F1bZpt0uI27hw",
+        "status": "Released",
+        "createdAt": "2025-12-18T15:31:13.211Z",
+        "clientId": "9ybszWGxVKRmZM2OXIo6",
+        "statusHistory": "[{\"author\":\"System\",\"id\":\"8cfdb9a0-1e90-4962-8c0b-0e5ed4d9635b\",\"fromStatus\":\"Not Started\",\"timestamp\":\"2025-12-18T15:31:17.219Z\",\"toStatus\":\"Released\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\"}]",
+        "productId": "Mofaz68FVhlW8Z6H4B7p",
+        "blockedComments": "[]",
+        "deploymentType": "client-specific",
+        "updatedAt": "2025-12-18T15:31:17.405Z",
+        "nextDeliveryDate": "2025-12-16"
+      },
+      {
+        "id": "7oNukPmDf8CHEPyIbe6F",
+        "blockedComments": "[]",
+        "nextDeliveryDate": "2025-12-17",
+        "productId": "CfngN0Hz4lQl706qofv1",
+        "statusHistory": "[{\"toStatus\":\"Released\",\"timestamp\":\"2025-12-18T15:40:50.167Z\",\"fromStatus\":\"In Progress\",\"text\":\"Status changed from \\\"In Progress\\\" to \\\"Released\\\"\",\"author\":\"System\",\"id\":\"8a9bbfbb-9c10-4b02-a97b-d83d9e1a940b\",\"type\":\"status_change\"}]",
+        "status": "Released",
+        "updatedAt": "2025-12-18T15:40:51.015Z",
+        "createdAt": "2025-12-17T14:23:49.809Z",
+        "deploymentType": "generic",
+        "clientId": ""
+      },
+      {
+        "id": "9w0zh0zbC4LTNdh6mbdt",
+        "updatedAt": "2025-12-19T13:34:07.717Z",
+        "nextDeliveryDate": "2026-01-06",
+        "clientId": "",
+        "statusHistory": "[{\"text\":\"Status changed from \\\"In Progress\\\" to \\\"Released\\\"\",\"type\":\"status_change\",\"toStatus\":\"Released\",\"id\":\"d9433f53-acd6-4653-bee1-f47d2b1a9d7f\",\"fromStatus\":\"In Progress\",\"timestamp\":\"2025-12-19T13:25:22.737Z\",\"author\":\"System\"},{\"timestamp\":\"2025-12-19T13:34:06.852Z\",\"type\":\"status_change\",\"id\":\"d3e5675b-22c3-4fde-8c33-715bf16905d1\",\"fromStatus\":\"Released\",\"toStatus\":\"In Progress\",\"text\":\"Status changed from \\\"Released\\\" to \\\"In Progress\\\"\",\"author\":\"System\"}]",
+        "blockedComments": "[]",
+        "status": "In Progress",
+        "deploymentType": "generic",
+        "createdAt": "2025-12-17T18:58:06.995Z",
+        "productId": "2uAlYj4OtBCsYPi9FfFD"
+      },
+      {
+        "id": "9wSDaIAylt0xMhDMVVGn",
+        "updatedAt": "2025-12-22T14:21:45.728Z",
+        "environment": "qa",
+        "blockedComments": "[]",
+        "statusHistory": "[{\"timestamp\":\"2025-12-19T13:26:40.649Z\",\"fromStatus\":\"In Progress\",\"id\":\"dc44fc05-f5ed-4bc3-a857-ae2ebafb3eb0\",\"text\":\"Status changed from \\\"In Progress\\\" to \\\"Released\\\"\",\"author\":\"System\",\"toStatus\":\"Released\",\"type\":\"status_change\"}]",
+        "clientId": "",
+        "nextDeliveryDate": "2026-01-30",
+        "createdAt": "2025-12-17T14:37:36.815Z",
+        "status": "Released",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "deploymentType": "generic"
+      },
+      {
+        "id": "AGYI8cFTIYqOgbQ55msC",
+        "blockedComments": "[]",
+        "status": "Released",
+        "clientId": "",
+        "productId": "Zfppp78pdfaScHrypCOp",
+        "updatedAt": "2025-12-19T13:26:13.229Z",
+        "nextDeliveryDate": "2026-01-16",
+        "createdAt": "2025-12-17T14:25:23.738Z",
+        "deploymentType": "generic",
+        "statusHistory": "[{\"toStatus\":\"Released\",\"id\":\"a91cef43-6370-4fe7-9f1e-9bb7d9e7f8ef\",\"author\":\"System\",\"type\":\"status_change\",\"timestamp\":\"2025-12-19T13:26:13.036Z\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"fromStatus\":\"Not Started\"}]"
+      },
+      {
+        "id": "H7e3Wu0TJin1ZeOPf5G5",
+        "blockedComments": "[]",
+        "status": "Released",
+        "createdAt": "2025-12-19T13:29:51.450Z",
+        "deploymentType": "client-specific",
+        "featureName": "",
+        "environment": "sandbox",
+        "nextDeliveryDate": "2025-12-19",
+        "updatedAt": "2025-12-19T13:29:55.469Z",
+        "clientId": "sGawlD55KlVyhgUUcj8L",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "statusHistory": "[{\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"id\":\"cc171419-623f-4e99-991b-ff02ac2fd7bc\",\"fromStatus\":\"Not Started\",\"type\":\"status_change\",\"toStatus\":\"Released\",\"timestamp\":\"2025-12-19T13:29:55.270Z\",\"author\":\"System\"}]"
+      },
+      {
+        "id": "HsTfbsn97cl6CMMLuKYQ",
+        "createdAt": "2025-12-17T14:26:12.247Z",
+        "deploymentType": "generic",
+        "status": "In Progress",
+        "notes": "[{\"author\":\"Admin\",\"type\":\"note\",\"id\":\"7efe62d3-885b-4985-81ab-f0d7d01877b3\",\"parentId\":null,\"text\":\"Marking in progress as per the discussion with Kushagra\",\"timestamp\":\"2025-12-18T15:45:08.265Z\"}]",
+        "clientId": "",
+        "blockedComments": "[]",
+        "nextDeliveryDate": "2026-01-30",
+        "productId": "FfeiU2sSck9vtiBopuq9",
+        "statusHistory": "[{\"toStatus\":\"In Progress\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"In Progress\\\"\",\"timestamp\":\"2025-12-18T15:44:56.498Z\",\"id\":\"1c0b699d-6815-42cf-bae9-c6cc52177577\",\"author\":\"System\",\"fromStatus\":\"Not Started\",\"type\":\"status_change\"},{\"toStatus\":\"Released\",\"id\":\"2e0dc458-ef6f-4634-9024-4df6988623fa\",\"author\":\"System\",\"fromStatus\":\"In Progress\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"In Progress\\\" to \\\"Released\\\"\",\"timestamp\":\"2025-12-19T13:25:07.947Z\"},{\"timestamp\":\"2025-12-19T13:34:18.252Z\",\"author\":\"System\",\"text\":\"Status changed from \\\"Released\\\" to \\\"In Progress\\\"\",\"fromStatus\":\"Released\",\"type\":\"status_change\",\"id\":\"a02bd683-c83f-45e7-b495-d3701a0034ed\",\"toStatus\":\"In Progress\"}]",
+        "updatedAt": "2025-12-19T13:34:45.469Z"
+      },
+      {
+        "id": "IJSymeMmQWWjfIoylI08",
+        "createdAt": "2025-12-19T13:13:38.920Z",
+        "deploymentType": "client-specific",
+        "blockedComments": "[]",
+        "featureName": "",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "updatedAt": "2025-12-19T13:52:09.649Z",
+        "status": "Not Started",
+        "clientId": "jAmEFiWRLJvitV1T9Z3N",
+        "environment": "production",
+        "nextDeliveryDate": "2026-02-19",
+        "statusHistory": "[{\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"timestamp\":\"2025-12-19T13:20:13.923Z\",\"author\":\"System\",\"fromStatus\":\"Not Started\",\"id\":\"789a3101-95f7-4368-b813-3f9fa9f288a4\",\"type\":\"status_change\",\"toStatus\":\"Released\"},{\"id\":\"38fec3ae-cdda-4b13-9c69-076fdde515f3\",\"toStatus\":\"Blocked\",\"timestamp\":\"2025-12-19T13:26:27.337Z\",\"author\":\"System\",\"fromStatus\":\"Released\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Released\\\" to \\\"Blocked\\\"\"},{\"author\":\"System\",\"id\":\"c1b89c32-8d69-4ac8-836b-e06d325aa611\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Blocked\\\" to \\\"Not Started\\\"\",\"fromStatus\":\"Blocked\",\"timestamp\":\"2025-12-19T13:51:55.744Z\",\"toStatus\":\"Not Started\"}]"
+      },
+      {
+        "id": "IfJd4FBOWl0g4YPpPNP0",
+        "environment": "sandbox",
+        "deploymentType": "client-specific",
+        "nextDeliveryDate": "2026-01-12",
+        "status": "In Progress",
+        "createdAt": "2025-12-19T13:49:40.996Z",
+        "featureName": "",
+        "clientId": "8gpjOfOscdFewK5Viik5",
+        "updatedAt": "2025-12-22T11:33:56.883Z",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "blockedComments": "[]",
+        "statusHistory": "[{\"author\":\"System\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"In Progress\\\"\",\"id\":\"9e620b14-d88b-438d-92fa-199de43736d4\",\"timestamp\":\"2025-12-19T13:49:51.928Z\",\"fromStatus\":\"Not Started\",\"toStatus\":\"In Progress\"}]",
+        "notes": "[{\"type\":\"note\",\"author\":\"Admin\",\"id\":\"544ac7d8-02ea-45f9-a8d4-630820aff3ad\",\"parentId\":null,\"text\":\"Onboarding in process\",\"timestamp\":\"2025-12-22T11:33:56.660Z\"}]"
+      },
+      {
+        "id": "JLJ8WGMQZeiqchH9iONo",
+        "status": "In Progress",
+        "productId": "49UJ1VmZLdyrowLn2sCF",
+        "statusHistory": "[{\"id\":\"17bcc10d-6a83-4344-8a7e-c70cc0865100\",\"timestamp\":\"2025-12-19T13:53:31.893Z\",\"author\":\"System\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"In Progress\\\"\",\"toStatus\":\"In Progress\",\"fromStatus\":\"Not Started\",\"type\":\"status_change\"}]",
+        "nextDeliveryDate": "2026-01-06",
+        "updatedAt": "2025-12-19T13:53:32.084Z",
+        "clientId": "",
+        "deploymentType": "ga",
+        "blockedComments": "[]",
+        "featureName": "",
+        "createdAt": "2025-12-19T13:53:26.182Z",
+        "environment": "production"
+      },
+      {
+        "id": "JPkZgTUX30ki2BxZXK8w",
+        "deploymentType": "client-specific",
+        "updatedAt": "2025-12-19T13:20:44.387Z",
+        "status": "Released",
+        "featureName": "",
+        "clientId": "OCB1CDMWK2fblLbujhDy",
+        "createdAt": "2025-12-19T13:13:06.589Z",
+        "nextDeliveryDate": "2025-12-19",
+        "environment": "production",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "blockedComments": "[]",
+        "statusHistory": "[{\"toStatus\":\"Released\",\"id\":\"1f1b100b-cb0f-4e3e-9d69-1a9a52a2a520\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"author\":\"System\",\"type\":\"status_change\",\"fromStatus\":\"Not Started\",\"timestamp\":\"2025-12-19T13:20:43.315Z\"}]"
+      },
+      {
+        "id": "KfM8CjuEN2JrhsTEXCkX",
+        "nextDeliveryDate": "2026-01-05",
+        "environment": "production",
+        "blockedComments": "[]",
+        "releaseItems": "Full feature release for PRTC - SC",
+        "status": "Not Started",
+        "updatedAt": "2025-12-26T10:16:39.445Z",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "deploymentType": "client-specific",
+        "createdAt": "2025-12-26T10:16:39.445Z",
+        "featureName": "",
+        "clientId": "9ybszWGxVKRmZM2OXIo6"
+      },
+      {
+        "id": "P01v64xk4iN9Sy8HKpXo",
+        "deploymentType": "ga",
+        "nextDeliveryDate": "2026-01-06",
+        "featureName": "",
+        "status": "In Progress",
+        "updatedAt": "2025-12-19T13:55:32.195Z",
+        "clientId": "",
+        "productId": "wKGcp5BDJCuYRcrQHCWn",
+        "blockedComments": "[]",
+        "createdAt": "2025-12-19T13:55:25.964Z",
+        "environment": "production",
+        "statusHistory": "[{\"text\":\"Status changed from \\\"Not Started\\\" to \\\"In Progress\\\"\",\"author\":\"System\",\"id\":\"afd726c2-e6c5-43f9-b741-2549f3e88ebf\",\"toStatus\":\"In Progress\",\"type\":\"status_change\",\"timestamp\":\"2025-12-19T13:55:32.008Z\",\"fromStatus\":\"Not Started\"}]"
+      },
+      {
+        "id": "R0kl1hBvRsekzDhCCMha",
+        "status": "Released",
+        "statusHistory": "[{\"type\":\"status_change\",\"toStatus\":\"Released\",\"author\":\"System\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"fromStatus\":\"Not Started\",\"id\":\"d27f87cb-6fb2-4599-9797-266dccef0a0e\",\"timestamp\":\"2025-12-22T11:54:14.864Z\"}]",
+        "updatedAt": "2025-12-22T11:54:15.054Z",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "clientId": "jAmEFiWRLJvitV1T9Z3N",
+        "environment": "sandbox",
+        "blockedComments": "[]",
+        "createdAt": "2025-12-22T11:54:10.541Z",
+        "deploymentType": "client-specific",
+        "nextDeliveryDate": "2025-06-27",
+        "featureName": ""
+      },
+      {
+        "id": "Ss8CJVCLifnQZTYUx73m",
+        "environment": "sandbox",
+        "updatedAt": "2025-12-19T13:51:18.474Z",
+        "blockedComments": "[]",
+        "createdAt": "2025-12-19T13:51:18.474Z",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "clientId": "gDuELhYbHETGzsvZph7j",
+        "deploymentType": "client-specific",
+        "status": "Not Started",
+        "featureName": "",
+        "nextDeliveryDate": "2026-01-27"
+      },
+      {
+        "id": "W6s06LRJIaXKQso8FNkz",
+        "clientId": "YRRLtyJyf1liMHQePXWM",
+        "blockedComments": "[]",
+        "deploymentType": "client-specific",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "nextDeliveryDate": "2025-12-17",
+        "featureName": "",
+        "createdAt": "2025-12-22T11:55:04.084Z",
+        "statusHistory": "[{\"author\":\"System\",\"fromStatus\":\"Not Started\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"timestamp\":\"2025-12-22T11:55:07.332Z\",\"toStatus\":\"Released\",\"type\":\"status_change\",\"id\":\"2f4736e7-f3da-40a7-a672-99c9570c5693\"}]",
+        "environment": "sandbox",
+        "updatedAt": "2025-12-22T11:55:07.512Z",
+        "status": "Released"
+      },
+      {
+        "id": "acXgLYmEYFwQdm36QAE0",
+        "clientId": "OCB1CDMWK2fblLbujhDy",
+        "updatedAt": "2025-12-22T14:22:34.643Z",
+        "statusHistory": "[{\"fromStatus\":\"Not Started\",\"timestamp\":\"2025-12-22T14:22:34.441Z\",\"toStatus\":\"Released\",\"author\":\"System\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"id\":\"d1863a12-6351-4d90-90f2-e6475d032895\",\"type\":\"status_change\"}]",
+        "releaseItems": "Sandbox release to CWF with all features",
+        "deploymentType": "client-specific",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "nextDeliveryDate": "2025-08-05",
+        "status": "Released",
+        "featureName": "",
+        "blockedComments": "[]",
+        "environment": "sandbox",
+        "createdAt": "2025-12-22T14:22:30.167Z"
+      },
+      {
+        "id": "bSnNoQlWZqeR8HbkKOJL",
+        "updatedAt": "2025-12-18T15:26:39.605Z",
+        "status": "Released",
+        "statusHistory": "[{\"author\":\"System\",\"timestamp\":\"2025-12-18T15:26:39.415Z\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"fromStatus\":\"Not Started\",\"type\":\"status_change\",\"id\":\"0cd7e7f2-0100-4ce9-942d-0bdb3c5e59ab\",\"toStatus\":\"Released\"}]",
+        "productId": "fBCNl2BxQXgyyHMSw4ga",
+        "deploymentType": "client-specific",
+        "clientId": "9ybszWGxVKRmZM2OXIo6",
+        "blockedComments": "[]",
+        "nextDeliveryDate": "2025-04-16",
+        "createdAt": "2025-12-18T15:26:33.925Z"
+      },
+      {
+        "id": "cTdI8VzGnDmd3VDKL0Rz",
+        "clientId": "QbIZALjBv3WiKYWsYZ5c",
+        "featureName": "",
+        "status": "Not Started",
+        "blockedComments": "[]",
+        "deploymentType": "client-specific",
+        "createdAt": "2025-12-19T13:50:51.485Z",
+        "updatedAt": "2025-12-19T13:50:51.485Z",
+        "nextDeliveryDate": "2026-01-20",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "environment": "sandbox"
+      },
+      {
+        "id": "j46aqcbHjQt6tpSSZ6oO",
+        "createdAt": "2025-12-18T15:28:11.046Z",
+        "status": "Released",
+        "nextDeliveryDate": "2025-12-16",
+        "clientId": "9ybszWGxVKRmZM2OXIo6",
+        "productId": "jY9FXOMiZbSYsAm1L5Ev",
+        "statusHistory": "[{\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"type\":\"status_change\",\"author\":\"System\",\"timestamp\":\"2025-12-18T15:28:18.484Z\",\"toStatus\":\"Released\",\"id\":\"ec40ead3-6e00-4486-9c36-f87fd2385acb\",\"fromStatus\":\"Not Started\"}]",
+        "deploymentType": "client-specific",
+        "updatedAt": "2025-12-18T15:28:18.679Z",
+        "blockedComments": "[]"
+      },
+      {
+        "id": "jW0nU2iuPj7EDO3Lnbn2",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "nextDeliveryDate": "2025-12-09",
+        "clientId": "9ybszWGxVKRmZM2OXIo6",
+        "createdAt": "2025-12-18T15:27:34.941Z",
+        "status": "Released",
+        "deploymentType": "client-specific",
+        "updatedAt": "2025-12-20T07:14:20.472Z",
+        "environment": "sandbox",
+        "blockedComments": "[]",
+        "statusHistory": "[{\"id\":\"df46c4cc-e6d4-47b9-8beb-129286688771\",\"toStatus\":\"Released\",\"fromStatus\":\"Not Started\",\"author\":\"System\",\"timestamp\":\"2025-12-18T15:27:40.297Z\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\"}]"
+      },
+      {
+        "id": "l0n6HzmbTswiopnjOswH",
+        "updatedAt": "2025-12-22T14:23:17.976Z",
+        "createdAt": "2025-12-17T14:28:16.734Z",
+        "productId": "dMXHopu14Df3LvHttiVK",
+        "statusHistory": "[{\"id\":\"db5ada8a-2806-4e90-ada0-8847ca863cc9\",\"author\":\"System\",\"text\":\"Status changed from \\\"In Progress\\\" to \\\"Released\\\"\",\"timestamp\":\"2025-12-19T13:27:08.236Z\",\"type\":\"status_change\",\"toStatus\":\"Released\",\"fromStatus\":\"In Progress\"},{\"fromStatus\":\"Released\",\"author\":\"System\",\"toStatus\":\"In Progress\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Released\\\" to \\\"In Progress\\\"\",\"timestamp\":\"2025-12-22T14:23:17.774Z\",\"id\":\"76a1d28c-833f-4a26-b7b0-383a08cfc1f0\"}]",
+        "nextDeliveryDate": "2026-02-02",
+        "clientId": "YRRLtyJyf1liMHQePXWM",
+        "deploymentType": "client-specific",
+        "blockedComments": "[]",
+        "status": "In Progress"
+      },
+      {
+        "id": "lH26nFXjOLE6EvOAnSDM",
+        "featureName": "",
+        "status": "Not Started",
+        "blockedComments": "[]",
+        "statusHistory": "[{\"author\":\"System\",\"toStatus\":\"Released\",\"timestamp\":\"2025-12-19T13:29:04.486Z\",\"type\":\"status_change\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"fromStatus\":\"Not Started\",\"id\":\"4230ed51-e5ff-4bdd-b3bd-a91710b3abad\"},{\"text\":\"Status changed from \\\"Released\\\" to \\\"Not Started\\\"\",\"toStatus\":\"Not Started\",\"author\":\"System\",\"timestamp\":\"2025-12-19T13:29:13.519Z\",\"fromStatus\":\"Released\",\"type\":\"status_change\",\"id\":\"50459128-27bc-4e96-89dc-893f884f80f4\"}]",
+        "deploymentType": "client-specific",
+        "clientId": "bNiEddCIJS5CT41gyXca",
+        "createdAt": "2025-12-19T13:28:52.669Z",
+        "environment": "sandbox",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "updatedAt": "2025-12-19T13:29:20.290Z",
+        "nextDeliveryDate": "2026-04-04"
+      },
+      {
+        "id": "nHVhfP7vInWXvdKzOkZ1",
+        "statusHistory": "[{\"type\":\"status_change\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"author\":\"System\",\"timestamp\":\"2025-12-19T13:28:11.571Z\",\"fromStatus\":\"Not Started\",\"id\":\"875db9c1-e505-4142-93b7-5a677b9b28d9\",\"toStatus\":\"Released\"}]",
+        "status": "Released",
+        "deploymentType": "client-specific",
+        "createdAt": "2025-12-18T11:05:47.409Z",
+        "productId": "Z4D8d2hoBVakZlcy0dBW",
+        "updatedAt": "2025-12-19T13:28:11.770Z",
+        "nextDeliveryDate": "2026-06-01",
+        "blockedComments": "[]",
+        "clientId": "sEaxo3aij4adHjfHnxDc"
+      },
+      {
+        "id": "om74momr2t5jUj3CVgRr",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "updatedAt": "2025-12-22T11:33:09.236Z",
+        "deploymentType": "client-specific",
+        "status": "Not Started",
+        "nextDeliveryDate": "2026-02-03",
+        "environment": "sandbox",
+        "featureName": "",
+        "blockedComments": "[]",
+        "createdAt": "2025-12-22T11:33:09.236Z",
+        "clientId": "D5ixn7XokpfW3wUe9rTG"
+      },
+      {
+        "id": "qFBZqHK6a98oh2aTlvI9",
+        "clientId": "73YdY2VCiMmSqdwxfDTZ",
+        "statusHistory": "[{\"timestamp\":\"2025-12-19T13:24:47.788Z\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"Released\\\"\",\"author\":\"System\",\"type\":\"status_change\",\"toStatus\":\"Released\",\"fromStatus\":\"Not Started\",\"id\":\"65c2d610-c93c-42d6-852d-184dee7ca1d2\"}]",
+        "blockedComments": "[]",
+        "nextDeliveryDate": "2025-12-19",
+        "featureName": "",
+        "deploymentType": "client-specific",
+        "createdAt": "2025-12-19T13:18:48.383Z",
+        "productId": "1YkP7aG8xgS9DGwcNOLr",
+        "environment": "production",
+        "updatedAt": "2025-12-19T13:24:47.984Z",
+        "status": "Released"
+      },
+      {
+        "id": "qYwUGM5JBEYnuuDWWhjV",
+        "createdAt": "2025-12-17T14:30:24.891Z",
+        "status": "Released",
+        "deploymentType": "client-specific",
+        "blockedComments": "[]",
+        "clientId": "rjQkuaZfczwpQDJN2CBh",
+        "nextDeliveryDate": "2025-12-16",
+        "updatedAt": "2025-12-20T07:14:40.586Z",
+        "productId": "0sbzasIlCDnt34ZHpkew",
+        "environment": "qa"
+      },
+      {
+        "id": "sjCBJKLm1f7OeVJUgLD9",
+        "clientId": "BF8qSfWG4KsYCCz1lJ8N",
+        "nextDeliveryDate": "2026-02-09",
+        "featureName": "",
+        "status": "Not Started",
+        "updatedAt": "2025-12-22T11:31:39.502Z",
+        "deploymentType": "client-specific",
+        "createdAt": "2025-12-22T11:31:39.502Z",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "blockedComments": "[]",
+        "environment": "sandbox"
+      },
+      {
+        "id": "tteTUMH9P8g0C6Xn5z4A",
+        "featureName": "",
+        "productId": "xC0KyuhWQVGzWPJ5souy",
+        "status": "In Progress",
+        "createdAt": "2025-12-19T13:54:09.263Z",
+        "nextDeliveryDate": "2026-01-06",
+        "statusHistory": "[{\"timestamp\":\"2025-12-19T13:54:16.326Z\",\"type\":\"status_change\",\"author\":\"System\",\"id\":\"5c0fc832-c429-43e9-9b06-3fd5343180bf\",\"text\":\"Status changed from \\\"Not Started\\\" to \\\"In Progress\\\"\",\"toStatus\":\"In Progress\",\"fromStatus\":\"Not Started\"}]",
+        "deploymentType": "ga",
+        "environment": "production",
+        "updatedAt": "2025-12-19T13:54:16.516Z",
+        "clientId": "",
+        "blockedComments": "[]"
+      },
+      {
+        "id": "yZY4ukw9NWEZYoShfGLY",
+        "featureName": "",
+        "updatedAt": "2025-12-19T13:50:20.092Z",
+        "blockedComments": "[]",
+        "status": "Not Started",
+        "createdAt": "2025-12-19T13:50:20.092Z",
+        "deploymentType": "client-specific",
+        "nextDeliveryDate": "2026-01-15",
+        "productId": "lIWBfu8htqlhmyOVo9Tf",
+        "clientId": "6g1MVJt4H0mZ5SbOKjDd",
+        "environment": "sandbox"
+      }
+    ],
+    "checklists": [
+      {
+        "id": "0JmkTxKMxCgML4IdYdIf",
+        "item": "Documentation Uploaded",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true
+      },
+      {
+        "id": "0ThGRfv43EQkBwEO0wfw",
+        "item": "Test Cases Approved",
+        "isCompleted": true,
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV"
+      },
+      {
+        "id": "0mS6dglKpm7H2gS5DYLY",
+        "item": "Documentation Uploaded",
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5",
+        "isCompleted": false
+      },
+      {
+        "id": "0nY8BINFNaln6TQqoMs0",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "item": "UAT Completed",
+        "isCompleted": false
+      },
+      {
+        "id": "1FKHeFVx3jjQEV2QIsv0",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "1TRCvftVwCgqZfuc7sy9",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX"
+      },
+      {
+        "id": "1jvwSa3RqUyX4sVyfxCj",
+        "item": "UAT Completed",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false
+      },
+      {
+        "id": "26HWXLjJtp104Z3ck98A",
+        "item": "Requirements Finalized",
+        "isCompleted": false,
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC"
+      },
+      {
+        "id": "2We3C87xnhTyfQ1ny2lR",
+        "item": "UAT Completed",
+        "isCompleted": false,
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM"
+      },
+      {
+        "id": "2i4CLLr3A4iT20YuaIXT",
+        "item": "Test Cases Approved",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false
+      },
+      {
+        "id": "2niV39l9hCULStjsUctq",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "3ESHtZ8pCiBrw96VmHIG",
+        "isCompleted": true,
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn",
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "3ErXz584NGjYU1irDqrs",
+        "item": "Documentation Uploaded",
+        "isCompleted": false,
+        "deploymentId": "l0n6HzmbTswiopnjOswH"
+      },
+      {
+        "id": "3qjTeYICMbRMgp6YKke8",
+        "item": "UAT Completed",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "isCompleted": false
+      },
+      {
+        "id": "3xL2Unsp8Cf3hXeXzRkv",
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ",
+        "isCompleted": false,
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "42vn22Om2uqGLHKQxGoR",
+        "item": "Test Cases Approved",
+        "isCompleted": false,
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt"
+      },
+      {
+        "id": "4IkjfDQc4GXVqU0byqou",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true,
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "4JTePDwE5yvyb5tazHG2",
+        "isCompleted": false,
+        "item": "Release Notes Added",
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX"
+      },
+      {
+        "id": "4NSLrQ23y1Wym4wAZe2j",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "4ROsJKnmesxurtBGNeKo",
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": false
+      },
+      {
+        "id": "4XMCSoBpPHPKTEVab7gy",
+        "isCompleted": false,
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "item": "API Ready"
+      },
+      {
+        "id": "4erdU7fCkOTq8DbjhBAt",
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "4sMLhw9DLSSM00yeRmAo",
+        "isCompleted": false,
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "item": "UAT Completed"
+      },
+      {
+        "id": "50eeNANToxoWbnbDEJUK",
+        "item": "Documentation Uploaded",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "isCompleted": false
+      },
+      {
+        "id": "5L1Fx222wIqlovF67d1o",
+        "isCompleted": false,
+        "deploymentId": "IJSymeMmQWWjfIoylI08",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "5Tg6SPQLMmYE41iR0TeC",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true,
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "5UlcJgdP8rgYZ9F79F75",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false
+      },
+      {
+        "id": "5gIAqnh7joZbI26rVnSX",
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "isCompleted": true,
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "6CsThVoeCpP3yVF4S627",
+        "deploymentId": "R0kl1hBvRsekzDhCCMha",
+        "item": "Documentation Uploaded",
+        "isCompleted": true
+      },
+      {
+        "id": "6OU08RLiOKZ4xThevidz",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "6Q0ZUvZQeB4KMJTb5cIM",
+        "deploymentId": "W6s06LRJIaXKQso8FNkz",
+        "isCompleted": false,
+        "item": "UAT Completed"
+      },
+      {
+        "id": "6hQUjKBJw2jWPH8qJcxT",
+        "isCompleted": false,
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt",
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "6kTwB5e15fVB1P7Sge5E",
+        "isCompleted": false,
+        "item": "Test Cases Approved",
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1"
+      },
+      {
+        "id": "7ATqmqdr1RJGzdt5H6rS",
+        "isCompleted": true,
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw",
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "7SqPqeo5vE9P8MWbGFLV",
+        "isCompleted": false,
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "7gQo4DgBLn8yqzW4CwOe",
+        "item": "Frontend Ready",
+        "isCompleted": true,
+        "deploymentId": "R0kl1hBvRsekzDhCCMha"
+      },
+      {
+        "id": "7jBnBRhxHw9eGZzFSyKe",
+        "item": "API Ready",
+        "isCompleted": false,
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5"
+      },
+      {
+        "id": "7kCOI5RsteyZ0fqEUcAi",
+        "item": "Documentation Uploaded",
+        "deploymentId": "IJSymeMmQWWjfIoylI08",
+        "isCompleted": false
+      },
+      {
+        "id": "7r3HkG4CrRwpdR4QwVRe",
+        "isCompleted": true,
+        "deploymentId": "W6s06LRJIaXKQso8FNkz",
+        "item": "Backend Ready"
+      },
+      {
+        "id": "7uSHLD8Htbf5NvxA52EW",
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "isCompleted": false,
+        "item": "Backend Ready"
+      },
+      {
+        "id": "84ZhBu0IKVQv7E3PtDNe",
+        "isCompleted": true,
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "8BjikVLDx0ngbVne3gYL",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "item": "UAT Completed",
+        "isCompleted": false
+      },
+      {
+        "id": "8rWGIcY5U2Yp43cN9KSa",
+        "item": "Backend Ready",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "isCompleted": false
+      },
+      {
+        "id": "91jwMVnRUFGIlWfOoA1I",
+        "isCompleted": false,
+        "item": "Backend Ready",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ"
+      },
+      {
+        "id": "9Cn8S2Z3krlmo60kOkPw",
+        "isCompleted": false,
+        "item": "API Ready",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo"
+      },
+      {
+        "id": "9VQ9qY1xN7S06xOoJSUx",
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "9oMDQ5bRko5zwflRGpBS",
+        "isCompleted": false,
+        "item": "Requirements Finalized",
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1"
+      },
+      {
+        "id": "9pAONX4o4bmeEy4t6UzJ",
+        "isCompleted": true,
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "item": "API Ready"
+      },
+      {
+        "id": "A8F5AtqR21mwwlgq8CjZ",
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "isCompleted": true,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "A8xf4KYrSNVcR7myjo2O",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn",
+        "isCompleted": false
+      },
+      {
+        "id": "AP0h4NYmwn6WRD1HFFrL",
+        "deploymentId": "acXgLYmEYFwQdm36QAE0",
+        "item": "Documentation Uploaded",
+        "isCompleted": true
+      },
+      {
+        "id": "AoPt93XtcdyHz6G60bQG",
+        "item": "Requirements Finalized",
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5",
+        "isCompleted": false
+      },
+      {
+        "id": "ArAn7El7DFYCrbPJnFIf",
+        "item": "Backend Ready",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "isCompleted": false
+      },
+      {
+        "id": "AztUy0Hnl11KT7oI3ij7",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "isCompleted": false
+      },
+      {
+        "id": "B5ogyzcv6wpyclKuOHNY",
+        "item": "Release Notes Added",
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "isCompleted": false
+      },
+      {
+        "id": "BAU1Zl1JpbCLlBk9NdIu",
+        "item": "Release Notes Added",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false
+      },
+      {
+        "id": "BBX3JWGH9NeZpf1OpWaM",
+        "isCompleted": false,
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "item": "Backend Ready"
+      },
+      {
+        "id": "C8Ngobay7OhwTm51mzLp",
+        "item": "Backend Ready",
+        "isCompleted": false,
+        "deploymentId": "IJSymeMmQWWjfIoylI08"
+      },
+      {
+        "id": "CA4ODJrgOWe5mvMSQ3Wn",
+        "item": "Backend Ready",
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "isCompleted": false
+      },
+      {
+        "id": "CPEzUaeOE8o3Iylbihqz",
+        "isCompleted": true,
+        "item": "Frontend Ready",
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV"
+      },
+      {
+        "id": "Cgm1UPSmSl2NP4KQkA3w",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "item": "Requirements Finalized",
+        "isCompleted": false
+      },
+      {
+        "id": "CoJotDMswY290zR007a9",
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": true
+      },
+      {
+        "id": "DKYlMdlxp8VN8e3FiH87",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "isCompleted": false,
+        "item": "API Ready"
+      },
+      {
+        "id": "DSmAFzB74FGqJ2jSMqe9",
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM",
+        "item": "Requirements Finalized",
+        "isCompleted": false
+      },
+      {
+        "id": "DzVWJDirsPk3mwHN4no1",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ",
+        "isCompleted": false
+      },
+      {
+        "id": "E8xc9k6Ao3aEvDLVmuHA",
+        "isCompleted": false,
+        "item": "Requirements Finalized",
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn"
+      },
+      {
+        "id": "EEe8MwdIMfS5iYVdXREx",
+        "isCompleted": false,
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "EGguJ1eDjmtGHKee9vZT",
+        "isCompleted": false,
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "EIcjX2YmYm8yVh2oq0m0",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "EKWavk1xNdD1s7rCOyNH",
+        "isCompleted": false,
+        "item": "Test Cases Approved",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt"
+      },
+      {
+        "id": "EN7nojxAr1LrP69XZ5dU",
+        "item": "Test Cases Approved",
+        "isCompleted": false,
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ"
+      },
+      {
+        "id": "ES9BDluqOVflHBFl8NgM",
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "EY0dMUwp8px8NTVVpaPs",
+        "isCompleted": false,
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "item": "API Ready"
+      },
+      {
+        "id": "EZyYxT1ErlwJmlkqhszK",
+        "item": "Requirements Finalized",
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "isCompleted": false
+      },
+      {
+        "id": "EvPMsb9uYX7hJ5FkSBOU",
+        "isCompleted": false,
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC",
+        "item": "API Ready"
+      },
+      {
+        "id": "F66c2nZtz8yP0AiYj0GU",
+        "isCompleted": false,
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM",
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "FbBjEw5TTde0TvkOoseu",
+        "isCompleted": true,
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw"
+      },
+      {
+        "id": "Fw2BCoxPE8W6XNNcgXyX",
+        "item": "Documentation Uploaded",
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "isCompleted": false
+      },
+      {
+        "id": "FzUs8NDkIPpfwjS8yUIo",
+        "item": "Backend Ready",
+        "isCompleted": false,
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn"
+      },
+      {
+        "id": "G4s46qTXXAMRNXduWYNk",
+        "isCompleted": true,
+        "deploymentId": "acXgLYmEYFwQdm36QAE0",
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "G8JY8ctnT1OK5pmS6KHC",
+        "isCompleted": false,
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "item": "UAT Completed"
+      },
+      {
+        "id": "GKTjMan4GnA6ZuPy6fkV",
+        "item": "Backend Ready",
+        "isCompleted": false,
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt"
+      },
+      {
+        "id": "GfFDAEYpvubRbfnzBPbu",
+        "item": "Test Cases Approved",
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "isCompleted": true
+      },
+      {
+        "id": "Gj2VpWaJx0hm0yoULFrQ",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "IJSymeMmQWWjfIoylI08"
+      },
+      {
+        "id": "H1hECsZ9ZU0mnehr8sj0",
+        "isCompleted": false,
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ",
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "HVFEn8SHWmRC3vQ2Jyia",
+        "isCompleted": true,
+        "item": "Backend Ready",
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw"
+      },
+      {
+        "id": "HvW45bNj1JxCboUzsdU6",
+        "item": "Documentation Uploaded",
+        "isCompleted": false,
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A"
+      },
+      {
+        "id": "IN5A7Vuktl6nhrHsNAjc",
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "item": "API Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "ITiShpuNR36QbFbr5DVp",
+        "item": "Backend Ready",
+        "isCompleted": true,
+        "deploymentId": "acXgLYmEYFwQdm36QAE0"
+      },
+      {
+        "id": "IjfIemapXRdix06oKeAa",
+        "isCompleted": false,
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "Ir8uP5WSezJWS0FQzgMj",
+        "item": "Frontend Ready",
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "isCompleted": false
+      },
+      {
+        "id": "J0OQIp8WyIc2GSbJKnPI",
+        "item": "Release Notes Added",
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "isCompleted": false
+      },
+      {
+        "id": "J0sXCAxRImli6BIpBftd",
+        "item": "Release Notes Added",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false
+      },
+      {
+        "id": "J5BDuA6nPmIHQltWPv8s",
+        "item": "Documentation Uploaded",
+        "isCompleted": false,
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ"
+      },
+      {
+        "id": "J5hHaYR9e3rf4ZTtXzIH",
+        "isCompleted": false,
+        "item": "Backend Ready",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0"
+      },
+      {
+        "id": "J6PLe1FKkARxnG1DkMGn",
+        "item": "Frontend Ready",
+        "isCompleted": false,
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn"
+      },
+      {
+        "id": "J6n2tIpBQYTwQHGgH16f",
+        "item": "Documentation Uploaded",
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM",
+        "isCompleted": false
+      },
+      {
+        "id": "J9PTdAZUAlvAspNf6l0q",
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "JCTrf9qLRCZAtkeaXyP8",
+        "item": "Documentation Uploaded",
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "isCompleted": false
+      },
+      {
+        "id": "JHK06QEHtE9p5TEMgt6U",
+        "item": "Test Cases Approved",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true
+      },
+      {
+        "id": "JPzfbGm71N8MAs8q97PZ",
+        "item": "API Ready",
+        "isCompleted": false,
+        "deploymentId": "IJSymeMmQWWjfIoylI08"
+      },
+      {
+        "id": "JXDRNCwCh6DSG3YJibP0",
+        "isCompleted": false,
+        "item": "Documentation Uploaded",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F"
+      },
+      {
+        "id": "JlQpInp87onzfsNGxYvz",
+        "deploymentId": "W6s06LRJIaXKQso8FNkz",
+        "item": "Requirements Finalized",
+        "isCompleted": true
+      },
+      {
+        "id": "KDUWMvfLMGX4r5ZseZ7W",
+        "isCompleted": false,
+        "item": "Test Cases Approved",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ"
+      },
+      {
+        "id": "KGD6v3tnNH6JiEXHJ1gl",
+        "deploymentId": "R0kl1hBvRsekzDhCCMha",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": true
+      },
+      {
+        "id": "KV9TaUfZq8YOYJAd1Ile",
+        "isCompleted": false,
+        "item": "Test Cases Approved",
+        "deploymentId": "IJSymeMmQWWjfIoylI08"
+      },
+      {
+        "id": "LMe1qmEiCZuLiNrLTayb",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "isCompleted": false,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "LZPRx2v4YOzcwDMTdb6f",
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "isCompleted": false,
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "LzZrZQurfjBAksKCm8hW",
+        "isCompleted": true,
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "acXgLYmEYFwQdm36QAE0"
+      },
+      {
+        "id": "MSzUbB1TzwztAYtqvZ6R",
+        "item": "Release Notes Added",
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "isCompleted": true
+      },
+      {
+        "id": "MXF7avx1xyjfgl502sJ7",
+        "isCompleted": false,
+        "item": "Documentation Uploaded",
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC"
+      },
+      {
+        "id": "MYm5FrJ8i1cNvGQu6CL4",
+        "isCompleted": false,
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "Moo31109reuLXvR0cUi2",
+        "isCompleted": true,
+        "item": "Backend Ready",
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV"
+      },
+      {
+        "id": "MpH1pYc4WtMbK8zpxD58",
+        "item": "Release Notes Added",
+        "isCompleted": false,
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m"
+      },
+      {
+        "id": "MqfIZ2TH2lFJuT0UDjsz",
+        "item": "UAT Completed",
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "isCompleted": false
+      },
+      {
+        "id": "MxPhXLcrgpzvO2AloXkr",
+        "isCompleted": false,
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "N3IExgZo9ewyIv1LDNpG",
+        "isCompleted": false,
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "NPga9pmHrKNQCZEqphad",
+        "isCompleted": true,
+        "deploymentId": "R0kl1hBvRsekzDhCCMha",
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "NQh1ZtWAVtNEfA1rPfWw",
+        "isCompleted": false,
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "item": "UAT Completed"
+      },
+      {
+        "id": "Nr2YGEiNthzg7aMkpGlH",
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "Oe2Av6lKB3MBWqjQcHiD",
+        "item": "Documentation Uploaded",
+        "isCompleted": true,
+        "deploymentId": "W6s06LRJIaXKQso8FNkz"
+      },
+      {
+        "id": "OwQoYPyxmjsBhrluoQw7",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "isCompleted": false,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "PEc0nSh1t9y7F9oQBqOL",
+        "item": "Release Notes Added",
+        "isCompleted": false,
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5"
+      },
+      {
+        "id": "PdndgNGENQAbGaxmsfIu",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m"
+      },
+      {
+        "id": "Pe4eg5uJEOMR0uTrYdI4",
+        "item": "Documentation Uploaded",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m",
+        "isCompleted": false
+      },
+      {
+        "id": "PfRMBmlcGS3k3Qq3yuKB",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "isCompleted": false
+      },
+      {
+        "id": "Q7wNUaXPxshp3fGIDrYk",
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "isCompleted": false,
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "QRGF4ms1t7RGMAlpOoNZ",
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC",
+        "item": "Backend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "R1nMVRDHZmBSedzuC2AE",
+        "item": "Requirements Finalized",
+        "isCompleted": true,
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV"
+      },
+      {
+        "id": "RB1pQoJQvCCwFHwuxSdj",
+        "isCompleted": false,
+        "item": "API Ready",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m"
+      },
+      {
+        "id": "RPx8Vmn0kTVxlftxSKj8",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ",
+        "item": "Documentation Uploaded",
+        "isCompleted": false
+      },
+      {
+        "id": "RTaPU7SnINwIVBDN1YlP",
+        "item": "UAT Completed",
+        "isCompleted": false,
+        "deploymentId": "R0kl1hBvRsekzDhCCMha"
+      },
+      {
+        "id": "RV9ammcQHws0bwS7brNu",
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "item": "API Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "RjfHebC8omCsIA3e8nkx",
+        "item": "API Ready",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true
+      },
+      {
+        "id": "RtarEHpPcldsaCpRprcy",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY"
+      },
+      {
+        "id": "RwQ84q0PeucSNfRA2Xun",
+        "isCompleted": false,
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "item": "API Ready"
+      },
+      {
+        "id": "RyTIvK5MtYI6OanVszca",
+        "item": "Requirements Finalized",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m",
+        "isCompleted": false
+      },
+      {
+        "id": "SKH9RWFLb3Rc1cksBVJI",
+        "isCompleted": false,
+        "deploymentId": "5InRa5E17O3boxlLRxZQ",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "SRMnrKCLryNYN4ESeO78",
+        "isCompleted": false,
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "SVv9JiByLYO93aELI6ud",
+        "isCompleted": false,
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM",
+        "item": "API Ready"
+      },
+      {
+        "id": "SbtFthtLleVQATbjPfho",
+        "isCompleted": false,
+        "item": "Documentation Uploaded",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY"
+      },
+      {
+        "id": "SefNe5TWkKV3pMwEbBgZ",
+        "isCompleted": false,
+        "item": "Release Notes Added",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ"
+      },
+      {
+        "id": "Sh9etIxAQVaBAdUAll63",
+        "isCompleted": false,
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "T8sThBLLI6pvGv7TpNDw",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn"
+      },
+      {
+        "id": "TIamNucrGHXEOsWyLFOS",
+        "item": "API Ready",
+        "isCompleted": true,
+        "deploymentId": "W6s06LRJIaXKQso8FNkz"
+      },
+      {
+        "id": "TqG3oRRQIaf89OEDsyP7",
+        "item": "Backend Ready",
+        "isCompleted": false,
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ"
+      },
+      {
+        "id": "U131zlT0uU5rMdOFsYsV",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": false,
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM"
+      },
+      {
+        "id": "UKqXmU9EBG3iKjr35SX7",
+        "item": "Release Notes Added",
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "isCompleted": false
+      },
+      {
+        "id": "UbA3zpwY7avu2kobwMhs",
+        "isCompleted": false,
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "UeRsxVYpzES6kDW7G8cP",
+        "item": "Release Notes Added",
+        "isCompleted": false,
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC"
+      },
+      {
+        "id": "UhsTrOGBVCDzM7XtV4AQ",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "item": "API Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "Um4x0fkIvjF8LXb9qJ5N",
+        "item": "API Ready",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false
+      },
+      {
+        "id": "Ur6YUO35kieQqMeqWJsn",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "UuqEFKxpIcAlANGonTyN",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "Ux8Z6g6dLCw6MfRtGKlU",
+        "isCompleted": true,
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw",
+        "item": "UAT Completed"
+      },
+      {
+        "id": "UxDHZ7Lhqs7sIcFi7y1J",
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "item": "Backend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "Uzsw4CNgwI8UL4mPe87E",
+        "isCompleted": false,
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "V5GU78pdjWYYwPgo23fo",
+        "deploymentId": "IJSymeMmQWWjfIoylI08",
+        "item": "Release Notes Added",
+        "isCompleted": false
+      },
+      {
+        "id": "VbB2H57AKG0U1FTfvlDP",
+        "isCompleted": false,
+        "deploymentId": "5InRa5E17O3boxlLRxZQ",
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "VrBr5p9qiGoc0wXbePRV",
+        "isCompleted": false,
+        "item": "Requirements Finalized",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo"
+      },
+      {
+        "id": "WBVNrJ1IwB5ppCouLWNq",
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5",
+        "isCompleted": false,
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "WI1xMvHMIupzRVEkxys3",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz"
+      },
+      {
+        "id": "WQHklnQRYnAZLorUCVVJ",
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "item": "Requirements Finalized",
+        "isCompleted": false
+      },
+      {
+        "id": "WwrPshqEIT7Xmq4H0U2r",
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "item": "Backend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "XBVeG6UrmmreFoFX8SQI",
+        "isCompleted": true,
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw",
+        "item": "API Ready"
+      },
+      {
+        "id": "XETX8GlPigDJEuJw58LP",
+        "item": "Requirements Finalized",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false
+      },
+      {
+        "id": "XEa9a2QMWnA33RefeaP8",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "isCompleted": false,
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "XPlOIwAkBBxUfe4leBMv",
+        "item": "API Ready",
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt",
+        "isCompleted": false
+      },
+      {
+        "id": "XXHLcihD9jReK7Mh8D8s",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt",
+        "isCompleted": false
+      },
+      {
+        "id": "Y619fBZUoleMJKsjnJvd",
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "Y6zkVZzWL0jYbYpixoI5",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "isCompleted": false,
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "YMZ0IoCaGUBRS7Er6vqr",
+        "item": "Frontend Ready",
+        "isCompleted": false,
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9"
+      },
+      {
+        "id": "YjHvfIxGGccBoaeWKKD0",
+        "isCompleted": true,
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "item": "Backend Ready"
+      },
+      {
+        "id": "YloM5MGZRXxvOJlcDi1j",
+        "item": "API Ready",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false
+      },
+      {
+        "id": "YricbiN7kMXdI6VPmdWG",
+        "item": "Backend Ready",
+        "isCompleted": false,
+        "deploymentId": "lH26nFXjOLE6EvOAnSDM"
+      },
+      {
+        "id": "Z1aCWxVZbmfnyUOeqYKD",
+        "item": "Frontend Ready",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true
+      },
+      {
+        "id": "ZCAsE1AOkuk8fHftDBWW",
+        "deploymentId": "IJSymeMmQWWjfIoylI08",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": false
+      },
+      {
+        "id": "ZOdjFXWFTZDHPP6mCggk",
+        "isCompleted": true,
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "item": "Backend Ready"
+      },
+      {
+        "id": "ZUCHSqslMHlO5cTfvkBI",
+        "isCompleted": false,
+        "item": "Test Cases Approved",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY"
+      },
+      {
+        "id": "ZYdx8QTEWw4BwrxbGf1i",
+        "isCompleted": false,
+        "item": "Documentation Uploaded",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt"
+      },
+      {
+        "id": "Zd9iz2Lc0iCkMneIFSLl",
+        "item": "API Ready",
+        "isCompleted": true,
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL"
+      },
+      {
+        "id": "ZjNQBtzwwbD6I7lWEhUg",
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "isCompleted": false,
+        "item": "Backend Ready"
+      },
+      {
+        "id": "ZseuL9NidO5R54CiKW97",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "item": "Release Notes Added",
+        "isCompleted": false
+      },
+      {
+        "id": "Zzh2PMJhPyXvj6luLQTV",
+        "item": "UAT Completed",
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5",
+        "isCompleted": false
+      },
+      {
+        "id": "aGqD5mEhYyIhJn0SZc5r",
+        "item": "Frontend Ready",
+        "isCompleted": false,
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz"
+      },
+      {
+        "id": "aYSVerbP5nosQVmIvRS6",
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL",
+        "item": "Backend Ready",
+        "isCompleted": true
+      },
+      {
+        "id": "aaXpFfUt5S5tBBb194jz",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "isCompleted": false,
+        "item": "API Ready"
+      },
+      {
+        "id": "al76NxrKvKwEazvqXv6H",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "item": "Requirements Finalized",
+        "isCompleted": false
+      },
+      {
+        "id": "bBbxsbbsOvy5FE73Yrg0",
+        "isCompleted": false,
+        "item": "API Ready",
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn"
+      },
+      {
+        "id": "bI6A78Mf7qnLpKOR5wqT",
+        "isCompleted": false,
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "c1efFPVSC8QQqDYWGqFg",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "isCompleted": false,
+        "item": "API Ready"
+      },
+      {
+        "id": "ch1RNbR6jIN3AFFmUQpv",
+        "deploymentId": "W6s06LRJIaXKQso8FNkz",
+        "isCompleted": true,
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "dDzXZdm77oTcXiHc6xFf",
+        "item": "Frontend Ready",
+        "isCompleted": false,
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt"
+      },
+      {
+        "id": "dV2VMI4cZV4GKrgXdvhc",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "isCompleted": false,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "dWDFehos8ltE1xgzY6SU",
+        "item": "Requirements Finalized",
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt",
+        "isCompleted": false
+      },
+      {
+        "id": "djSJb2k5fJ8yvUxF4Js3",
+        "isCompleted": false,
+        "item": "API Ready",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9"
+      },
+      {
+        "id": "dqAZ3Us8TbH83xkZjSMX",
+        "item": "Backend Ready",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt",
+        "isCompleted": false
+      },
+      {
+        "id": "duisIuHmiPYICIjQAUgB",
+        "item": "Documentation Uploaded",
+        "isCompleted": true,
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL"
+      },
+      {
+        "id": "dwlfjUNmQszfwaKLUGUp",
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC",
+        "isCompleted": false,
+        "item": "UAT Completed"
+      },
+      {
+        "id": "e4oJOh8mgW8neVfZ44Sj",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "e6WvF1dbq11umcQ7hbCR",
+        "item": "UAT Completed",
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL",
+        "isCompleted": true
+      },
+      {
+        "id": "eFi8TopeqSHK1dize0YX",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt",
+        "isCompleted": false,
+        "item": "UAT Completed"
+      },
+      {
+        "id": "eJhbienvUJiZomflPldU",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "acXgLYmEYFwQdm36QAE0"
+      },
+      {
+        "id": "eW5HvtDjFUDCuHvrLlRx",
+        "isCompleted": false,
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "ecZnpdFo7FFewhLnKiJv",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "item": "Requirements Finalized",
+        "isCompleted": false
+      },
+      {
+        "id": "fKWendF0bqoNSxH7MGj1",
+        "deploymentId": "JPkZgTUX30ki2BxZXK8w",
+        "isCompleted": false,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "fMen4f6J2Urk6ZgK2onT",
+        "item": "Frontend Ready",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false
+      },
+      {
+        "id": "fZaSHsAEE1xaRC66x3PP",
+        "isCompleted": false,
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "item": "Backend Ready"
+      },
+      {
+        "id": "g4wPTfr4Z9xGhlkTWKCk",
+        "deploymentId": "R0kl1hBvRsekzDhCCMha",
+        "isCompleted": true,
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "g8cQIIwZBaBjyfidPTb9",
+        "isCompleted": true,
+        "deploymentId": "acXgLYmEYFwQdm36QAE0",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "g9PVKvwHIQFGA9q510iT",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m",
+        "isCompleted": false
+      },
+      {
+        "id": "gGAukieVLPiHLU7eOYd8",
+        "isCompleted": false,
+        "item": "Release Notes Added",
+        "deploymentId": "9wSDaIAylt0xMhDMVVGn"
+      },
+      {
+        "id": "gHDCKslQGSUwgPuqmCHW",
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO",
+        "isCompleted": true,
+        "item": "Requirements Finalized"
+      },
+      {
+        "id": "gL099BfLedFAjw9bVFlf",
+        "item": "Documentation Uploaded",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false
+      },
+      {
+        "id": "gQICJCXdF6sl60JRx1Cb",
+        "item": "API Ready",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ",
+        "isCompleted": false
+      },
+      {
+        "id": "gergIjsHVeIdTOLWYqDv",
+        "item": "Documentation Uploaded",
+        "deploymentId": "KfM8CjuEN2JrhsTEXCkX",
+        "isCompleted": false
+      },
+      {
+        "id": "glqqa5O2VPVq8ZDQc8ez",
+        "isCompleted": false,
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5",
+        "item": "Backend Ready"
+      },
+      {
+        "id": "hAeOs3xzmhxszLny05Ws",
+        "isCompleted": true,
+        "item": "Test Cases Approved",
+        "deploymentId": "acXgLYmEYFwQdm36QAE0"
+      },
+      {
+        "id": "hB1D49ZGzvFmw7Et9FVo",
+        "item": "Release Notes Added",
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV",
+        "isCompleted": true
+      },
+      {
+        "id": "hMXEb2QSkU61nCjrFO1Z",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": false
+      },
+      {
+        "id": "hUOyPYWnVJ0EcoBTMizv",
+        "item": "API Ready",
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "isCompleted": false
+      },
+      {
+        "id": "hVim3eDFzwQ5KuktGJas",
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw",
+        "isCompleted": true,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "hjX0gT9CMjvuajv9i7Un",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "isCompleted": false,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "hlmM1L1zuDWB2h5RhU1B",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV",
+        "isCompleted": true
+      },
+      {
+        "id": "hoKsGotU8Eh0iOWMQGRH",
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "item": "Frontend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "i2OhkijUjhMJ3LhmBj6E",
+        "isCompleted": true,
+        "item": "Backend Ready",
+        "deploymentId": "R0kl1hBvRsekzDhCCMha"
+      },
+      {
+        "id": "i915wxsxzKraSk5mAlhu",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "iAL85UqEPFsTIYFqK2A5",
+        "item": "Frontend Ready",
+        "isCompleted": false,
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0"
+      },
+      {
+        "id": "iK2k7IRpv7HsZrJhtnV6",
+        "deploymentId": "R0kl1hBvRsekzDhCCMha",
+        "item": "Release Notes Added",
+        "isCompleted": false
+      },
+      {
+        "id": "iZNhRbH8OxlUdrjyWkut",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false,
+        "item": "Backend Ready"
+      },
+      {
+        "id": "iq1T7MFan5SyFVdFgts3",
+        "item": "UAT Completed",
+        "isCompleted": false,
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt"
+      },
+      {
+        "id": "ivipj6nIfOCCXC53A0lb",
+        "item": "Requirements Finalized",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false
+      },
+      {
+        "id": "jZ3wdnnQNXOfsxSEBafO",
+        "item": "Release Notes Added",
+        "isCompleted": true,
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw"
+      },
+      {
+        "id": "jlJy8IfNg02mYlcxryfy",
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "item": "UAT Completed",
+        "isCompleted": false
+      },
+      {
+        "id": "jxJ9bVcb733pQpRwWsvi",
+        "isCompleted": false,
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "k5nuzXKNtPfCMizmsUhK",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": true,
+        "deploymentId": "W6s06LRJIaXKQso8FNkz"
+      },
+      {
+        "id": "kVgva65XnpGZ9I8WytXS",
+        "isCompleted": false,
+        "item": "API Ready",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt"
+      },
+      {
+        "id": "keZkRw2oVzDUC3AV7mpl",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt",
+        "isCompleted": false
+      },
+      {
+        "id": "l63caTk7EX0kbH0g9qfO",
+        "isCompleted": false,
+        "item": "Release Notes Added",
+        "deploymentId": "acXgLYmEYFwQdm36QAE0"
+      },
+      {
+        "id": "lDB9bfKTHRQQHN7cUL96",
+        "item": "Frontend Ready",
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL",
+        "isCompleted": true
+      },
+      {
+        "id": "lPy4IE3MkTt5xSDLasBp",
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL",
+        "item": "Test Cases Approved",
+        "isCompleted": true
+      },
+      {
+        "id": "m9qkbfvKDNJssDHystfT",
+        "item": "UAT Completed",
+        "isCompleted": false,
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV"
+      },
+      {
+        "id": "mM5Pzal9xt0ZQguP0u4i",
+        "isCompleted": true,
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV",
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "mO5098OMy613s5ibnv7i",
+        "isCompleted": true,
+        "deploymentId": "R0kl1hBvRsekzDhCCMha",
+        "item": "API Ready"
+      },
+      {
+        "id": "mTo9yO5qizSXOyD3nH2W",
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw",
+        "item": "Documentation Uploaded",
+        "isCompleted": true
+      },
+      {
+        "id": "mfGXPPhGhufIxKqhXCnb",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "l0n6HzmbTswiopnjOswH"
+      },
+      {
+        "id": "mrzHaml0cx5QLbyev4WR",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "item": "Backend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "nDxOV2qB3p4vLN186a4M",
+        "item": "Requirements Finalized",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "isCompleted": false
+      },
+      {
+        "id": "nYm9zsBUs7Lm5sEMxyMg",
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC",
+        "isCompleted": false,
+        "item": "Test Cases Approved"
+      },
+      {
+        "id": "nb31Kun1WopFxpwHFhja",
+        "item": "Go-Live Validation Completed",
+        "isCompleted": false,
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo"
+      },
+      {
+        "id": "nhEyFUcmGX9DNoZ9ZXWG",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "item": "Backend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "nhjfU5I1cDGJhScaFSTL",
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "o0aYGLVAWZRgQaorXvK7",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "oSydNYuxF6id5F59LM2H",
+        "item": "UAT Completed",
+        "deploymentId": "2g9axrPgFfYNzbZkPOjY",
+        "isCompleted": false
+      },
+      {
+        "id": "ovJNUmDe4FepJz7uiwoQ",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "5InRa5E17O3boxlLRxZQ"
+      },
+      {
+        "id": "pQGe2xlMsfODdYwjBHNq",
+        "isCompleted": false,
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "item": "UAT Completed"
+      },
+      {
+        "id": "phnw2p45nbVkC1452Mu0",
+        "isCompleted": false,
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "pvsdmWNnFlFfhb2B45yO",
+        "item": "Frontend Ready",
+        "deploymentId": "W6s06LRJIaXKQso8FNkz",
+        "isCompleted": true
+      },
+      {
+        "id": "q5AxPMNpTvpdbPbrcuCy",
+        "deploymentId": "l0n6HzmbTswiopnjOswH",
+        "item": "Requirements Finalized",
+        "isCompleted": false
+      },
+      {
+        "id": "qc58ajIPmgKNRDhv9xC1",
+        "item": "Requirements Finalized",
+        "isCompleted": true,
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL"
+      },
+      {
+        "id": "qh0nk7SKfqDQCIKirL0h",
+        "deploymentId": "IfJd4FBOWl0g4YPpPNP0",
+        "isCompleted": false,
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "qlpS5lhUp8BJVahtYVvf",
+        "item": "Release Notes Added",
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt",
+        "isCompleted": false
+      },
+      {
+        "id": "r4PkREY4ReOcLXcV5x1b",
+        "item": "Requirements Finalized",
+        "deploymentId": "IJSymeMmQWWjfIoylI08",
+        "isCompleted": false
+      },
+      {
+        "id": "rBeZZWmQsXnjePUpcIZA",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "isCompleted": false,
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "rUrXGYBpH9qKnN4fSGQC",
+        "isCompleted": false,
+        "deploymentId": "9w0zh0zbC4LTNdh6mbdt",
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "rf47VAnpZjSffd3KxuWq",
+        "isCompleted": false,
+        "deploymentId": "acXgLYmEYFwQdm36QAE0",
+        "item": "API Ready"
+      },
+      {
+        "id": "rtCF5UnmKQibmeNMXvvM",
+        "isCompleted": false,
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5",
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "syHWtbzVIbmnf7vV9Ovy",
+        "isCompleted": false,
+        "item": "UAT Completed",
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ"
+      },
+      {
+        "id": "t7RktzpOJabo9DwEGYpL",
+        "deploymentId": "jW0nU2iuPj7EDO3Lnbn2",
+        "isCompleted": true,
+        "item": "UAT Completed"
+      },
+      {
+        "id": "tJ35pixJZ03fUnGWmF0a",
+        "item": "Go-Live Validation Completed",
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL",
+        "isCompleted": true
+      },
+      {
+        "id": "tL3VtPQMFBsYg4NJ7H6l",
+        "isCompleted": false,
+        "item": "Backend Ready",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m"
+      },
+      {
+        "id": "tMJA0F4om62Sn2AnKIfE",
+        "isCompleted": false,
+        "deploymentId": "nHVhfP7vInWXvdKzOkZ1",
+        "item": "Frontend Ready"
+      },
+      {
+        "id": "tcNppKdDzz6hhrSde9Yt",
+        "deploymentId": "JLJ8WGMQZeiqchH9iONo",
+        "item": "Test Cases Approved",
+        "isCompleted": false
+      },
+      {
+        "id": "tdGKeD5aIWqbyrYkWKQl",
+        "item": "API Ready",
+        "isCompleted": false,
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ"
+      },
+      {
+        "id": "txsmDs4oYM2pcBZYmZeD",
+        "item": "Requirements Finalized",
+        "deploymentId": "5n2A9b7F1bZpt0uI27hw",
+        "isCompleted": true
+      },
+      {
+        "id": "u5ngrk5yziZTAn9dCQUZ",
+        "deploymentId": "om74momr2t5jUj3CVgRr",
+        "isCompleted": false,
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "uWn9hvofPABC01GKssaY",
+        "deploymentId": "Ss8CJVCLifnQZTYUx73m",
+        "item": "Frontend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "ujFRD7T8u5l7IxFCNEin",
+        "deploymentId": "yZY4ukw9NWEZYoShfGLY",
+        "item": "Frontend Ready",
+        "isCompleted": false
+      },
+      {
+        "id": "uuAFvET4SuuIF22Pr3y2",
+        "deploymentId": "qFBZqHK6a98oh2aTlvI9",
+        "isCompleted": false,
+        "item": "Backend Ready"
+      },
+      {
+        "id": "v8S0SLluGaJpfJ8J4WvM",
+        "item": "Test Cases Approved",
+        "isCompleted": false,
+        "deploymentId": "om74momr2t5jUj3CVgRr"
+      },
+      {
+        "id": "vKO8etzJsCbILLxfmaaa",
+        "deploymentId": "4Voyc5SJ33N7cWsaAIRt",
+        "isCompleted": false,
+        "item": "Documentation Uploaded"
+      },
+      {
+        "id": "vKiODWIAecHGohI6NWTl",
+        "item": "Release Notes Added",
+        "deploymentId": "sjCBJKLm1f7OeVJUgLD9",
+        "isCompleted": false
+      },
+      {
+        "id": "vfs0zOKkcY3yJiltFWzb",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "item": "Release Notes Added",
+        "isCompleted": false
+      },
+      {
+        "id": "w5jApua4fF3ABxKhtKGE",
+        "deploymentId": "bSnNoQlWZqeR8HbkKOJL",
+        "isCompleted": true,
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "wB2BrRgerRozlwWN82fm",
+        "deploymentId": "HsTfbsn97cl6CMMLuKYQ",
+        "item": "Release Notes Added",
+        "isCompleted": false
+      },
+      {
+        "id": "wyn8GeNeWTVLpXfKUP0Z",
+        "isCompleted": false,
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "item": "UAT Completed"
+      },
+      {
+        "id": "xLYd71EGTeAP1j5tw7xD",
+        "item": "Release Notes Added",
+        "isCompleted": false,
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A"
+      },
+      {
+        "id": "xVBDbYZHdG7FBfT6K3un",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "isCompleted": false,
+        "item": "Release Notes Added"
+      },
+      {
+        "id": "xeBQeYFa8wn6k7LLRrYz",
+        "item": "Backend Ready",
+        "deploymentId": "cTdI8VzGnDmd3VDKL0Rz",
+        "isCompleted": false
+      },
+      {
+        "id": "xv6pviFWLHrwYQKfB9VH",
+        "isCompleted": false,
+        "deploymentId": "AGYI8cFTIYqOgbQ55msC",
+        "item": "Go-Live Validation Completed"
+      },
+      {
+        "id": "yPJrBueU80aGYk0y1gaD",
+        "item": "API Ready",
+        "deploymentId": "tteTUMH9P8g0C6Xn5z4A",
+        "isCompleted": false
+      },
+      {
+        "id": "yf6hebUSIzRWFJcajhdi",
+        "isCompleted": true,
+        "item": "Release Notes Added",
+        "deploymentId": "W6s06LRJIaXKQso8FNkz"
+      },
+      {
+        "id": "yi26StFuCYY7waEhQuXH",
+        "item": "UAT Completed",
+        "deploymentId": "7oNukPmDf8CHEPyIbe6F",
+        "isCompleted": false
+      },
+      {
+        "id": "z7rnP58Dj9nzmJns7QSw",
+        "item": "UAT Completed",
+        "isCompleted": true,
+        "deploymentId": "j46aqcbHjQt6tpSSZ6oO"
+      },
+      {
+        "id": "zBkc0SMglLHoBPfazRpX",
+        "item": "API Ready",
+        "isCompleted": true,
+        "deploymentId": "qYwUGM5JBEYnuuDWWhjV"
+      },
+      {
+        "id": "zH5WusM8RpwvY1jXUnOy",
+        "item": "Frontend Ready",
+        "isCompleted": false,
+        "deploymentId": "H7e3Wu0TJin1ZeOPf5G5"
+      },
+      {
+        "id": "zYBmKw1V1GC0eaGS3Gx3",
+        "deploymentId": "P01v64xk4iN9Sy8HKpXo",
+        "item": "UAT Completed",
+        "isCompleted": false
+      }
+    ],
+    "releaseNotes": [
+      {
+        "id": "Ykayfnf0YceEqcOuODO0",
+        "version": "v1",
+        "releaseDate": "2025-12-18",
+        "history": "[{\"timestamp\":\"2025-12-18T08:23:05.256Z\",\"changes\":[\"Minor changes\"],\"author\":\"Admin\",\"id\":\"9491e435-65a4-4ee7-a154-0bf8c1793f1e\",\"action\":\"updated\"}]",
+        "items": "[{\"title\":\"gsdfsfg\",\"description\":\"\",\"type\":\"improvement\",\"id\":\"4050dd79-c530-421f-9477-bb376cab5d05\",\"visibility\":\"public\"},{\"title\":\"fdgsdfgsd\",\"type\":\"security\",\"visibility\":\"public\",\"id\":\"de458454-1b6c-4b18-ab59-20a407b9f3d6\",\"description\":\"\"},{\"title\":\"sfdgsdfgsd\",\"description\":\"\",\"visibility\":\"public\",\"id\":\"19fb7233-0a3f-4ae5-ad2d-7df2369f28fd\",\"type\":\"performance\"}]",
+        "createdAt": "2025-12-18T06:51:16.473Z",
+        "title": "v1",
+        "updatedAt": "2025-12-18T08:23:07.306Z",
+        "productId": "BWYi0B2LFZ3LswSdUdkS",
+        "summary": "sdfssdf"
+      }
+    ]
+  }
+}

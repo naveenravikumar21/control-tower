@@ -14,6 +14,13 @@ export const DOC_TYPES = [
   { key: 'productionChecklist', label: 'Prod Checklist' }
 ];
 
+// Documentation types for deployments
+export const DEPLOYMENT_DOC_TYPES = [
+  { key: 'runbook', label: 'Runbook/Deployment Guide' },
+  { key: 'releaseNotesLink', label: 'Release Notes Link' },
+  { key: 'qaReport', label: 'Test Results/QA Report' }
+];
+
 // Deployment types
 export const DEPLOYMENT_TYPES = [
   { key: 'ga', label: 'General Availability (GA)', description: 'General availability release for all clients' },

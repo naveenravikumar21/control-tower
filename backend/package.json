@@ -1,0 +1,32 @@
+{
+  "name": "control-tower-backend",
+  "version": "1.0.0",
+  "description": "Moleculer backend for Control Tower",
+  "main": "moleculer.config.js",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js",
+    "migrate": "knex migrate:latest --knexfile db/knexfile.js",
+    "migrate:rollback": "knex migrate:rollback --knexfile db/knexfile.js",
+    "migrate:make": "knex migrate:make --knexfile db/knexfile.js",
+    "seed": "knex seed:run --knexfile db/knexfile.js",
+    "migrate-firestore": "node scripts/migrate-firestore.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "firebase": "^12.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.1.0",
+    "moleculer": "^0.14.34",
+    "moleculer-web": "^0.10.7",
+    "pg": "^8.13.1",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "firebase-admin": "^13.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

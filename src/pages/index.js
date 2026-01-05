@@ -9,3 +9,5 @@ export { Onboarding } from './Onboarding';
 export { SettingsPage } from './Settings';
 export { ReleaseNotes } from './ReleaseNotes';
 export { EAPDashboard } from './EAPDashboard';
+export { Users } from './Users';
+export { Login } from './Login';
