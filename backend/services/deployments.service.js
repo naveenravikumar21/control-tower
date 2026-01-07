@@ -89,7 +89,8 @@ module.exports = {
                 mappingStatus: "string|optional|nullable",
                 constructionStatus: "string|optional|nullable",
                 documentation: "object|optional",
-                relevantDocs: "array|optional"
+                relevantDocs: "array|optional",
+                deliveryPerson: "string|optional|nullable"
             },
             async handler(ctx) {
                 const data = this.transformToDb(ctx.params);
@@ -145,7 +146,8 @@ module.exports = {
                 mappingStatus: "string|optional|nullable",
                 constructionStatus: "string|optional|nullable",
                 documentation: "object|optional",
-                relevantDocs: "array|optional"
+                relevantDocs: "array|optional",
+                deliveryPerson: "string|optional|nullable"
             },
             async handler(ctx) {
                 const { id, ...updates } = ctx.params;
@@ -205,6 +207,7 @@ module.exports = {
                 const docs = data.relevantDocs || [];
                 result.relevant_docs = typeof docs === 'object' ? JSON.stringify(docs) : docs;
             }
+            if (data.deliveryPerson !== undefined) result.delivery_person = data.deliveryPerson || null;
 
             return result;
         },
@@ -232,6 +235,7 @@ module.exports = {
                 constructionStatus: record.construction_status,
                 documentation: record.documentation || {},
                 relevantDocs: record.relevant_docs || [],
+                deliveryPerson: record.delivery_person,
                 createdAt: record.created_at,
                 updatedAt: record.updated_at
             };

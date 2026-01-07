@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu, ListTodo, Edit2, Link } from 'lucide-react';
+import { X, Clock, CheckCircle2, FileText, ExternalLink, Trash2, CheckCheck, RotateCcw, Cpu, ListTodo, Edit2, Link, User } from 'lucide-react';
 import { useToast, useConfig } from '../contexts';
 import { useCollection } from '../hooks';
 import { updateDocument, deleteDocument, api } from '../utils/api';
@@ -20,8 +20,11 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
   const [isEditingDocs, setIsEditingDocs] = useState(false);
   const [localDocumentation, setLocalDocumentation] = useState({});
   const [localRelevantDocs, setLocalRelevantDocs] = useState([]);
+  // Delivery person state
+  const [isEditingDeliveryPerson, setIsEditingDeliveryPerson] = useState(false);
+  const [localDeliveryPerson, setLocalDeliveryPerson] = useState('');
 
-  // Sync local release items and documentation state when editing changes
+  // Sync local release items, documentation, and delivery person state when editing changes
   useEffect(() => {
     if (editing) {
       setLocalReleaseItems(editing.releaseItems || '');
@@ -29,6 +32,8 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
       setLocalDocumentation(editing.documentation || {});
       setLocalRelevantDocs(editing.relevantDocs || []);
       setIsEditingDocs(false);
+      setLocalDeliveryPerson(editing.deliveryPerson || '');
+      setIsEditingDeliveryPerson(false);
     }
   }, [editing?.id]);
 
@@ -154,6 +159,16 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
     } catch(e) { addToast("Failed to update environment", "error"); }
   };
 
+  const handleDeliveryPersonChange = async (deliveryPerson) => {
+    try {
+      await updateDocument('deployments', editing.id, {
+        deliveryPerson: deliveryPerson.trim() || null
+      });
+      setEditing({ ...editing, deliveryPerson: deliveryPerson.trim() || null });
+      addToast("Delivery person updated", "success");
+    } catch(e) { addToast("Failed to update delivery person", "error"); }
+  };
+
   const handleReleaseItemsChange = async (releaseItems) => {
     try {
       await updateDocument('deployments', editing.id, {
@@ -260,6 +275,44 @@ export const DeploymentModal = ({ editing, setEditing, onClose }) => {
                   {env.label}
                 </button>
               ))}
+            </div>
+
+            {/* Delivery Person */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mr-2 flex items-center gap-1">
+                <User size={12} /> Delivery Person:
+              </span>
+              {isEditingDeliveryPerson ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="text"
+                    value={localDeliveryPerson}
+                    onChange={(e) => setLocalDeliveryPerson(e.target.value)}
+                    placeholder="Enter name..."
+                    className="flex-1 min-w-[200px] px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                    autoFocus
+                  />
+                  <button
+                    onClick={() => { setLocalDeliveryPerson(editing.deliveryPerson || ''); setIsEditingDeliveryPerson(false); }}
+                    className="px-2 py-1.5 text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => { handleDeliveryPersonChange(localDeliveryPerson); setIsEditingDeliveryPerson(false); }}
+                    className="px-2 py-1.5 text-sm bg-blue-600 text-white hover:bg-blue-700 rounded-lg"
+                  >
+                    Save
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsEditingDeliveryPerson(true)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 transition-all"
+                >
+                  {editing.deliveryPerson || <span className="text-slate-400 italic">Not assigned</span>}
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">

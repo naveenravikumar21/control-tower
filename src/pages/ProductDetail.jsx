@@ -146,11 +146,13 @@ export const ProductDetail = () => {
     docTypes.forEach(t => docData[t.key] = fd.get(t.key) || "");
 
     // Determine parentId based on context
+    // Ensure empty strings become null for UUID validation
     let parentId = null;
     if (isSubProject) {
       parentId = productId; // Creating new sub-project under current product
     } else if (editing?.parentId || selectedParentId) {
-      parentId = selectedParentId || editing?.parentId || null; // Editing sub-project, use selected or keep existing
+      const rawParentId = selectedParentId || editing?.parentId || '';
+      parentId = rawParentId && rawParentId.trim() !== '' ? rawParentId : null;
     }
 
     // Build EAP data if enabled
@@ -731,12 +733,18 @@ export const ProductDetail = () => {
             {subProjects.map(sp => {
               const spDeploys = deploys.filter(d => d.productId === sp.id);
               const deployCount = spDeploys.length;
+              // Find earliest deployment date for this sub-project (non-released deployments only)
+              const activeSpDeploys = spDeploys.filter(d => d.nextDeliveryDate && d.status !== 'Released');
+              const earliestDeployDate = activeSpDeploys.length > 0
+                ? activeSpDeploys.sort((a, b) => new Date(a.nextDeliveryDate) - new Date(b.nextDeliveryDate))[0].nextDeliveryDate
+                : null;
               // Count docs based on relevance
               const spRelevantDocTypes = docTypes.filter(t => sp.relevantDocs?.[t.key] !== false);
               const spFilledDocs = spRelevantDocTypes.filter(t => sp.documentation?.[t.key]);
               const docsCount = spFilledDocs.length;
               const totalRelevantDocs = spRelevantDocTypes.length;
-              const spDeadline = getDeadlineStatus(sp.nextReleaseDate, 'In Progress');
+              // Use earliest deployment date for deadline status, fallback to product release date
+              const spDeadline = getDeadlineStatus(earliestDeployDate || sp.nextReleaseDate, 'In Progress');
               const spColorIndex = sp.name?.charCodeAt(0) % PRODUCT_AVATAR_COLORS.length || 0;
               const spAvatarColor = PRODUCT_AVATAR_COLORS[spColorIndex];
 
@@ -794,11 +802,11 @@ export const ProductDetail = () => {
                       )}
                     </div>
 
-                    {sp.nextReleaseDate && (
+                    {(earliestDeployDate || sp.nextReleaseDate) && (
                       <div className="mt-3 flex items-center gap-2">
                         <Clock size={14} className={spDeadline.color.split(' ')[0]} />
                         <span className={`text-sm ${spDeadline.color.split(' ')[0]}`}>
-                          Next release: {formatDate(sp.nextReleaseDate)}
+                          {earliestDeployDate ? 'Next delivery' : 'Next release'}: {formatDate(earliestDeployDate || sp.nextReleaseDate)}
                         </span>
                       </div>
                     )}

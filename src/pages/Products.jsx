@@ -167,7 +167,9 @@ export const Products = () => {
     const docData = {};
     docTypes.forEach(t => docData[t.key] = fd.get(t.key) || "");
 
-    const parentId = fd.get('parentId') || null;
+    // Ensure empty string becomes null for UUID validation
+    const parentIdRaw = fd.get('parentId');
+    const parentId = parentIdRaw && parentIdRaw.trim() !== '' ? parentIdRaw : null;
 
     // Build EAP data if enabled
     const eapData = eapEnabled ? {
